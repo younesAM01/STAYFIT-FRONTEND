@@ -1,0 +1,58 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { routing } from "@/i18n/routing";
+import { Globe } from "lucide-react";
+
+export default function LocaleDropdown() {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleLocaleChange = (nextLocale) => {
+    setIsDropdownOpen(false);
+
+    // Extract current locale from pathname
+    const currentLocale = pathname.split("/")[1];
+
+    // Check if the current locale is in the list of locales
+    if (routing.locales.includes(currentLocale)) {
+      // Replace the locale in the pathname
+      const newPath = pathname.replace(`/${currentLocale}`, `/${nextLocale}`);
+      router.replace(newPath);
+    } else {
+      // If no locale is found, just prepend the new one
+      router.replace(`/${nextLocale}${pathname}`);
+    }
+  };
+
+  return (
+    <div className="relative mx-2">
+      <button
+        className="flex items-center p-2 bg-transparent text-[#7fff00] hover:text-[#7fff00]/80"
+        onClick={toggleDropdown}
+      >
+        <Globe className="w-5 h-5" />
+      </button>
+
+      {isDropdownOpen && (
+        <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10">
+          {routing.locales.map((locale) => (
+            <button
+              key={locale}
+              onClick={() => handleLocaleChange(locale)}
+              className="block w-full text-left px-4 py-2 text-black hover:bg-gray-200"
+            >
+              {locale.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
