@@ -34,7 +34,7 @@ export default function LocaleDropdown() {
   return (
     <div className="relative mx-2">
       <button
-        className="flex items-center p-2 bg-transparent text-[#7fff00] hover:text-[#7fff00]/80"
+        className="flex items-center p-2 bg-transparent text-[#c2fe02] hover:text-[#c2fe02]/80"
         onClick={toggleDropdown}
       >
         <Globe className="w-5 h-5" />
