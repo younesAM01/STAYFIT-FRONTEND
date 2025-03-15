@@ -46,7 +46,7 @@ export default function FitnessNavbar() {
   }, [])
 
   return (
-    <nav className="w-full mt-2 bg-[#c2fe02] overflow-hidden">
+    <nav className="w-full mt-2 bg-[#B4E90E] overflow-hidden">
       <div ref={scrollRef} className="flex whitespace-nowrap overflow-x-hidden" style={{ scrollBehavior: "auto" }}>
         <div className="flex animate-marquee">
           {allCategories.map((category, index) => (
@@ -54,7 +54,7 @@ export default function FitnessNavbar() {
               key={`${category.name}-${index}`}
               href={category.href}
               className={cn(
-                "flex items-center gap-2 px-8 py-2 font-bold text-black hover:opacity-80 transition-opacity",
+                "flex items-center gap-2 px-8 py-2 font-bold text-[#0d111a] hover:opacity-80 transition-opacity",
               )}
             >
               <div className="relative h-10 w-24 flex-shrink-0">

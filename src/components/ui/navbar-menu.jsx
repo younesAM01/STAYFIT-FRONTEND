@@ -78,12 +78,9 @@ export const DesktopMenu = ({ setActive, children }) => {
 export const CoachItem = ({ title, description, href, src }) => {
   return (
     <Link href={href} className="flex space-x-2">
-      <Image
-        src={src}
-        width={140}
-        height={70}
-        alt={title}
-        className="shrink-0 rounded-md shadow-2xl"
+      <img 
+        src={src}                  
+        className="shrink-0 rounded-md shadow-2xl h-[90px] object-cover"
       />
       <div>
         <h4 className="text-xl font-bold mb-1 text-[#b4e90e]">{title}</h4>
@@ -152,10 +149,10 @@ const Navbar = () => {
         <MenuItem setActive={setActive} active={active} item={t('home')} href="/" isMobile={isMobile} />
         <MenuItem setActive={setActive} active={active} item={t('our coaches')} href="/coaches" isMobile={isMobile}>
           <div className=" grid grid-cols-2 gap-4 p-2 z-10000">
-            <CoachItem title="Sarah Ahmed" description="Yoga specialist with 8+ years experience" href="/coaches/sarah" src="/coaches/sarah.jpg" />
-            <CoachItem title="Mark Williams" description="Strength & conditioning expert" href="/coaches/mark" src="/coaches/mark.jpg" />
-            <CoachItem title="Layla Mahmoud" description="Nutrition and fitness coach" href="/coaches/layla" src="/coaches/layla.jpg" />
-            <CoachItem title="Ahmed Hassan" description="Functional training specialist" href="/coaches/ahmed" src="/coaches/ahmed.jpg" />
+            <CoachItem title="Ahmed Sobhi" description="Yoga specialist with 8+ years experience" href="/coaches/sarah" src="https://i.pinimg.com/474x/a2/fb/13/a2fb13560cae8b99da7ab04497737746.jpg" />
+            <CoachItem title="Anass Beniss" description="Strength & conditioning expert" href="/coaches/mark" src="https://i.pinimg.com/474x/88/d1/1a/88d11a3428462b2e143d8c4a28af7a60.jpg" />
+            <CoachItem title="Layla Mahmoud" description="Nutrition and fitness coach" href="/coaches/layla" src="https://i.pinimg.com/736x/79/3a/b1/793ab11603c2f931ae82bad4f5e3219c.jpg" />
+            <CoachItem title="Ahmed Hassan" description="Functional training specialist" href="/coaches/ahmed" src="https://i.pinimg.com/474x/f0/f4/88/f0f4889240793a25e5b7c4fa2fbfb37b.jpg" />
           </div>
         </MenuItem>
         <MenuItem setActive={setActive} active={active} item={t('services')} href="/services" isMobile={isMobile} />
