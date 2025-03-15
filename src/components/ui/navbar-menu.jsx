@@ -27,7 +27,7 @@ export const MenuItem = ({ setActive, active, item, href, children, isMobile }) 
         {item}
         {isActive && !isMobile && (
           <motion.div
-            className="absolute bottom-[-4px] left-0 h-[2px] bg-[#7fff00]"
+            className="absolute bottom-[-4px] left-0 h-[2px] bg-[#b4e90e]"
             initial={{ width: 0 }}
             animate={{ width: "100%" }}
             transition={{ duration: 0.3 }}
@@ -63,14 +63,14 @@ export const DesktopMenu = ({ setActive, children }) => {
   return (
     <nav
       onMouseLeave={() => setActive(null)}
-      className="relative w-full rounded-none border-b border-[#7fff00]/[0.1] bg-gradient-to-r from-black via-black to-[#7fff00]/10 hidden md:flex items-center px-8 py-6"
+      className="relative w-full rounded-none border-b border-[#b4e90e]/[0.1] bg-gradient-to-r from-black via-black to-[#b4e90e]/10 hidden md:flex items-center px-8 py-6"
     >
-      <div className="text-[#7fff00] font-bold text-2xl font-inter">STAY FiT</div>
+      <div className="text-[#b4e90e] font-bold text-2xl font-inter">STAY FiT</div>
       <div className="flex justify-center space-x-8 mx-auto">{children}</div>
       
       <LocaleDropdown />
 
-      <button className="px-6 py-2 bg-[#7fff00] text-black font-semibold rounded-full hover:bg-[#7fff00]/90 transition-colors">
+      <button className="px-6 py-2 bg-[#b4e90e] text-black font-semibold rounded-full hover:bg-[#b4e90e]/90 transition-colors">
         {t('register')}
       </button>
     </nav>
@@ -87,7 +87,7 @@ export const CoachItem = ({ title, description, href, src }) => {
         className="shrink-0 rounded-md shadow-2xl"
       />
       <div>
-        <h4 className="text-xl font-bold mb-1 text-[#7fff00]">{title}</h4>
+        <h4 className="text-xl font-bold mb-1 text-[#b4e90e]">{title}</h4>
         <p className="text-neutral-300 text-sm max-w-[10rem]">{description}</p>
       </div>
     </Link>
@@ -107,7 +107,7 @@ export const MobileCoachItem = ({ title, description, href, src }) => {
         />
       </div>
       <div>
-        <h4 className="text-base font-bold text-[#7fff00]">{title}</h4>
+        <h4 className="text-base font-bold text-[#b4e90e]">{title}</h4>
         <p className="text-xs text-neutral-300">{description}</p>
       </div>
     </Link>
@@ -165,11 +165,11 @@ const Navbar = () => {
       </DesktopMenu>
 
       {/* Mobile Menu */}
-      <nav className="relative w-full rounded-none border-b border-[#7fff00]/[0.1] bg-gradient-to-r from-black via-black to-[#7fff00]/10 md:hidden flex items-center px-4 py-4">
-        <div className="text-[#7fff00] font-bold text-xl font-inter">STAY FiT</div>
+      <nav className="relative w-full rounded-none border-b border-[#b4e90e]/[0.1] bg-gradient-to-r from-[#0d111a] via-[#0d111a] to-[#b4e90e]/10 md:hidden flex items-center px-4 py-4">
+        <div className="text-[#b4e90e] font-bold text-xl font-inter">STAY FiT</div>
         <div className="ml-auto">
           <button
-            className="flex items-center justify-center rounded-md p-2 text-[#7fff00] hover:bg-black/20 focus:outline-none"
+            className="flex items-center justify-center rounded-md p-2 text-[#b4e90e] hover:bg-black/20 focus:outline-none"
             onClick={toggleMenu}
             aria-expanded={isMenuOpen}
             aria-label="Toggle navigation menu"
@@ -181,13 +181,13 @@ const Navbar = () => {
 
       {/* Mobile Navigation Menu */}
       <div
-        className={`fixed inset-y-0 right-0 z-50 w-72 transform bg-gradient-to-r from-black via-black to-[#7fff00]/10 p-6 shadow-lg transition-transform duration-300 ease-in-out ${
+        className={`fixed inset-y-0 right-0 z-50 w-72 transform bg-gradient-to-r from-[#0d111a] via-[#0d111a] to-[#b4e90e]/10 p-6 shadow-lg transition-transform duration-300 ease-in-out ${
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Close button inside the navigation menu */}
         <button
-          className="absolute right-4 top-4 rounded-full p-2 text-[#7fff00] hover:bg-black/20"
+          className="absolute right-4 top-4 rounded-full p-2 text-[#b4e90e] hover:bg-black/20"
           onClick={() => setIsMenuOpen(false)}
           aria-label="Close navigation menu"
         >
@@ -197,7 +197,7 @@ const Navbar = () => {
         <div className="flex flex-col space-y-4 pt-16">
           <Link
             href="/"
-            className="text-lg font-medium text-white hover:text-[#7fff00]"
+            className="text-lg font-medium text-white hover:text-[#b4e90e]"
             onClick={() => setIsMenuOpen(false)}
           >
             {t('home')} 
@@ -211,7 +211,7 @@ const Navbar = () => {
             >
               <Link
                 href="/coaches"
-                className="text-lg font-medium text-white hover:text-[#7fff00]"
+                className="text-lg font-medium text-white hover:text-[#b4e90e]"
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsMenuOpen(false);
@@ -272,27 +272,27 @@ const Navbar = () => {
           
           <Link
             href="/services"
-            className="text-lg font-medium text-white hover:text-[#7fff00]"
+            className="text-lg font-medium text-white hover:text-[#b4e90e]"
             onClick={() => setIsMenuOpen(false)}
           >
             {t('services')}
           </Link>
           <Link
             href="/about"
-            className="text-lg font-medium text-white hover:text-[#7fff00]"
+            className="text-lg font-medium text-white hover:text-[#b4e90e]"
             onClick={() => setIsMenuOpen(false)}
           >
             {t('about us')}
           </Link>
           <Link
             href="/contact"
-            className="text-lg font-medium text-white hover:text-[#7fff00]"
+            className="text-lg font-medium text-white hover:text-[#b4e90e]"
             onClick={() => setIsMenuOpen(false)}
           >
             {t('contact us')}
           </Link>
           
-          <button className="mt-6 px-6 py-3 bg-[#7fff00] text-black font-semibold rounded-lg hover:bg-[#7fff00]/90 transition-colors">
+          <button className="mt-6 px-6 py-3 bg-[#b4e90e] text-black font-semibold rounded-lg hover:bg-[#b4e90e]/90 transition-colors">
           {t('register')}
           </button>
         </div>
