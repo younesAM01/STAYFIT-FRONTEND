@@ -1,0 +1,27 @@
+{
+    "HomePage": {
+      "abouttitle1": "WHO WE ARE",
+      "abouttitle2": "WELCOME TO STAY FIT COACHING",
+      "about": "At STAY FIT, we are dedicated to providing personalized fitness coaching sessions that empower our clients to achieve their health and wellness goals. Our experienced coaches understand that every individual is unique, and we tailor our programs to meet the specific needs of each client, ensuring a supportive and effective fitness journey. Join us to experience a holistic approach to fitness that combines expert guidance with a community of like-minded individuals.",
+      "aboutbtn": "FREE CONSULTATION",
+      "home": "Home",
+      "our coaches": "Our Coaches",
+      "services": "Services",
+      "about us": "About Us",
+      "contact us": "Contact Us",
+      "register": "Register Now",
+      "Fitness": "Fitness",
+      "FitnessDescription": "Improve your cardiovascular endurance, increase strength or maintain regular physical activity with our complete equipment.",
+      "GroupClasses": "Group Classes",
+      "GroupClassesDescription": "Join our muscle strengthening, cardio, endurance, dance and relaxation classes led by qualified instructors.",
+      "Boxing": "Boxing",
+      "BoxingDescription": "Learn or perfect your boxing technique with our high-quality equipment and experienced instructors.",
+      "Yoga": "Yoga",
+      "YogaDescription": "Complete combat training combining standing fighting, wrestling and ground combat techniques.",
+      "Trainer": {
+        "title": "OUR TRAINERS",
+        "description": "We are a team of experienced people, nutrition, sports and fitness passionate experts with talent and knowledge unsurpassed in the industry. Get to know us.",
+        "profileBtn": "View Profile"
+      }
+    }
+  }
