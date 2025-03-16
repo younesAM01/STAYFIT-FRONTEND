@@ -15,8 +15,8 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         {/* Newsletter Subscription */}
         <div className="flex flex-col items-center justify-center mb-12 text-center">
-          <h3 className="text-xl font-bold mb-4">{t('newsletter.title')}</h3>
-          <div className="flex flex-col sm:flex-row w-full max-w-md gap-2">
+          <h3 className="text-xl font-bold mb-4 text-[#B4E90E]">{t('newsletter.title')}</h3>
+          <div className="flex flex-col sm:flex-row w-full max-w-sm gap-2">
             <Input type="email" placeholder={t('newsletter.placeholder')} className="bg-[#1a1f2e] border-[#2a2f3e] rounded-3xl text-white" />
             <Button className="bg-[#B4E90E] hover:bg-[#a3d80d] text-[#0d111a] font-bold rounded-3xl">{t('newsletter.button')}</Button>
           </div>

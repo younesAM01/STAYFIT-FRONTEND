@@ -64,9 +64,9 @@ export default function Services() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen md:mt-6">
     {/* Header Section */}
-    <div className="relative w-full h-[300px]">
+    <div className="relative w-full h-[350px]">
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ 
