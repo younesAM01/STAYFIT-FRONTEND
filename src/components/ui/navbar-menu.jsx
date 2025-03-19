@@ -147,7 +147,7 @@ const Navbar = () => {
       {/* Desktop Menu */}
       <DesktopMenu setActive={setActive}>
         <MenuItem setActive={setActive} active={active} item={t('home')} href="/" isMobile={isMobile} />
-        <MenuItem setActive={setActive} active={active} item={t('our coaches')} href="/coaches" isMobile={isMobile}>
+        <MenuItem setActive={setActive} active={active} item={t('our coaches')} href="/en/coaches" isMobile={isMobile}>
           <div className=" grid grid-cols-2 gap-4 p-2 z-10000">
             <CoachItem title="Ahmed Sobhi" description="Yoga specialist with 8+ years experience" href="/coaches/sarah" src="https://i.pinimg.com/474x/a2/fb/13/a2fb13560cae8b99da7ab04497737746.jpg" />
             <CoachItem title="Anass Beniss" description="Strength & conditioning expert" href="/coaches/mark" src="https://i.pinimg.com/474x/88/d1/1a/88d11a3428462b2e143d8c4a28af7a60.jpg" />
