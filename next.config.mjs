@@ -4,7 +4,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig = {
     images: {
-      domains: ["i.pinimg.com"],
+      domains: ["i.pinimg.com", "www.firstbeat.com"],
     },
   };
 

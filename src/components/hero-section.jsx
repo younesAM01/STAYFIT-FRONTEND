@@ -1,5 +1,4 @@
 "use client";
-import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import { useEffect, useState } from "react";
 
 const HeroSection = () => {
@@ -39,7 +38,7 @@ const HeroSection = () => {
       {/* Overlay Content */}
       <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white px-4">
         <h1 className="text-5xl md:text-6xl font-bold mb-6 text-center">
-          Transform Your Game
+          Transform Your Life
         </h1>
         <p className="text-xl md:text-2xl mb-8 text-center max-w-2xl">
           Expert coaching to take your skills to the next level
