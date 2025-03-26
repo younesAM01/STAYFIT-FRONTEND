@@ -1,8 +1,11 @@
 "use client";
+import { useTranslations } from 'next-intl';
 import React, { useState, useEffect } from 'react';
 
 const TestimonialSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const t = useTranslations('HomePage');
+
   
   const testimonials = [
     {
@@ -53,12 +56,12 @@ const TestimonialSlider = () => {
   }, [currentIndex]);
 
   return (
-    <div className="flex justify-center items-center ">
+    <div className="flex justify-center items-center my-4 ">
       <div className="max-w-3xl w-11/12 text-center relative px-4">
       <div className="text-center flex flex-col items-center mb-10">
           <h2 className=" text-md md:text-2xl font-bold flex items-center text-center mb-6 text-white">
             <span className="mx-4 w-28 h-0.5 bg-[#B4E90E] block"></span>
-                WHAT OUR CLIENT SAY
+            {t('testemonia')}
             <span className="ml-4 w-28 h-0.5 bg-[#B4E90E] block"></span>
           </h2>
           
@@ -114,17 +117,17 @@ const TestimonialSlider = () => {
         <div className="absolute top-1/2 w-full flex justify-between px-4 transform -translate-y-1/2 pointer-events-none">
           <button
             onClick={prevSlide}
-            className="bg-black/30 hover:bg-black/60 text-white w-10 h-10 rounded-full flex justify-center items-center transition-colors duration-300 pointer-events-auto"
+            className="bg-[#B4E90E] hover:bg-[#B4E90E]/80 text-[#0d111a] w-10 h-10 rounded-full flex justify-center items-center transition-colors duration-300 pointer-events-auto"
             aria-label="Previous testimonial"
           >
-            ←
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
           </button>
           <button
             onClick={nextSlide}
-            className="bg-black/30 hover:bg-black/60 text-white w-10 h-10 rounded-full flex justify-center items-center transition-colors duration-300 pointer-events-auto"
+            className="bg-[#B4E90E] hover:bg-[#B4E90E]/80 text-[#0d111a] w-10 h-10 rounded-full flex justify-center items-center transition-colors duration-300 pointer-events-auto"
             aria-label="Next testimonial"
           >
-            →
+           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-chevrons-right"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg>
           </button>
         </div>
       </div>

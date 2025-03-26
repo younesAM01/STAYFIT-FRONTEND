@@ -61,7 +61,7 @@ const ActivityCard = ({ activity }) => {
           <motion.div 
             className="absolute w-full px-4 sm:px-6 top-20 sm:bottom-0 sm:opacity-0 sm:group-hover:opacity-100 
                 sm:translate-y-full sm:group-hover:translate-y-0 
-                transition-all duration-1500"
+                transition-all duration-800"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ 
               opacity: 1, 
