@@ -113,5 +113,19 @@
         "phoneNumber": "+123 456 7890"
       }
     }
+  },
+  "COACHEPAGE": {
+    "herotitle1": "Transform Your Body",
+    "herotitle_span": "Transform Your Life",
+    "paragraph": "Our expert coaches are ready to guide you through your fitness journey, providing personalized training to help you achieve your goals.",
+    "boutton": "Start Your Journey",
+    "meetcoaches": "Meet Our Expert Coaches",
+    "all": "All",
+    "cardio": "Cardio",
+    "gym": "Gym",
+    "boxing": "Boxing",
+    "swimming": "Swimming",
+    "viewProfile": "View Profile",
+    "bookNow": "Book Now"
   }
 }

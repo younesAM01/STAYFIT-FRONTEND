@@ -1,11 +1,12 @@
 'use client';
 import { motion } from 'framer-motion';
 import React, { useState, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 const AboutUs = () => {
   const vid = require('@/assets/pinterest.mp4');
   const t = useTranslations('HomePage');
+  const locale = useLocale();
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef(null);
 
@@ -20,30 +21,41 @@ const AboutUs = () => {
     }
   };
 
+  // Determine text alignment and flex direction based on locale
+  const textAlign = locale === 'ar' ? 'text-right' : 'text-left';
+  const flexDirection = locale === 'ar' ? 'flex-row-reverse' : 'flex-row';
+
   return (
     <motion.div 
-      className="text-white"
+      className={`text-white ${textAlign}`}
+      dir={locale === 'ar' ? 'rtl' : 'ltr'}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: false, amount: 0.3 }}
       transition={{ duration: 1 }}
     >
       <div className="max-w-6xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row items-center">
+        <div className={`flex flex-col md:flex-row items-center ${flexDirection}`}>
           {/* Content Section */}
           <motion.div 
-            className="w-full md:w-1/2 md:pl-12 mb-8 md:mb-0"
-            initial={{ x: -50, opacity: 0 }}
+            className="w-full md:w-1/2 md:px-12 mb-8 md:mb-0"
+            initial={{ x: locale === 'ar' ? 50 : -50, opacity: 0 }}
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: false, amount: 0.3 }}
             transition={{ duration: 1, type: 'spring', stiffness: 50 }}
           >
-            <div className="text-[#B4E90E] text-lg md:text-2xl font-medium mb-2 text-center md:text-left">{t('abouttitle1')}</div>
-            <h2 className="text-lg md:text-xl font-bold mb-6 text-center md:text-left">{t('abouttitle2')}</h2>
-            <p className="text-gray-400 mb-8 text-center md:text-left">{t('about')}.</p>
+            <div className={`text-[#B4E90E] text-lg md:text-2xl font-medium mb-2 ${textAlign}`}>
+              {t('abouttitle1')}
+            </div>
+            <h2 className={`text-lg md:text-xl font-bold mb-6 ${textAlign}`}>
+              {t('abouttitle2')}
+            </h2>
+            <p className={`text-gray-400 mb-8 ${textAlign}`}>
+              {t('about')}
+            </p>
             <motion.a 
               href="#"
-              className="mx-auto max-w-[230px] block md:inline-block bg-[#B4E90E] hover:bg-[#9bcf0e] text-[#0d111a] font-bold py-3 px-8 rounded-xl transition duration-300 text-center"
+              className={`mx-auto max-w-[230px] block md:inline-block bg-[#B4E90E] hover:bg-[#9bcf0e] text-[#0d111a] font-bold py-3 px-8 rounded-xl transition duration-300 ${textAlign}`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -53,8 +65,8 @@ const AboutUs = () => {
 
           {/* Video Section */}
           <motion.div 
-            className="w-full md:w-1/2 lg:ml-8"
-            initial={{ x: 50, opacity: 0 }}
+            className="w-full md:w-1/2 lg:mx-8"
+            initial={{ x: locale === 'ar' ? -50 : 50, opacity: 0 }}
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: false, amount: 0.3 }}
             transition={{ duration: 1, type: 'spring', stiffness: 50 }}

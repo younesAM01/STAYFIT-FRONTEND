@@ -1,13 +1,15 @@
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Facebook, Instagram, Twitter, Youtube } from "lucide-react"
+import { Facebook, InstagramIcon, Twitter, Youtube } from "lucide-react"
 import Image from "next/image"
 import logo from "@/assets/stayfit11.png"
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 
 export default function Footer() {
   const t = useTranslations('HomePage.Footer');
+  const locale = useLocale()
+
   const currentYear = new Date().getFullYear();
   
   return (
@@ -62,7 +64,7 @@ export default function Footer() {
                 <span className="sr-only">Facebook</span>
               </Link>
               <Link href="#" className="text-gray-400 hover:text-[#B4E90E] transition-colors">
-                <Instagram className="h-6 w-6" />
+                <InstagramIcon className="h-6 w-6" />
                 <span className="sr-only">Instagram</span>
               </Link>
               <Link href="#" className="text-gray-400 hover:text-[#B4E90E] transition-colors">
@@ -74,19 +76,41 @@ export default function Footer() {
                 <span className="sr-only">YouTube</span>
               </Link>
             </div>
-            <div className="mt-6">
-              <p className="text-gray-400 text-sm">
-                {t('connect.contact')}{" "}
-                <a href="mailto:info@fitcoach.com" className="text-[#B4E90E]">
-                  {t('connect.email')}
-                </a>
-              </p>
-              <p className="text-gray-400 text-sm mt-1">
-                {t('connect.phone')}{" "}
-                <a href="tel:+1234567890" className="text-[#B4E90E]">
-                  {t('connect.phoneNumber')}
-                </a>
-              </p>
+            <div className={`mt-6 `}>
+              <div className="text-gray-400 text-sm ">
+                {locale === 'ar' ? (
+                  <div className="text-right">
+                    <a href="mailto:info@fitcoach.com" className="text-[#B4E90E]">
+                      {t('connect.email')}
+                    </a>{" "}
+                    {t('connect.contact')}
+                  </div>
+                ) : (
+                  <div>
+                    {t('connect.contact')}{" "}
+                    <a href="mailto:info@fitcoach.com" className="text-[#B4E90E]">
+                      {t('connect.email')}
+                    </a>
+                  </div>
+                )}
+              </div>
+              <div className="text-gray-400 text-sm mt-1 text-left">
+                {locale === 'ar' ? (
+                  <div className="text-right">
+                    <a href="tel:+1234567890" className="text-[#B4E90E]">
+                      {t('connect.phoneNumber')}
+                    </a>{" "}
+                    {t('connect.phone')}
+                  </div>
+                ) : (
+                  <>
+                    {t('connect.phone')}{" "}
+                    <a href="tel:+1234567890" className="text-[#B4E90E]">
+                      {t('connect.phoneNumber')}
+                    </a>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -95,20 +119,3 @@ export default function Footer() {
   )
 }
 
-
-{/* <p className="text-gray-400 text-sm">
-                
-                <a href="mailto:info@fitcoach.com" className="text-[#B4E90E]">
-                  {t('connect.email')}
-                </a>
-                {" "}
-                {t('connect.contact')}{" "}
-              </p>
-              <p className="text-gray-400 text-sm mt-1 text-right">
-                 
-                <a href="tel:+1234567890" className="text-[#B4E90E]">
-                  {t('connect.phoneNumber')}
-                </a>
-                {" "}
-                {t('connect.phone')}
-              </p> */}
