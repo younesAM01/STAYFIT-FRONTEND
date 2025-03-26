@@ -69,7 +69,7 @@ export const DesktopMenu = ({ setActive, children }) => {
       <Image src={logo} alt="STAY FiT" width={130} height={40} />
       <div className="flex justify-center space-x-8 mx-auto">{children}</div>
       <LocaleDropdown />
-      <button className="px-6 py-1 bg-[#b4e90e] text-black font-semibold rounded-full hover:bg-customGreen/90 transition-colors">
+      <button className="px-6 py-1 bg-[#b4e90e] text-[#0d111a] font-semibold rounded-full hover:bg-customGreen/90 transition-colors">
         {t('register')}
       </button>
     </nav>
@@ -155,7 +155,7 @@ const Navbar = () => {
             <CoachItem title="Ahmed Hassan" description="Functional training specialist" href="/coaches/ahmed" src="https://i.pinimg.com/474x/f0/f4/88/f0f4889240793a25e5b7c4fa2fbfb37b.jpg" />
           </div>
         </MenuItem>
-        <MenuItem setActive={setActive} active={active} item={t('services')} href="/services" isMobile={isMobile} />
+        <MenuItem setActive={setActive} active={active} item={t('services')} href="/en/services" isMobile={isMobile} />
         <MenuItem setActive={setActive} active={active} item={t('about us')} href="/about" isMobile={isMobile} />
         <MenuItem setActive={setActive} active={active} item={t('contact us')} href="/contact" isMobile={isMobile} />
       </DesktopMenu>
@@ -267,7 +267,7 @@ const Navbar = () => {
           </div>
           
           <Link
-            href="/services"
+            href="/en/services"
             className="text-lg font-medium text-white hover:text-[#b4e90e]"
             onClick={() => setIsMenuOpen(false)}
           >

@@ -1,9 +1,11 @@
 'use client';
-import S from '@/components/about-section';
-export default function Service() {
+import Services from "@/pages/servie-page";
+
+export default function ServicesPage() {
+  
   return (
-    <>
-    <Services />
-    </>
-);
+      <>
+      <Services />
+      </>
+  );
 }

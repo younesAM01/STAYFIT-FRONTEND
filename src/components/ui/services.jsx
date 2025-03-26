@@ -64,7 +64,7 @@ export default function ServicesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-[#171f30]">
     {/* Header Section */}
     <div className="relative w-full h-[300px]">
       <div 
@@ -73,7 +73,7 @@ export default function ServicesPage() {
           backgroundImage: `url('https://png.pngtree.com/thumb_back/fh260/background/20250120/pngtree-black-and-white-gym-photography-with-modern-fitness-equipment-image_16886018.jpg')`,
         }}
       >
-        <div className="absolute inset-0 bg-black/50" />
+        <div className="absolute inset-0 bg-[#18223b]" />
         <div className="relative h-full flex flex-col items-center justify-center px-4">
           <h1 className="text-4xl sm:text-5xl font-bold text-white text-center mb-4">
             Our Services
