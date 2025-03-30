@@ -1,27 +1,131 @@
 {
-    "HomePage": {
-      "abouttitle1": "WHO WE ARE",
-      "abouttitle2": "WELCOME TO STAY FIT COACHING",
-      "about": "At STAY FIT, we are dedicated to providing personalized fitness coaching sessions that empower our clients to achieve their health and wellness goals. Our experienced coaches understand that every individual is unique, and we tailor our programs to meet the specific needs of each client, ensuring a supportive and effective fitness journey. Join us to experience a holistic approach to fitness that combines expert guidance with a community of like-minded individuals.",
-      "aboutbtn": "FREE CONSULTATION",
-      "home": "Home",
-      "our coaches": "Our Coaches",
-      "services": "Services",
-      "about us": "About Us",
-      "contact us": "Contact Us",
-      "register": "Register Now",
-      "Fitness": "Fitness",
-      "FitnessDescription": "Improve your cardiovascular endurance, increase strength or maintain regular physical activity with our complete equipment.",
-      "GroupClasses": "Group Classes",
-      "GroupClassesDescription": "Join our muscle strengthening, cardio, endurance, dance and relaxation classes led by qualified instructors.",
-      "Boxing": "Boxing",
-      "BoxingDescription": "Learn or perfect your boxing technique with our high-quality equipment and experienced instructors.",
-      "Yoga": "Yoga",
-      "YogaDescription": "Complete combat training combining standing fighting, wrestling and ground combat techniques.",
-      "Trainer": {
-        "title": "OUR TRAINERS",
-        "description": "We are a team of experienced people, nutrition, sports and fitness passionate experts with talent and knowledge unsurpassed in the industry. Get to know us.",
-        "profileBtn": "View Profile"
+  "HomePage": {
+    "abouttitle1": "WHO WE ARE",
+    "abouttitle2": "WELCOME TO STAY FIT COACHING",
+    "about": "At STAY FIT, we are dedicated to providing personalized fitness coaching sessions that empower our clients to achieve their health and wellness goals. Our experienced coaches understand that every individual is unique, and we tailor our programs to meet the specific needs of each client, ensuring a supportive and effective fitness journey. Join us to experience a holistic approach to fitness that combines expert guidance with a community of like-minded individuals.",
+    "aboutbtn": "FREE CONSULTATION",
+    "home": "Home",
+    "our coaches": "Our Coaches",
+    "services": "Services",
+    "about us": "About Us",
+    "contact us": "Contact Us",
+    "register": "Register Now",
+    "Fitness": "Fitness",
+    "FitnessDescription": "Improve your cardiovascular endurance, increase strength or maintain regular physical activity with our complete equipment.",
+    "GroupClasses": "Group Classes",
+    "GroupClassesDescription": "Join our muscle strengthening, cardio, endurance, dance and relaxation classes led by qualified instructors.",
+    "Boxing": "Boxing",
+    "BoxingDescription": "Learn or perfect your boxing technique with our high-quality equipment and experienced instructors.",
+    "Yoga": "Yoga",
+    "YogaDescription": "Complete combat training combining standing fighting, wrestling and ground combat techniques.",
+    "Trainer": {
+      "title": "OUR TRAINERS",
+      "description": "We are a team of experienced people, nutrition, sports and fitness passionate experts with talent and knowledge unsurpassed in the industry. Get to know us.",
+      "profileBtn": "View Profile"
+    },
+    "testemonia": "WHAT OUR CLIENT SAY",
+    "packtitle": "MEMBERSHIP PLAN",
+    "packbtn": "GET STARTED",
+    "packs": [
+      {
+        "id": "starter",
+        "name": "STARTER PLAN",
+        "price": "$40",
+        "period": "per month",
+        "features": [
+          "Unlimited club access",
+          "Open 24/7",
+          "Access to live team training",
+          "Spa & fight club",
+          "Functional Fitness 1 on 1",
+          "Personal Health Coaching"
+        ],
+        "highlight": false
+      },
+      {
+        "id": "standard",
+        "name": "STANDARD PLAN",
+        "price": "$100",
+        "period": "per month",
+        "features": [
+          "Unlimited club access",
+          "Diet Plan included",
+          "5 Days a Week",
+          "Open, fight club",
+          "Health and Fitness Tips",
+          "Personal Health Coaching"
+        ],
+        "highlight": true
+      },
+      {
+        "id": "premium",
+        "name": "PREMIUM PLAN",
+        "price": "$140",
+        "period": "per month",
+        "features": [
+          "Membership Card",
+          "7 Days a Week",
+          "Diet Plan included",
+          "Spa & Fight club, Cardio Classes",
+          "Health and Fitness Tips",
+          "Personal Health Coaching"
+        ],
+        "highlight": false
+      }
+    ],
+    "ContactPage": {
+      "title": "CONTACT US",
+      "subtitle": "FOR MORE INFORMATION!",
+      "description": "We are proud to create a friendly atmosphere and encourage a sense of community.",
+      "form": {
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email",
+        "phone": "Phone",
+        "subject": "Subject",
+        "message": "Message",
+        "accept": "I accept to share my information with",
+        "acceptHighlight": "Stay Fit",
+        "submit": "Send"
+      }
+    },
+    "Footer": {
+      "newsletter": {
+        "title": "Subscribe to Our Newsletter",
+        "placeholder": "Enter your email",
+        "button": "Subscribe"
+      },
+      "description": "Transforming lives through expert fitness coaching and personalized training programs. Join our community and achieve your fitness goals today.",
+      "copyright": "© {year} STAY FIT. All rights reserved.",
+      "quickLinks": {
+        "title": "Quick Links",
+        "about": "About Us",
+        "terms": "Terms & Conditions",
+        "services": "Services",
+        "trainers": "Our Trainers",
+        "faq": "FAQ"
+      },
+      "connect": {
+        "title": "Connect With Us",
+        "contact": "Contact:",
+        "email": "info@fitcoach.com",
+        "phone": "Phone:",
+        "phoneNumber": "+123 456 7890"
       }
     }
+  },
+  "COACHEPAGE": {
+    "herotitle1": "Transform Your Body",
+    "herotitle_span": "Transform Your Life",
+    "paragraph": "Our expert coaches are ready to guide you through your fitness journey, providing personalized training to help you achieve your goals.",
+    "boutton": "Start Your Journey",
+    "meetcoaches": "Meet Our Expert Coaches",
+    "all": "All",
+    "cardio": "Cardio",
+    "gym": "Gym",
+    "boxing": "Boxing",
+    "swimming": "Swimming",
+    "viewProfile": "View Profile",
+    "bookNow": "Book Now"
   }
+}
