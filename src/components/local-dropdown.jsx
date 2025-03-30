@@ -41,14 +41,14 @@ export default function LocaleDropdown() {
       </button>
 
       {isDropdownOpen && (
-        <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg z-10">
+        <div className="absolute right-0 mt-2 w-26 bg-[#B4E90E] rounded-md shadow-lg z-10">
           {routing.locales.map((locale) => (
             <button
               key={locale}
               onClick={() => handleLocaleChange(locale)}
-              className="block w-full text-left px-4 py-2 text-black hover:bg-gray-200"
+              className="block w-full text-left px-4 py-2 text-[#0d111a] hover:bg-[#9bcf0e]"
             >
-              {locale.toUpperCase()}
+              {locale === 'en' ? 'ENGLISH' : locale === 'ar' ? 'العربية' : locale.toUpperCase()}
             </button>
           ))}
         </div>

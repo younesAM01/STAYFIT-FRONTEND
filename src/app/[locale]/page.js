@@ -23,7 +23,6 @@ export default async function Home() {
       <TrainerShowcase />
       <TestimonialSlider /> 
       <MembershipPlans />
-      
       <ContactForm /> 
       </div>
     </main>

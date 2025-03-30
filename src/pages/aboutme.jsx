@@ -65,8 +65,8 @@ export default function CoachProfile() {
 
   return (
     <div className="min-h-screen bg-[#0d111a] text-white">
-    {/* Hero Section with Background */}
-    <div className="relative h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] overflow-hidden ml-40">
+     {/* Hero Section with Background */}
+     <div className="relative h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] overflow-hidden">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -76,7 +76,7 @@ export default function CoachProfile() {
       <div className="absolute inset-0 bg-[url('/placeholder.svg?height=1080&width=1920')] bg-cover bg-center"></div>
 
       <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-end pb-6 sm:pb-8 md:pb-12">
-        <div className="flex flex-col items-end sm:items-start md:flex-row md:items-end gap-4 sm:gap-6 md:gap-8">
+        <div className="flex flex-col items-center sm:items-start md:flex-row md:items-end gap-4 sm:gap-6 md:gap-8">
           <motion.div 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -93,7 +93,7 @@ export default function CoachProfile() {
             />
           </motion.div>
 
-          <div className="flex-1 text-center sm:text-left">
+          <div className="flex-1 text-center md:text-left">
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -113,6 +113,7 @@ export default function CoachProfile() {
         </div>
       </div>
     </div>
+
 
       {/* Navigation Tabs */}
       <motion.div 

@@ -56,7 +56,7 @@ const TestimonialSlider = () => {
   }, [currentIndex]);
 
   return (
-    <div className="flex justify-center items-center ">
+    <div className="flex justify-center items-center my-4 ">
       <div className="max-w-3xl w-11/12 text-center relative px-4">
       <div className="text-center flex flex-col items-center mb-10">
           <h2 className=" text-md md:text-2xl font-bold flex items-center text-center mb-6 text-white">

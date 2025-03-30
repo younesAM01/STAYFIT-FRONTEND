@@ -134,7 +134,7 @@ export default function Services() {
           </div>
         </motion.div>
 
-        <motion.div 
+         <motion.div 
           className="absolute bottom-0 left-0 right-0 flex items-center justify-center py-6 bg-[#b4e90e]"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

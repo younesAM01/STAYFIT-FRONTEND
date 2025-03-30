@@ -5,19 +5,19 @@ import { useTranslations } from 'next-intl';
 
 const TimelineItem = ({ activity, index, position = 'right' }) => {
   const isLeft = position === 'left';
-  
+
   return (
-    <div className="relative flex items-center justify-center last:mb-0">
+    <div className="relative flex items-center justify-center last:mb-0 py-6"> {/* Reduced height */}
       {/* Timeline line */}
       <div className="absolute h-full w-0.5 bg-[#B4E90E] top-0 left-1/2 transform -translate-x-1/2" />
       
-      {/* Timeline dot */}
+      {/* Timeline dot with subtle scale effect */}
       <motion.div 
         className="absolute z-10 w-4 h-4 rounded-full bg-[#B4E90E] left-1/2 transform -translate-x-1/2"
-        initial={{ scale: 0 }}
-        whileInView={{ scale: 1 }}
-        viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6, delay: index * 0.2 }}
+        initial={{ scale: 0.5, opacity: 0 }}
+        whileInView={{ scale: 1, opacity: 1 }}
+        viewport={{ once: false, amount: 0.3, margin: "-20px" }}
+        transition={{ duration: 0.6, type: "spring", stiffness: 50, damping: 14 }}
       />
       
       {/* Content container */}
@@ -25,10 +25,10 @@ const TimelineItem = ({ activity, index, position = 'right' }) => {
         {/* Timeline label */}
         <motion.div 
           className={`w-1/3 px-4 ${isLeft ? 'text-right' : 'text-left'}`}
-          initial={{ opacity: 0, x: isLeft ? 20 : -20 }}
+          initial={{ opacity: 0, x: isLeft ? 30 : -30 }}
           whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, delay: (index * 0.2) + 0.3 }}
+          viewport={{ once: false, amount: 0.2, margin: "-20px" }}
+          transition={{ duration: 0.7, type: "spring", stiffness: 45, damping: 12 }}
         >
           <h3 className={`md:text-xl text-xl font-medium ${isLeft ? 'bg-gradient-to-r' : 'bg-gradient-to-l'} from-blue-600 to-[#B4E90E] bg-clip-text text-transparent`}>
             {activity.title}
@@ -36,32 +36,24 @@ const TimelineItem = ({ activity, index, position = 'right' }) => {
         </motion.div>
         
         {/* Timeline line connector */}
-        <div className={`w-1/6 h-0.5 bg-[#B4E90E] ${isLeft ? 'mr-2' : 'ml-2'}`} />
+        <motion.div 
+          className={`w-1/6 h-0.5 bg-[#B4E90E] ${isLeft ? 'mr-1' : 'ml-1'}`} 
+          initial={{ scaleX: 0 }}
+          whileInView={{ scaleX: 1 }}
+          viewport={{ once: false, amount: 0.3, margin: "-20px" }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          style={{ transformOrigin: isLeft ? 'right' : 'left' }}
+        />
         
         {/* Card container */}
         <div className="w-1/2">
           <motion.div
-            initial={{ 
-              opacity: 0, 
-              x: isLeft ? -100 : 100 // Start offscreen from the appropriate side
-            }}
-            whileInView={{ 
-              opacity: 1, 
-              x: 0 // Slide in to original position
-            }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ 
-              duration: 1.2, // Increased duration for slower animation
-              delay: (index * 0.2) + 0.4,
-              type: "spring",
-              stiffness: 70, // Reduced stiffness for slower motion
-              damping: 15  // Added damping for smoother deceleration
-            }}
+            initial={{ opacity: 0, x: isLeft ? -40 : 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: false, amount: 0.2, margin: "-20px" }}
+            transition={{ duration: 0.9, type: "spring", stiffness: 40, damping: 15, mass: 1.5 }}
           >
-            <ActivityCard 
-              activity={activity} 
-              index={index} 
-            />
+            <ActivityCard activity={activity} index={index} />
           </motion.div>
         </div>
       </div>
@@ -73,14 +65,14 @@ const Timeline = () => {
   const t = useTranslations('HomePage');
   const activities = [
     {
-      title: t('Fitness'),  // Translated title
-      description: t('FitnessDescription'),  // Translated description
+      title: t('General Fitness'),  // Translated title
+      description: t('GeneralFitnessDescription'),  // Translated description
       image: "https://img.freepik.com/photos-gratuite/vue-angle-bas-homme-muscle-meconnaissable-se-preparant-soulever-barre-dans-club-sante_637285-2497.jpg"
     },
     {
-      title: t('GroupClasses'),
-      description: t('GroupClassesDescription'),
-      image: "https://web-back.perfectgym.com/sites/default/files/styles/460x/public/equipment%20%286%29.jpg?itok=bC0T32-Kg"
+      title: t('Pre/Postnatal Exercises'),
+      description: t('ExercisesDescription'),
+      image: "https://images.squarespace-cdn.com/content/v1/582a774c5016e1e43d96ecba/1616515884190-ZSIYM8ZSZ0K7UOW8H8NP/unsplash-image-ORK-USd2DDc.jpg?format=1500w"
     },
     {
       title: t('Boxing'),
