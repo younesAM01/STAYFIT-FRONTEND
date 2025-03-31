@@ -1,6 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 
 const activities = [
   {
@@ -50,10 +51,11 @@ const activities = [
   }
 ];
 
-
 export default function Services() {
+  const t = useTranslations('Servicespage');
   const [isClient, setIsClient] = useState(false);
   const [loadError, setLoadError] = useState({});
+  const servicesRef = useRef(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -63,103 +65,222 @@ export default function Services() {
     setLoadError(prev => ({...prev, [index]: true}));
   };
 
+  const scrollToServices = () => {
+    servicesRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
-    <div className="min-h-screen md:mt-6">
-    {/* Header Section */}
-    <div className="relative w-full h-[350px]">
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-          backgroundImage: `url('https://png.pngtree.com/thumb_back/fh260/background/20250120/pngtree-black-and-white-gym-photography-with-modern-fitness-equipment-image_16886018.jpg')`,
-        }}
-      >
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative h-full flex flex-col items-center justify-center px-4">
-          <h1 className="text-4xl sm:text-5xl font-bold text-white text-center mb-4">
-            Our Services
-          </h1>
-          <p className="text-lg sm:text-xl text-white text-center max-w-3xl">
-            Discover our comprehensive range of fitness programs designed to help you achieve your health and wellness goals. Whether you&apos;re just starting or looking to advance your fitness journey, we have the perfect service for you.
-          </p>
+    <div className="min-h-screen bg-[#0d111a]">
+      {/* Full-height Banner Section */}
+      <div className="relative w-full h-screen overflow-hidden bg-[#0d111a] text-[#0d111a]">
+        <div className="absolute inset-0 z-0">
+          <div 
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ 
+              backgroundImage: `url('https://png.pngtree.com/background/20230616/original/pngtree-contemporary-fitness-and-gym-with-a-panoramic-city-and-sky-view-picture-image_3653380.jpg')`,
+            }}
+          />
+          <div className="absolute inset-0 bg-black/60"></div>
         </div>
-      </div>
-    </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 max-w-7xl">
-        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {isClient && activities.map((activity, index) => (
-              <motion.div
-                  key={index}
-                  className="relative h-[250px] sm:h-[300px] rounded-xl sm:rounded-2xl overflow-hidden group"
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ 
-                      opacity: 1, 
-                      y: 0,
-                      transition: { 
-                          duration: 0.5, 
-                          delay: index * 0.1 
-                      }
-                  }}
-                  viewport={{ once: true, margin: "-50px" }}
+        <motion.div 
+          className="relative z-10 flex flex-col h-full container mx-auto px-4 sm:px-8 md:px-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div className="flex flex-col justify-center h-full items-center sm:items-start max-w-2xl">
+            <motion.div 
+              className="mb-4 text-lg sm:text-xl md:text-2xl font-semibold tracking-wider text-[#e6edd3] text-center sm:text-left"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              {t('title')}
+            </motion.div>
+            <motion.h1 
+              className="mb-6 text-5xl sm:text-6xl md:text-7xl lg:text-6xl font-bold tracking-tight text-center sm:text-left text-[#b4e90e] "
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              {t('subtitle')}
+            </motion.h1>
+            <motion.p 
+              className="mb-8 text-lg sm:text-xl md:text-2xl text-[#f2fad8] text-center sm:text-left"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              {t('description')}
+            </motion.p>
+
+            <motion.div 
+              className="flex items-center gap-4 mb-8"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <button className="px-8 py-3 bg-[#0d111a] hover:bg-[#0d111a]-700 text-[#b4e90e] font-bold rounded-md transition-colors text-base sm:text-lg md:text-xl">
+                {t('subscribe')}
+              </button>
+              <button 
+                onClick={scrollToServices}
+                className="px-8 py-3 border-2 border-white text-[#b4e90e] hover:bg-white/10 rounded-md font-bold transition-colors text-base sm:text-lg md:text-xl cursor-pointer"
               >
-                  {/* Background Image */}
-                  <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ 
-                       backgroundImage: loadError[index] ? 'none' : `url(${activity.image})`,
-                       backgroundColor: loadError[index] ? '#1f2937' : 'transparent'
-                     }}
-                      onError={() => handleImageError(index)}
-                  />
+                {t('services')}
+              </button>
+            </motion.div>
+          </div>
+        </motion.div>
 
-                  {/* Dark Overlay */}
-                  <div className="absolute inset-0 bg-black/60 sm:bg-black/30 sm:group-hover:bg-black/60 transition-colors duration-500" />
+         <motion.div 
+          className="absolute bottom-0 left-0 right-0 flex items-center justify-center py-6 bg-[#b4e90e]"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+        >
+          <p className="text-sm sm:text-lg md:text-2xl tracking-normal whitespace-nowrap px-4 rtl:tracking-normal" dir="auto">
+            {t('focus')}
+          </p>
+        </motion.div>
+      </div>
 
-                  {/* Content Container */}
-                  <div className="relative h-full w-full flex flex-col justify-center items-center p-4">
-                      {/* Title Container */}
-                      <motion.div 
-                          className="absolute w-full flex items-center sm:items-center justify-center transition-all duration-700 ease-in-out 
-                              top-8 sm:inset-0 sm:group-hover:items-start sm:group-hover:pt-8 select-none"
-                          initial={{ opacity: 0, y: -20 }}
-                          whileInView={{ 
-                              opacity: 1, 
-                              y: 0,
-                              transition: { 
-                                  duration: 0.5, 
-                                  delay: (index * 0.1) + 0.2 
-                              }
-                          }}
-                          viewport={{ once: true, margin: "-50px" }}
-                      >
-                          <h2 className="text-2xl sm:text-3xl font-bold text-white text-center drop-shadow-lg px-4 sm:px-6">
-                              {activity.title}
-                          </h2>
-                      </motion.div>
+      {/* Cards Section */}
+      <div ref={servicesRef} className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+          {/* First row - Three cards */}
+          {isClient && activities.slice(0, 3).map((activity, index) => (
+            <motion.div
+              key={index}
+              className="relative h-[300px] sm:h-[350px] lg:h-[400px] rounded-xl overflow-hidden group"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ 
+                opacity: 1, 
+                y: 0,
+                transition: { duration: 0.5, delay: index * 0.2 }
+              }}
+              viewport={{ once: true, margin: "-50px" }}
+            >
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat transform group-hover:scale-110 transition-transform duration-700"
+                style={{ 
+                  backgroundImage: loadError[index] ? 'none' : `url(${activity.image})`,
+                  backgroundColor: loadError[index] ? '#1f2937' : 'transparent'
+                }}
+                onError={() => handleImageError(index)}
+              />
+              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/75 transition-colors duration-500" />
+              <div className="relative h-full w-full flex flex-col justify-center items-center p-4">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white text-center mb-4 select-none">
+                  {activity.title}
+                </h2>
+                <p className="text-base sm:text-lg text-white/80 text-center max-w-sm block sm:opacity-0 sm:group-hover:opacity-100 transform sm:translate-y-4 sm:group-hover:translate-y-0 transition-all duration-500 select-none">
+                  {activity.description}
+                </p>
+              </div>
+            </motion.div>
+          ))}
 
-                      {/* Description */}
-                      <motion.div 
-                          className="absolute w-full px-4 sm:px-6 top-20 sm:bottom-0 sm:opacity-0 sm:group-hover:opacity-100 
-                              sm:translate-y-full sm:group-hover:translate-y-0 
-                              transition-all duration-800 select-none"
-                     
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ 
-                              opacity: 1, 
-                              y: 0,
-                              transition: { 
-                                  duration: 0.5, 
-                                  delay: (index * 0.1) + 0.4 
-                              }
-                          }}
-                          viewport={{ once: true, margin: "-50px" }}
-                      >
-                          <p className="text-sm sm:text-base text-white leading-relaxed text-center drop-shadow-lg">
-                              {activity.description}
-                          </p>
-                      </motion.div>
-                  </div>
+          {/* Second row - One large card */}
+          {isClient && activities.slice(3, 4).map((activity, index) => (
+            <motion.div
+              key={index + 3}
+              className="relative h-[400px] sm:h-[500px] lg:h-[600px] col-span-1 sm:col-span-2 lg:col-span-3 rounded-xl overflow-hidden group"
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ 
+                opacity: 1, 
+                scale: 1,
+                transition: { duration: 0.6 }
+              }}
+              viewport={{ once: true, margin: "-50px" }}
+            >
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat transform group-hover:scale-110 transition-transform duration-700"
+                style={{ 
+                  backgroundImage: loadError[index + 3] ? 'none' : `url(${activity.image})`,
+                  backgroundColor: loadError[index + 3] ? '#1f2937' : 'transparent'
+                }}
+                onError={() => handleImageError(index + 3)}
+              />
+              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/75 transition-colors duration-500" />
+              <div className="relative h-full w-full flex flex-col justify-center items-center p-4">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white text-center mb-6 select-none">
+                  {activity.title}
+                </h2>
+                <p className="text-base sm:text-lg lg:text-xl text-white/80 text-center max-w-xl block sm:opacity-0 sm:group-hover:opacity-100 transform sm:translate-y-4 sm:group-hover:translate-y-0 transition-all duration-500 select-none">
+                  {activity.description}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+
+          {/* Third row - Two cards side by side */}
+          <div className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
+            {isClient && activities.slice(4, 6).map((activity, index) => (
+              <motion.div
+                key={index + 4}
+                className="relative h-[350px] sm:h-[400px] lg:h-[450px] rounded-xl overflow-hidden group"
+                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
+                whileInView={{ 
+                  opacity: 1, 
+                  x: 0,
+                  transition: { duration: 0.6, delay: index * 0.2 }
+                }}
+                viewport={{ once: true, margin: "-50px" }}
+              >
+                <div 
+                  className="absolute inset-0 bg-cover bg-center bg-no-repeat transform group-hover:scale-110 transition-transform duration-700"
+                  style={{ 
+                    backgroundImage: loadError[index + 4] ? 'none' : `url(${activity.image})`,
+                    backgroundColor: loadError[index + 4] ? '#1f2937' : 'transparent'
+                  }}
+                  onError={() => handleImageError(index + 4)}
+                />
+                <div className="absolute inset-0 bg-black/60 group-hover:bg-black/75 transition-colors duration-500" />
+                <div className="relative h-full w-full flex flex-col justify-center items-center p-4">
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white text-center mb-4 select-none">
+                    {activity.title}
+                  </h2>
+                  <p className="text-base sm:text-lg text-white/80 text-center max-w-sm block sm:opacity-0 sm:group-hover:opacity-100 transform select-none sm:translate-y-4 sm:group-hover:translate-y-0 transition-all duration-500">
+                    {activity.description}
+                  </p>
+                </div>
               </motion.div>
+            ))}
+          </div>
+
+          {/* Fourth row - Three cards */}
+          {isClient && activities.slice(6, 9).map((activity, index) => (
+            <motion.div
+              key={index + 6}
+              className="relative h-[300px] sm:h-[350px] lg:h-[400px] rounded-xl overflow-hidden group"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ 
+                opacity: 1, 
+                y: 0,
+                transition: { duration: 0.5, delay: index * 0.2 }
+              }}
+              viewport={{ once: true, margin: "-50px" }}
+            >
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat transform group-hover:scale-110 transition-transform duration-700"
+                style={{ 
+                  backgroundImage: loadError[index + 6] ? 'none' : `url(${activity.image})`,
+                  backgroundColor: loadError[index + 6] ? '#1f2937' : 'transparent'
+                }}
+                onError={() => handleImageError(index + 6)}
+              />
+              <div className="absolute inset-0 bg-black/60 group-hover:bg-black/75 transition-colors duration-500" />
+              <div className="relative h-full w-full flex flex-col justify-center items-center p-4">
+                <h2 className="text-2xl select-none sm:text-3xl lg:text-4xl font-bold text-white text-center mb-4">
+                  {activity.title}
+                </h2>
+                <p className="text-base select-none sm:text-lg text-white/80 text-center max-w-sm block sm:opacity-0 sm:group-hover:opacity-100 transform sm:translate-y-4 sm:group-hover:translate-y-0 transition-all duration-500">
+                  {activity.description}
+                </p>
+              </div>
+            </motion.div>
           ))}
         </div>
       </div>

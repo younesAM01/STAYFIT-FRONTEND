@@ -65,14 +65,14 @@ const Timeline = () => {
   const t = useTranslations('HomePage');
   const activities = [
     {
-      title: t('Fitness'),  // Translated title
-      description: t('FitnessDescription'),  // Translated description
+      title: t('General Fitness'),  // Translated title
+      description: t('GeneralFitnessDescription'),  // Translated description
       image: "https://img.freepik.com/photos-gratuite/vue-angle-bas-homme-muscle-meconnaissable-se-preparant-soulever-barre-dans-club-sante_637285-2497.jpg"
     },
     {
-      title: t('GroupClasses'),
-      description: t('GroupClassesDescription'),
-      image: "https://web-back.perfectgym.com/sites/default/files/styles/460x/public/equipment%20%286%29.jpg?itok=bC0T32-Kg"
+      title: t('Pre/Postnatal Exercises'),
+      description: t('ExercisesDescription'),
+      image: "https://images.squarespace-cdn.com/content/v1/582a774c5016e1e43d96ecba/1616515884190-ZSIYM8ZSZ0K7UOW8H8NP/unsplash-image-ORK-USd2DDc.jpg?format=1500w"
     },
     {
       title: t('Boxing'),

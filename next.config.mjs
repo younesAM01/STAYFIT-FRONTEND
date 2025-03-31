@@ -4,9 +4,10 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const nextConfig = {
     images: {
-      domains: ["i.pinimg.com", "www.firstbeat.com"],
+      domains: ["i.pinimg.com", "www.firstbeat.com ","static.vecteezy.com"],
     },
   };
 
 const withNextIntl = createNextIntlPlugin();
 export default withNextIntl(withVideos(nextConfig));
+

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Dumbbell, FishIcon as Swimming, BoxIcon as Boxing, Heart } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
+import Link from "next/link"
 
 // Sample coaches data with two images per coach
 const coaches = [
@@ -224,12 +225,18 @@ export default function FitnessCoaching() {
                 <p className="text-gray-400 mb-2">{coach.specialty}</p>
                 <p className="text-sm text-gray-500">{coach.experience} experience</p>
                 <div className={`flex gap-2 mt-4 ${flexDirection}`}>
-                  <Button className="flex-1 bg-transparent border border-[#B4E90E] text-[#B4E90E] hover:bg-[#B4E90E] hover:text-[#0d111a]">
+                 <Link 
+                  href={`/en/aboutme`}
+                    
+                >
+                <Button className="flex-1 bg-transparent border border-[#B4E90E] text-[#B4E90E] hover:bg-[#B4E90E] hover:text-[#0d111a]">
+                  
                     {locale === 'ar' ? 'عرض الملف' : 'View Profile'}
-                  </Button>
+                  </Button></Link> 
                   <Button className="flex-1 bg-[#B4E90E] text-[#0d111a] hover:bg-[#a3d40c]">
                     {locale === 'ar' ? 'احجز الآن' : 'Book Now'}
                   </Button>
+                  
                 </div>
               </CardContent>
             </Card>
