@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { routing } from "@/i18n/routing";
+import { routing } from "../i18n/routing";
 import { Globe } from "lucide-react";
 
 export default function LocaleDropdown() {

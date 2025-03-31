@@ -128,4 +128,38 @@
     "viewProfile": "عرض الملف",
     "bookNow": "احجز الآن"
   }
+  ,"Servicespage": {
+  "title": "حَوِّل جسدك، حَوِّل حياتك",
+  "subtitle": "حافظ على لياقة وقوة جسمك",
+  "description": "تدرّب لتصبح أقوى جسديًا وعقليًا. استعد للمرحلة التالية.",
+  "subscribe": "اشترك",
+  "services": "خدماتنا",
+  "focus": "ركّز على تمارينك، لا على مخاوفك"
 }
+,
+
+"aboutme": {
+  "navigation": {
+    "about": "نبذة عني",
+    "specialties": "التخصصات",
+    "certifications": "الشهادات"
+  },
+  "sections": {
+    "about": {
+      "title": "نبذة عني",
+      "languages": "اللغات"
+    },
+    "specialties": {
+      "title": "التخصصات"
+    },
+    "certifications": {
+      "title": "الشهادات"
+    }
+  },
+  "cta": {
+    "title": "هل أنت مستعد لتحويل لياقتك البدنية؟",
+    "description": "احجز جلسة مع المدرب أسامة وابدأ رحلة لياقتك البدنية اليوم.",
+    "button": "احجز جلسة"
+  }
+}}
+
