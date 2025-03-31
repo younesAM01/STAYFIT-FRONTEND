@@ -44,7 +44,7 @@ export default async function RootLayout({
   return (
     <html lang={locale}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased subtle-brand-background`}
+        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased subtle-brand-background `}
       >
         <NextIntlClientProvider messages={messages}>
           <Navbar />
