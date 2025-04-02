@@ -3,9 +3,20 @@ import connectMongoDB from '@/lib/mongoDb/connect';
 import User from '@/models/User';
 
 // Get all users
-export async function GET() {
+export async function GET(request) {
     try {
         await connectMongoDB();
+        const { searchParams } = new URL(request.url);
+        const supabaseId = searchParams.get('supabaseId');
+        
+        if (supabaseId) {
+            const user = await User.findOne({ supabaseId });
+            if (!user) {
+                return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            }
+            return NextResponse.json(user);
+        }
+
         const users = await User.find();
         return NextResponse.json(users);
     } catch (error) {
