@@ -14,7 +14,7 @@ export default async function Home() {
   
 
   return (
-    <main>
+    <main className="overflow-x-hidden">
       <HeroSection />
       <FitnessNavbar /> 
       <div className="my-8">

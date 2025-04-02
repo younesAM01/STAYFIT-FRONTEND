@@ -15,7 +15,7 @@ const HeroSection = () => {
   }, []);
 
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div className="relative w-full h-screen overflow-hidden overflow-x-hidden">
       {/* Video Background */}
       <video
         id="hero-video"
@@ -26,7 +26,7 @@ const HeroSection = () => {
       />
 
       {/* Overlay Content */}
-      <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white px-4">
+      {/* <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white px-4">
         <h1 className="text-5xl md:text-6xl font-bold mb-6 text-center">
           Transform Your Life
         </h1>
@@ -39,7 +39,7 @@ const HeroSection = () => {
             Start Training Now
           </span>
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };
