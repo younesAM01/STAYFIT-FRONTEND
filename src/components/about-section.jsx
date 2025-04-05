@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 
 const AboutUs = () => {
-  const vid = require('@/assets/pinterest.mp4');
+  const vid = require("../../public/homevid.mp4");
   const t = useTranslations('HomePage');
   const locale = useLocale();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -21,23 +21,24 @@ const AboutUs = () => {
     }
   };
 
-  // Determine text alignment based on locale
+  // Determine text alignment based on locale and mobile view
   const textAlign = locale === 'ar' ? 'text-right' : 'text-left';
+  const mobileTextAlign = 'text-center'; // Center text on mobile
 
   return (
     <motion.div 
-      className={`text-white ${textAlign}`}
+      className={`text-white ${textAlign} ${mobileTextAlign} lg:${textAlign}`}
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: false, amount: 0.3 }}
       transition={{ duration: 1 }}
     >
-      <div className="max-w-6xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <div className={`flex flex-col items-center`}>
+      <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-12">
+        <div className={`flex flex-col lg:flex-row items-center`}>
           {/* Content Section */}
           <motion.div 
-            className="w-full mb-8"
+            className="w-full lg:w-1/2 mb-8 lg:mb-0"
             initial={{ x: locale === 'ar' ? 50 : -50, opacity: 0 }}
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: false, amount: 0.3 }}
@@ -64,7 +65,7 @@ const AboutUs = () => {
 
           {/* Video Section */}
           <motion.div 
-            className="w-full lg:mx-8"
+            className="w-full lg:w-[800px] lg:mx-6"
             initial={{ x: locale === 'ar' ? -50 : 50, opacity: 0 }}
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: false, amount: 0.3 }}
@@ -74,7 +75,6 @@ const AboutUs = () => {
               <motion.video 
                 ref={videoRef}
                 className="w-full h-[400px] object-cover rounded-lg"
-                poster="https://i.pinimg.com/236x/64/25/81/642581d7373f8f3cc234bebfe77e6dfb.jpg"
                 controls={isPlaying}
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}

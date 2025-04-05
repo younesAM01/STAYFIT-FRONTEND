@@ -152,3 +152,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom styles for icon-only mode */
+@layer components {
+  [data-sidebar="sidebar"] [data-sidebar="menu-button"] {
+    @apply transition-all duration-200;
+  }
+
+  [data-collapsible="icon"] [data-sidebar="menu-button"] {
+    @apply justify-center;
+  }
+
+  [data-collapsible="icon"] [data-sidebar="menu-button"] > span {
+    @apply hidden;
+  }
+}
+
+/* Custom styles for SidebarTrigger positioning */
+@layer components {
+  [data-state="collapsed"] [data-sidebar="footer"] [data-sidebar="trigger"] {
+    @apply rotate-180;
+  }
+
+  [data-state="expanded"] [data-sidebar="header"] [data-sidebar="trigger"] {
+    @apply rotate-0;
+  }
+}
