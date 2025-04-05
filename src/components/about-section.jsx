@@ -21,9 +21,8 @@ const AboutUs = () => {
     }
   };
 
-  // Determine text alignment and flex direction based on locale
+  // Determine text alignment based on locale
   const textAlign = locale === 'ar' ? 'text-right' : 'text-left';
-  const flexDirection = locale === 'ar' ? 'flex-row-reverse' : 'flex-row';
 
   return (
     <motion.div 
@@ -35,10 +34,10 @@ const AboutUs = () => {
       transition={{ duration: 1 }}
     >
       <div className="max-w-6xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <div className={`flex flex-col md:flex-row items-center ${flexDirection}`}>
+        <div className={`flex flex-col items-center`}>
           {/* Content Section */}
           <motion.div 
-            className="w-full md:w-1/2 md:px-12 mb-8 md:mb-0"
+            className="w-full mb-8"
             initial={{ x: locale === 'ar' ? 50 : -50, opacity: 0 }}
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: false, amount: 0.3 }}
@@ -55,7 +54,7 @@ const AboutUs = () => {
             </p>
             <motion.a 
               href="#"
-              className={`mx-auto max-w-[230px] block md:inline-block bg-[#B4E90E] hover:bg-[#9bcf0e] text-[#0d111a] font-bold py-3 px-8 rounded-xl transition duration-300 ${textAlign}`}
+              className={`mx-auto max-w-[230px] block bg-[#B4E90E] hover:bg-[#9bcf0e] text-[#0d111a] font-bold py-3 px-8 rounded-xl transition duration-300 ${textAlign}`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -65,7 +64,7 @@ const AboutUs = () => {
 
           {/* Video Section */}
           <motion.div 
-            className="w-full md:w-1/2 lg:mx-8"
+            className="w-full lg:mx-8"
             initial={{ x: locale === 'ar' ? -50 : 50, opacity: 0 }}
             whileInView={{ x: 0, opacity: 1 }}
             viewport={{ once: false, amount: 0.3 }}

@@ -45,7 +45,7 @@ export async function POST(request) {
         await connectMongoDB();
         
         const newService = await Services.create({ title, description, image: imageUrl });
-        return NextResponse.json({ success: true, data: newService });
+        return NextResponse.json({ success: true, data: "service created successfully" });
 
     } catch (error) {
         console.error('Error adding service:', error);
@@ -99,7 +99,7 @@ export async function PUT(request) {
             return NextResponse.json({ success: false, error: "Service not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, data: updatedService });
+        return NextResponse.json({ success: true, data: "Service updated successfully" });
     } catch (error) {
         console.error('Error updating service:', error);
         
@@ -133,7 +133,7 @@ export async function DELETE(request) {
             return NextResponse.json({ success: false, error: "Service not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, data: deletedService });
+        return NextResponse.json({ success: true, data: " service deleted successfully" });
     } catch (error) {
         console.error('Error deleting service:', error);
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });

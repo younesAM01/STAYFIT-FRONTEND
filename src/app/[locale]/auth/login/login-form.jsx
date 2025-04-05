@@ -5,6 +5,10 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { loginUser } from "../actions"
+import { useRouter, useSearchParams } from "next/navigation"
+import { supabase } from "@/lib/supabase/client"
+import { useLocale } from "use-intl"
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -13,6 +17,13 @@ const loginSchema = z.object({
 
 export function LoginForm({ onToggle }) {
   const [errors, setErrors] = useState({})
+  const [globalError, setGlobalError] = useState(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const local = useLocale();
+  const returnUrl = searchParams.get('returnUrl') || `/${local}/dashboard`
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -21,18 +32,50 @@ export function LoginForm({ onToggle }) {
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
+    // Clear field-specific error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }))
+    }
+    // Clear global error
+    if (globalError) {
+      setGlobalError(null)
+    }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
+    setGlobalError(null)
+    setIsSubmitting(true)
 
     try {
-      loginSchema.parse(formData)
-      setErrors({})
-      // Handle login logic here
-      console.log("Login form submitted:", formData)
+      // Validate form data
+      const validatedData = loginSchema.parse(formData)
+
+      // Direct client-side auth with Supabase
+      const { error } = await supabase.auth.signInWithPassword({
+        email: validatedData.email,
+        password: validatedData.password
+      })
+
+      if (error) {
+        setGlobalError(error.message || 'Login failed. Please check your credentials.')
+        return
+      }
+      
+      // Call server action to handle any additional server-side logic if needed
+      await loginUser({
+        email: validatedData.email,
+        password: validatedData.password
+      })
+
+      // Force a router refresh to update auth state across the app
+      router.refresh()
+      
+      // Redirect to return URL or dashboard
+      router.push(returnUrl)
     } catch (error) {
       if (error instanceof z.ZodError) {
+        // Handle validation errors
         const formattedErrors = {}
         error.errors.forEach((err) => {
           if (err.path[0]) {
@@ -40,8 +83,18 @@ export function LoginForm({ onToggle }) {
           }
         })
         setErrors(formattedErrors)
+      } else {
+        // Handle unexpected errors
+        setGlobalError(error instanceof Error ? error.message : 'An unexpected error occurred')
       }
+    } finally {
+      setIsSubmitting(false)
     }
+  }
+
+  const handleGoogleLogin = async () => {
+    // This would be implemented with Supabase OAuth
+    setGlobalError("Google login is not implemented in this example")
   }
 
   return (
@@ -50,6 +103,12 @@ export function LoginForm({ onToggle }) {
         <h1 className="text-3xl font-bold text-white">Welcome back</h1>
         <p className="text-gray-400">Sign in to your account</p>
       </div>
+
+      {globalError && (
+        <div className="bg-red-500/10 border border-red-500 text-red-500 p-3 rounded">
+          {globalError}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
@@ -84,8 +143,12 @@ export function LoginForm({ onToggle }) {
           {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
         </div>
 
-        <Button type="submit" className="w-full bg-[#B4E90E] hover:bg-[#a3d40d] text-black font-medium">
-          Sign In
+        <Button 
+          type="submit" 
+          disabled={isSubmitting}
+          className="w-full bg-[#B4E90E] hover:bg-[#a3d40d] text-black font-medium disabled:opacity-50"
+        >
+          {isSubmitting ? 'Signing In...' : 'Sign In'}
         </Button>
       </form>
 
@@ -102,7 +165,7 @@ export function LoginForm({ onToggle }) {
         type="button"
         variant="outline"
         className="w-full border-gray-700 text-white hover:bg-black/20"
-        onClick={() => console.log("Google login")}
+        onClick={handleGoogleLogin}
       >
         <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
           <path
