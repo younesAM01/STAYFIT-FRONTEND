@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import Footer from "@/components/ui/footer";
 import { AuthProvider } from "@/context/authContext";
+import LayoutWrapper from "@/components/layoutwraper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,11 +50,11 @@ export default async function RootLayout({
       >
         <AuthProvider>
         <NextIntlClientProvider messages={messages}>
-          <Navbar />
-          <main>
-            {children}
-          </main>
-          <Footer />
+          
+          
+        <LayoutWrapper>{children}</LayoutWrapper>
+         
+          
         </NextIntlClientProvider>
         </AuthProvider>
       </body>

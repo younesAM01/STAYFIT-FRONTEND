@@ -87,6 +87,7 @@ const UserSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  
   preferredLanguage: {
     type: String,
     trim: true
@@ -99,7 +100,9 @@ const UserSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
-  
+  provider: {
+    type: String
+  },
   createdAt: {
     type: Date,
     default: Date.now

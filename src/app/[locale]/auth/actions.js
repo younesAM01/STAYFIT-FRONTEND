@@ -6,7 +6,7 @@ import User from '@/models/User';
 
 export async function registerUser(data) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     // Supabase Authentication
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -31,7 +31,8 @@ export async function registerUser(data) {
       email: data.email,
       firstName: data.firstName,
       lastName: data.lastName,
-      supabaseId: authData.user.id
+      supabaseId: authData.user.id,
+      role: 'client'
     })
 
     return { 
@@ -49,7 +50,7 @@ export async function registerUser(data) {
 
 export async function loginUser(data) {
   try {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     // Supabase Authentication
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
@@ -71,6 +72,86 @@ export async function loginUser(data) {
     return { 
       success: false, 
       error: error instanceof Error ? error.message : 'Login failed' 
+    }
+  }
+}
+
+export async function createGoogleUser(userData) {
+  try {
+    const supabase = createServerSupabaseClient()
+    
+    // Get the current user to verify the request
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user || user.id !== userData.supabaseId) {
+      throw new Error('Unauthorized')
+    }
+    
+    // Connect to MongoDB
+    await connectMongoDB()
+    
+    // Check if user already exists in MongoDB
+    const existingUser = await User.findOne({ supabaseId: userData.supabaseId })
+    
+    if (!existingUser) {
+      // Create new user in MongoDB with Google data
+      await User.create({
+        email: userData.email,
+        supabaseId: userData.supabaseId,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        provider: userData.provider,
+        role: "client" // Assign "client" role
+      })
+    }
+    
+    return { success: true }
+  } catch (error) {
+    console.error('Google user creation error:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'User creation failed' 
+    }
+  }
+}
+
+
+// In your actions.js file, add this function:
+export async function handleOAuthUser(userId) {
+  try {
+    const supabase = await createServerSupabaseClient()
+    
+    // Get user data from Supabase using getUser instead of admin API
+    const { data: { user }, error } = await supabase.auth.getUser()
+    
+    if (error) throw new Error(error.message)
+    
+    // Connect to MongoDB
+    await connectMongoDB()
+    
+    // Check if user already exists in MongoDB
+    const existingUser = await User.findOne({ supabaseId: user.id })
+    
+    if (!existingUser) {
+      // Create new user in MongoDB with Google data
+      const userData = {
+        email: user.email,
+        supabaseId: user.id,
+        firstName: user.user_metadata?.given_name || user.user_metadata?.name?.split(' ')[0] || '',
+        lastName: user.user_metadata?.family_name || user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
+        provider: 'google',
+        role: "client" // Assign "client" role
+      }
+      
+      await User.create(userData)
+    }
+    
+    return { success: true }
+  } catch (error) {
+    console.error('OAuth user handling error:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to process OAuth user' 
     }
   }
 }
