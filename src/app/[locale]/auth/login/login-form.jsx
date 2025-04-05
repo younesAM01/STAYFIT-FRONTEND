@@ -9,6 +9,7 @@ import { createGoogleUser, loginUser } from "../actions"
 import { useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase/client"
 import { useLocale } from "use-intl"
+import Link from "next/link"
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -181,6 +182,11 @@ export function LoginForm({ onToggle }) {
             className="bg-black/30 border-gray-700 text-white"
           />
           {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
+          <div className="flex justify-end">
+            <Link href={`/${local}/auth/forgot-password`} className="text-xs text-[#B4E90E] hover:underline">
+              Forgot password?
+            </Link>
+          </div>
         </div>
 
         <Button 
@@ -204,7 +210,7 @@ export function LoginForm({ onToggle }) {
       <Button
         type="button"
         variant="outline"
-        className="w-full border-gray-700 text-white hover:bg-black/20"
+        className="w-full border-gray-700 text-white bg-black/20"
         onClick={handleGoogleLogin}
         disabled={isGoogleLoading}
       >

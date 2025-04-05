@@ -21,6 +21,8 @@ const MembershipPlans = () => {
           throw new Error('Failed to fetch packs');
         }
         const data = await response.json();
+        console.log(data)
+
         setPacks(data);
         
         // Initialize selected sessions with first session for each pack
