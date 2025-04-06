@@ -1,11 +1,10 @@
 // /src/app/[locale]/dashboard/layout.js
-"use client"
 
 export default function DashboardLayout({ children }) {
   return (
-    <div className="dashboard-layout">
+    <div className="min-h-screen">
       {/* You can add dashboard-specific elements here, like a sidebar */}
-      <main>{children}</main>
+      <main className="p-4">{children}</main>
     </div>
   )
 }

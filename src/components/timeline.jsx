@@ -96,7 +96,7 @@ const Timeline = () => {
           transition={{ duration: 1.0 }}
         >
           <span className="mx-4 w-28 h-0.5 bg-[#B4E90E] block"></span>
-          Our Services
+            {t('servicestitle')}
           <span className="ml-4 w-28 h-0.5 bg-[#B4E90E] block"></span>
         </motion.h2>
       </div>
