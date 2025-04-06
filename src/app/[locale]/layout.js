@@ -1,11 +1,9 @@
 import { Geist, Geist_Mono, Inter } from "next/font/google";
-import "./globals.css";
-import Navbar from "@/components/ui/navbar-menu";
+import "../globals.css";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import Footer from "@/components/ui/footer";
 import { AuthProvider } from "@/context/authContext";
 import LayoutWrapper from "@/components/layoutwraper";
 
