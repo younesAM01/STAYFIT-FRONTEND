@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @plugin "tailwindcss-animate";
 
@@ -99,14 +100,6 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
   --radius: 0.625rem;
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
 .dark {
@@ -134,14 +127,7 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(0.279 0.041 260.031);
-  --sidebar-ring: oklch(0.446 0.043 257.281);
+
 }
 
 @layer base {
@@ -150,31 +136,5 @@
   }
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-/* Custom styles for icon-only mode */
-@layer components {
-  [data-sidebar="sidebar"] [data-sidebar="menu-button"] {
-    @apply transition-all duration-200;
-  }
-
-  [data-collapsible="icon"] [data-sidebar="menu-button"] {
-    @apply justify-center;
-  }
-
-  [data-collapsible="icon"] [data-sidebar="menu-button"] > span {
-    @apply hidden;
-  }
-}
-
-/* Custom styles for SidebarTrigger positioning */
-@layer components {
-  [data-state="collapsed"] [data-sidebar="footer"] [data-sidebar="trigger"] {
-    @apply rotate-180;
-  }
-
-  [data-state="expanded"] [data-sidebar="header"] [data-sidebar="trigger"] {
-    @apply rotate-0;
   }
 }
