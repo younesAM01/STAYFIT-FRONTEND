@@ -15,7 +15,7 @@ export default function ContactForm() {
 
   return (
     <div 
-      className={`text-white ${textAlign}`} 
+      className={`text-white  ${textAlign}`} 
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
     >
       <div className="container mx-auto px-4 py-4 grid md:grid-cols-2 gap-8 items-center">

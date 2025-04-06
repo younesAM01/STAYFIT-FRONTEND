@@ -1,5 +1,27 @@
 import mongoose from 'mongoose';
+const AboutSchema = new mongoose.Schema({
+  paragraphs: [{ type: String, required: true }],
+  languages: [{
+    code: { type: String, required: true },
+    name: { type: String, required: true }
+  }]
+});
 
+const SpecialtySchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String, required: true }
+});
+
+const HeroSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  title: { type: String, required: true },
+  image: { type: String, required: true }
+});
+
+const CertificationSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  org: { type: String, default: "" }
+});
 const UserSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -45,22 +67,10 @@ const UserSchema = new mongoose.Schema({
   },
   
   // Coach-specific fields
-  experience: {
-    type: String,
-    trim: true
-  },
-  description: {
-    type: String,
-    trim: true
-  },
-  specialty: {
-    type: String,
-    trim: true
-  },
-  categories: {
-    type: [String],
-    default: []
-  },
+  aboutContent: { type: AboutSchema, required: false },
+  specialties: [{ type: SpecialtySchema, required: false }],
+  heroContent: { type: HeroSchema, required: false },
+  certifications: [{ type: CertificationSchema, required: false }],
   hoverImage: {
     type: String,
     trim: true
@@ -77,10 +87,22 @@ const UserSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  
+  preferredLanguage: {
+    type: String,
+    trim: true
+  },
+  nationality: {
+    type: String,
+    trim: true
+  },
+  goals: {
+    type: [String],
+    default: []
+  },
   provider: {
     type: String
   },
-  
   createdAt: {
     type: Date,
     default: Date.now
