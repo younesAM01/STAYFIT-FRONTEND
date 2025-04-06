@@ -5,7 +5,6 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { AuthProvider } from "@/context/authContext";
-import LayoutWrapper from "@/components/layoutwraper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,11 +47,9 @@ export default async function RootLayout({
       >
         <AuthProvider>
         <NextIntlClientProvider messages={messages}>
-          
-          
-        <LayoutWrapper>{children}</LayoutWrapper>
-         
-          
+                
+       {children}
+           
         </NextIntlClientProvider>
         </AuthProvider>
       </body>
