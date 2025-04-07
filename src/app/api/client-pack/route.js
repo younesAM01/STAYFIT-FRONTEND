@@ -1,3 +1,4 @@
+// api/client-pack
 import { NextResponse } from 'next/server';
 import connectMongoDB from "@/lib/mongoDb/connect";
 import ClientPack from "@/models/ClientPack";
@@ -16,6 +17,7 @@ export async function GET(request) {
   try {
     await connectMongoDB();
     const { searchParams } = new URL(request.url);
+    const clientId = searchParams.get('clientId');
     const id = searchParams.get('id');
 
     if (id) {
@@ -24,6 +26,11 @@ export async function GET(request) {
         return NextResponse.json({ message: "Session not found" }, { status: 404 });
       }
       return NextResponse.json(session, { status: 200 });
+    }
+
+    if (clientId) {
+      const clientSessions = await ClientPack.find({ client: clientId });
+      return NextResponse.json(clientSessions, { status: 200 });
     }
 
     const sessions = await ClientPack.find();

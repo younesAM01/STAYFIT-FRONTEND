@@ -4,14 +4,20 @@ import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/authContext';
 
 const MembershipPlans = () => {
   const t = useTranslations('HomePage');
   const locale = useLocale();
+  const router = useRouter();
+  const { user, mongoUser , isAuthenticated, isLoading: authLoading } = useAuth();
+  
   const [packs, setPacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedSessions, setSelectedSessions] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchPacks = async () => {
@@ -21,7 +27,6 @@ const MembershipPlans = () => {
           throw new Error('Failed to fetch packs');
         }
         const data = await response.json();
-        console.log(data)
 
         setPacks(data);
         
@@ -53,7 +58,8 @@ const MembershipPlans = () => {
   // Function to get current selected session for a pack
   const getSelectedSession = (pack) => {
     const selectedSessionId = selectedSessions[pack._id];
-    return pack.sessions.find(session => session._id === selectedSessionId) || pack.sessions[0];
+    const packs= pack.sessions.find(session => session._id === selectedSessionId) || pack.sessions[0];
+    return packs;
   };
 
   // Function to format price display
@@ -65,7 +71,63 @@ const MembershipPlans = () => {
     }).format(price);
   };
 
-  if (loading) return <div className="flex justify-center py-16"><div className="text-white">Loading...</div></div>;
+  // Function to calculate expiration date based on days
+  const calculateExpirationDate = (days) => {
+    const date = new Date();
+    date.setDate(date.getDate() + days);
+    return date;
+  };
+
+
+  // Function to handle "Get Started" button click
+  const handleGetStarted = async (pack) => {
+    try {
+      if (!isAuthenticated) {
+        // Redirect to login if user is not authenticated
+        router.push(`/${locale}/login?redirect=/membership-plans`);
+        return;
+      }
+
+      setSubmitting(true);
+      const selectedSession = getSelectedSession(pack);      
+      
+      
+      // Prepare data according to ClientPack schema with MongoDB ObjectId
+      const clientPackData = {
+        client: mongoUser._id, // MongoDB User ID
+        pack: pack._id, // MongoDB Pack ID
+        expirationDate: calculateExpirationDate(selectedSession.expirationDays),
+        remainingSessions: selectedSession.sessionCount,
+        packPrice:selectedSession.price,
+        purchaseState: 'pending'
+      };
+
+      // Make API call
+      const response = await fetch('/api/client-pack', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(clientPackData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create client pack');
+      }
+
+      const result = await response.json();
+      
+      // Redirect to checkout page
+      router.push(`/${locale}/checkoutPage`);
+    } catch (err) {
+      console.error('Error creating client pack:', err);
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading || authLoading) return <div className="flex justify-center py-16"><div className="text-white">Loading...</div></div>;
   if (error) return <div className="flex justify-center py-16"><div className="text-white">Error: {error}</div></div>;
 
   return (
@@ -81,7 +143,7 @@ const MembershipPlans = () => {
         <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[url('/api/placeholder/400/600')] bg-cover bg-center"></div>
       </div>
       
-      <div className="text-center flex flex-col items-center mb-10">
+      <div className="text-center flex flex-col items-center mb-10 relative z-10">
         <h2 className="text-md md:text-2xl font-bold flex items-center text-center mb-6 text-white">
           <span className="mx-4 w-28 h-0.5 bg-[#B4E90E] block"></span>
           {t('packtitle')}
@@ -108,7 +170,7 @@ const MembershipPlans = () => {
               
               <div className="text-center mb-6">
                 <span className="text-4xl font-bold text-[#B4E90E]">{formatPrice(selectedSession.price)}</span>
-                <span className="text-sm text-white ml-1">{t('currency', 'AED')}</span>
+                <span className="text-sm text-white ml-1">{t('currency', 'RS')}</span>
               </div>
               
               <div className="flex justify-center gap-4 mb-6">
@@ -151,8 +213,12 @@ const MembershipPlans = () => {
               </ul>
               
               <div className="flex justify-center">
-                <button className="px-6 py-2 rounded font-medium transition-colors border border-[#B4E90E] text-white hover:bg-[#B4E90E] hover:text-black">
-                  {t('packbtn')}
+                <button 
+                  className={`px-6 py-2 rounded font-medium transition-colors border border-[#B4E90E] text-white hover:bg-[#B4E90E] hover:text-black ${submitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  onClick={() => handleGetStarted(pack)}
+                  disabled={submitting}
+                >
+                  {submitting ?'Processing' : t('packbtn')}
                 </button>
               </div>
             </motion.div>
