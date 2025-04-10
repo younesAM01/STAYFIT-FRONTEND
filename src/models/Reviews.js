@@ -2,19 +2,46 @@ import mongoose from 'mongoose'
 
 const ReviewSchema = new mongoose.Schema({
   name: {
-    type: String,
-    required: true,
-    trim: true,
+    en: {
+      type: String,
+      required: false,
+      trim: true,
+      default: ""
+    },
+    ar: {
+      type: String,
+      required: false,
+      trim: true,
+      default: ""
+    }
   },
   trainerName: {
-    type: String,
-    required: true,
-    trim: true,
+    en: {
+      type: String,
+      required: false,
+      trim: true,
+      default: ""
+    },
+    ar: {
+      type: String,
+      required: false,
+      trim: true,
+      default: ""
+    }
   },
   quote: {
-    type: String,
-    required: true,
-    trim: true,
+    en: {
+      type: String,
+      required: false,
+      trim: true,
+      default: ""
+    },
+    ar: {
+      type: String,
+      required: false,
+      trim: true,
+      default: ""
+    }
   },
   rating: {
     type: Number,
@@ -26,6 +53,13 @@ const ReviewSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 })
 
-export default mongoose.models.Review|| mongoose.model('Review', ReviewSchema)
+// Make sure we remove any existing model before creating a new one (helps with hot reloading issues)
+mongoose.models = {};
+
+export default mongoose.models.Review || mongoose.model('Review', ReviewSchema)

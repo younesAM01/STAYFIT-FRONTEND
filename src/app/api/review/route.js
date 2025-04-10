@@ -1,5 +1,5 @@
 import connectMongoDB from '@/lib/mongoDb/connect';
-import Reviews from '@/models/Reviews';
+import Review from '@/models/Reviews';
 import { NextResponse } from "next/server";
 
 // Get single review by ID
@@ -33,17 +33,67 @@ export async function POST(request) {
         const body = await request.json();
         const { name, trainerName, quote, rating, image } = body;
 
-        if (!name || !trainerName || !quote || !rating || !image) {
-            return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
+        // Basic validation - at least some text content and required fields
+        if (!rating || !image) {
+            return NextResponse.json({ success: false, error: "Rating and image are required fields" }, { status: 400 });
+        }
+
+        // Create a data object with default empty values
+        const reviewData = {
+            name: { en: "", ar: "" },
+            trainerName: { en: "", ar: "" },
+            quote: { en: "", ar: "" },
+            rating,
+            image
+        };
+
+        // Handle name in different formats
+        if (name) {
+            if (typeof name === 'object') {
+                if (name.en) reviewData.name.en = name.en;
+                if (name.ar) reviewData.name.ar = name.ar;
+            } else if (typeof name === 'string') {
+                // Default to English if string is provided without language specification
+                reviewData.name.en = name;
+            }
+        }
+
+        // Handle trainerName in different formats
+        if (trainerName) {
+            if (typeof trainerName === 'object') {
+                if (trainerName.en) reviewData.trainerName.en = trainerName.en;
+                if (trainerName.ar) reviewData.trainerName.ar = trainerName.ar;
+            } else if (typeof trainerName === 'string') {
+                // Default to English if string is provided without language specification
+                reviewData.trainerName.en = trainerName;
+            }
+        }
+
+        // Handle quote in different formats
+        if (quote) {
+            if (typeof quote === 'object') {
+                if (quote.en) reviewData.quote.en = quote.en;
+                if (quote.ar) reviewData.quote.ar = quote.ar;
+            } else if (typeof quote === 'string') {
+                // Default to English if string is provided without language specification
+                reviewData.quote.en = quote;
+            }
         }
 
         await connectMongoDB();
         
-        const newReview = await Review.create({ name, trainerName, quote, rating, image });
-        return NextResponse.json({ success: true, data: "created successfully" });
+        try {
+            const newReview = await Review.create(reviewData);
+            return NextResponse.json({ success: true, data: "Review created successfully" });
+        } catch (validationError) {
+            console.error('Validation error:', validationError);
+            return NextResponse.json({ 
+                success: false, 
+                error: "Validation error: " + validationError.message 
+            }, { status: 400 });
+        }
 
     } catch (error) {
-        console.error('Error adding review:', error);
         
         if (error.code === 11000) {
             const duplicateField = Object.keys(error.keyPattern)[0];
@@ -66,10 +116,33 @@ export async function PUT(request) {
         await connectMongoDB();
 
         const updateFields = {};
-        if (name) updateFields.name = name;
-        if (trainerName) updateFields.trainerName = trainerName;
-        if (quote) updateFields.quote = quote;
-        if (rating) updateFields.rating = rating;
+        
+        // Handle multilingual fields
+        if (name) {
+            if (typeof name === 'object') {
+                updateFields.name = {};
+                if (name.en) updateFields.name.en = name.en;
+                if (name.ar) updateFields.name.ar = name.ar;
+            }
+        }
+        
+        if (trainerName) {
+            if (typeof trainerName === 'object') {
+                updateFields.trainerName = {};
+                if (trainerName.en) updateFields.trainerName.en = trainerName.en;
+                if (trainerName.ar) updateFields.trainerName.ar = trainerName.ar;
+            }
+        }
+        
+        if (quote) {
+            if (typeof quote === 'object') {
+                updateFields.quote = {};
+                if (quote.en) updateFields.quote.en = quote.en;
+                if (quote.ar) updateFields.quote.ar = quote.ar;
+            }
+        }
+        
+        if (rating !== undefined) updateFields.rating = rating;
         if (image) updateFields.image = image;
 
         if (Object.keys(updateFields).length === 0) {
@@ -92,9 +165,8 @@ export async function PUT(request) {
             return NextResponse.json({ success: false, error: "Review not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, data: "updated successfully" });
+        return NextResponse.json({ success: true, data: "Review updated successfully" });
     } catch (error) {
-        console.error('Error updating review:', error);
         
         if (error.code === 11000) {
             const duplicateField = Object.keys(error.keyPattern)[0];
@@ -126,9 +198,7 @@ export async function DELETE(request) {
             return NextResponse.json({ success: false, error: "Review not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ success: true, data: "deleted successfully" });
+        return NextResponse.json({ success: true, data: "Review deleted successfully" });
     } catch (error) {
-        console.error('Error deleting review:', error);
-        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 }
