@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Apple, CreditCard, CheckCircle } from "lucide-react"
+import { useRouter } from 'next/navigation';
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -17,6 +18,8 @@ export default function CheckoutPage() {
     const [packDetails, setPackDetails] = useState(null)
     const [isLoading, setIsLoading] = useState(false)
     const { user, mongoUser, isAuthenticated, isLoading: authLoading } = useAuth()
+    const router = useRouter(); // Initialize router
+    console.log(mongoUser)
 
     // Fetch client pack when mongoUser is available
     useEffect(() => {
@@ -63,13 +66,13 @@ export default function CheckoutPage() {
         if (selectedPack && selectedPack.pack) {
           try {
             setIsLoading(true)
-            const response = await fetch(`/api/packs?id=${selectedPack.pack}`)
+            const response = await fetch(`/api/packs?id=${selectedPack.pack._id}`)
             
             if (response.ok) {
               const data = await response.json()
               setPackDetails(data)
             } else {
-              console.error("Failed to fetch pack details:", response.status)
+              console.log(response)
             }
           } catch (error) {
             console.error("Error fetching pack details:", error)
@@ -94,12 +97,62 @@ export default function CheckoutPage() {
       return diffDays > 0 ? diffDays : 0;
     }
 
+    const handleCancel = async () => {
+      if (selectedPack && selectedPack._id) {
+        try {
+          const response = await fetch(`/api/client-pack?id=${selectedPack._id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ purchaseState: 'cancelled' }),
+          });
+
+          if (response.ok) {
+            router.push('/'); // Navigate to home after cancellation
+          } else {
+            console.error("Failed to cancel client pack:", response.status);
+          }
+        } catch (error) {
+          console.error("Error cancelling client pack:", error);
+        }
+      }
+    };
+
+    const handleCompletePurchase = async () => {
+      // Simulate a fake payment process
+      setIsLoading(true);
+      setTimeout(async () => {
+        try {
+          if (selectedPack && selectedPack._id) {
+            const response = await fetch(`/api/client-pack?id=${selectedPack._id}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ purchaseState: 'completed' }),
+            });
+
+            if (response.ok) {
+              router.push('/client-profile'); // Navigate to home after completion
+            } else {
+              console.error("Failed to complete purchase:", response.status);
+            }
+          }
+        } catch (error) {
+          console.error("Error completing purchase:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      }, 2000); // Simulate a 2-second payment processing time
+    };
+
     if (!selectedPack || !packDetails) {
       return <div>Loading...</div>; // Display loading if clientPack or packDetails is not available
     }
 
     return (
-      <div className="min-h-screen   text-white md:mt-16 lg:mt-22 p-2 md:p-6">
+      <div className="min-h-screen text-white md:mt-16 lg:mt-22 p-2 md:p-6">
         <div className="container mx-auto py-8 px-4">
           <h1 className="text-3xl text-center font-bold mb-8 text-[#B4E90E]">Checkout</h1>
 
@@ -172,7 +225,7 @@ export default function CheckoutPage() {
               {/* Selected Package Information */}
               <h2 className="text-xl font-semibold mb-4 text-[#B4E90E]">Your Selected Package</h2>
               <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
-                <div className="mb-4 p-4 bg-[#0d111a] rounded-lg border border-[#2a2f3d]">
+                <div className=" p-4 bg-[#0d111a] rounded-lg border border-[#2a2f3d]">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-medium text-[#B4E90E]">{packDetails.category}</span>
                     <div className="bg-[#B4E90E] text-[#0d111a] px-3 py-1 rounded-full text-sm font-medium">
@@ -188,7 +241,7 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <h3 className="text-[#B4E90E] font-medium mb-2">Package Features</h3>
                   <ul className="space-y-2">
                     {packDetails.features.en.map((feature, index) => (
@@ -283,7 +336,7 @@ export default function CheckoutPage() {
               )}
             </Card>
 
-            <div className="mt-8">
+            <div className="mt-16">
               <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
                 <h3 className="text-lg font-medium mb-4 text-[#B4E90E]">Order Summary</h3>
 
@@ -314,9 +367,14 @@ export default function CheckoutPage() {
                 </div>
               </Card>
 
-              <Button className="w-full mt-6 bg-[#B4E90E] hover:bg-[#a3d00d] text-[#0d111a] font-bold py-3">
-                Complete Purchase
-              </Button>
+              <div className="flex justify-between gap-4 mt-6">
+                <Button onClick={handleCancel} className="w-1/2 bg-red-500 hover:bg-red-500 text-white font-bold py-3">
+                  Cancel
+                </Button>
+                <Button onClick={handleCompletePurchase} className="w-1/2 bg-[#B4E90E] hover:bg-[#a3d00d] text-[#0d111a] font-bold py-3">
+                  Complete Purchase
+                </Button>
+              </div>
             </div>
           </div>
         </div>

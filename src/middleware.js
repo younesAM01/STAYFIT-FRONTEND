@@ -73,8 +73,9 @@ export async function middleware(request) {
   // Define protected paths
   const protectedPaths = [
     '/dashboard',
-    '/profile', 
-    '/settings'
+    '/client-profile',
+    'checkoutPage'
+    
   ];
   
   // Check if the current path is protected and needs authentication

@@ -2,7 +2,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
-import { handleOAuthUser } from '@/app/[locale]/auth/actions'
+import { handleOAuthUser } from '@/app/[locale]/(main-layout)/auth/actions'
 
 export async function GET(request) {
   const requestUrl = new URL(request.url)

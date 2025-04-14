@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { AuthProvider } from "@/context/authContext";
 
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -47,9 +48,9 @@ export default async function RootLayout({
       >
         <AuthProvider>
         <NextIntlClientProvider messages={messages}>
-                
-       {children}
-           
+             
+            {children}
+             
         </NextIntlClientProvider>
         </AuthProvider>
       </body>

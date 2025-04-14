@@ -16,17 +16,8 @@ const SessionSchema = new mongoose.Schema({
     ref: 'Pack',
     required: true
   },
-  purchaseDate: {
+  sessionDate: {
     type: Date,
-    required: true
-  },
-  packExpirationDate: {
-    type: Date,
-    required: true
-  },
-  sessionDay: {
-    type: String,
-    enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
     required: true
   },
   sessionTime: {
@@ -37,9 +28,9 @@ const SessionSchema = new mongoose.Schema({
     type: String, // Example: 'Gym A, Room 2' or 'Online (Zoom)'
     required: true
   },
-  duration: {
+   duration: {
     type: Number, // Duration in minutes
-    required: true
+    default: 60 // Default duration set to 1 hour (60 minutes)
   },
   status: {
     type: String,

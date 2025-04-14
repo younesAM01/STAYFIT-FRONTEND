@@ -65,6 +65,17 @@ const UserSchema = new mongoose.Schema({
     enum: ['super admin', 'admin', 'coach', 'client'],
     required: true
   },
+  rating: {
+    type: Number,
+    required: true,
+    default: 0,
+    min: 0,
+    max: 5
+  },
+  reviews: {
+    type: Number,
+    default: 0
+  },
   
   // Coach-specific fields
   aboutContent: { type: AboutSchema, required: false },

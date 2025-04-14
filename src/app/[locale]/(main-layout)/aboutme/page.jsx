@@ -66,7 +66,7 @@ export default function CoachProfile() {
   return (
     <div className="min-h-screen bg-[#0d111a] text-white">
      {/* Hero Section with Background */}
-     <div className="relative h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[70vh] overflow-hidden">
+     <div className="relative h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[60vh] overflow-hidden">
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
     try {
       setIsLoading(true)
       const { data: { session } } = await supabase.auth.getSession()
-      
+      console.log(session)
       if (session?.user) {
           
         // Fetch MongoDB user data when we have a valid Supabase user
@@ -58,6 +58,8 @@ export function AuthProvider({ children }) {
 
   // Check for user session on mount
   useEffect(() => {
+    setIsLoading(true) // ✅ Add this line
+
     const getUser = async () => {
       try {
         // Get current session
