@@ -1,11 +1,11 @@
 import { Geist, Geist_Mono, Inter } from "next/font/google";
-import "./globals.css";
-import Navbar from "@/components/ui/navbar-menu";
+import "../globals.css";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import Footer from "@/components/ui/footer";
+import { AuthProvider } from "@/context/authContext";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,13 +46,13 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased subtle-brand-background `}
       >
+        <AuthProvider>
         <NextIntlClientProvider messages={messages}>
-          <Navbar />
-          <main>
+             
             {children}
-          </main>
-          <Footer />
+             
         </NextIntlClientProvider>
+        </AuthProvider>
       </body>
     </html>
   );

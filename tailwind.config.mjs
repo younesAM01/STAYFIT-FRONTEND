@@ -19,6 +19,14 @@ const tailwindConfig = {
 			"0%": { opacity: "0", transform: "translateY(10px)" },
 			"100%": { opacity: "1", transform: "translateY(0)" },
 		  },
+		  "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
 		  shimmer: {
 			from: {
 			  backgroundPosition: "0 0",
@@ -31,6 +39,8 @@ const tailwindConfig = {
 		animation: {
 		  "fade-in": "fade-in 0.6s ease-out forwards",
 		  "slide-up": "slide-up 0.4s ease-out forwards",
+		  "accordion-down": "accordion-down 0.2s ease-out",
+		  "accordion-up": "accordion-up 0.2s ease-out",
 		  shimmer: "shimmer 2s linear infinite",
 		},
 		colors: {
@@ -43,6 +53,20 @@ const tailwindConfig = {
 		  popover: {
 			DEFAULT: "hsl(var(--popover))",
 			foreground: "hsl(var(--popover-foreground))",
+		  },
+		  card: {
+			DEFAULT: "hsl(var(--card))",
+			foreground: "hsl(var(--card-foreground))",
+		  },
+		  sidebar: {
+			DEFAULT: "#0d111a",
+			foreground: "#ffffff",
+			primary: "#B4E90E",
+			"primary-foreground": "#0d111a",
+			accent: "#1a2233",
+			"accent-foreground": "#B4E90E",
+			border: "#1a2233",
+			ring: "#B4E90E",
 		  },
 		  primary: {
 			DEFAULT: "hsl(var(--primary))",
