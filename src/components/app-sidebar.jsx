@@ -164,7 +164,7 @@ export function AppSidebar({ ...props }) {
                 )}
               </SidebarMenuButton>
               {showProfileMenu && (
-                <div className="absolute bottom-full mb-2 left-0 w-48 p-3 bg-slate-800 rounded-md shadow-lg text-xs z-10">
+                <div className="absolute bottom-full mb-2 left-0 w-48 p-3 bg-slate-800 rounded-md shadow-lg text-sm z-10">
                   <div className="absolute -bottom-2 left-3 w-4 h-4 bg-slate-800 transform rotate-45"></div>
                   <div className="flex">
                   <p className="text-white font-medium mb-1 mr-1">{mongoUser?.firstName || "User"}</p><p className="text-white font-medium mb-1">{mongoUser?.lastName || "lastName"}</p>
@@ -172,9 +172,15 @@ export function AppSidebar({ ...props }) {
                   <p className="text-gray-300 mb-2 break-words">{mongoUser?.email || "email@example.com"}</p>
                   <a 
                     href={`/${locale}/profile`} 
-                    className="block text-[#B4E90E] hover:underline"
+                    className="block text-[#B4E90E] hover:underline mb-2 cursor-pointer"
                   >
                     View Profile
+                  </a>
+                  <a 
+                    href={`/${locale}`} 
+                    className="block text-[#B4E90E] hover:underline cursor-pointer"
+                  >
+                    Back Home
                   </a>
                 </div>
               )}
@@ -186,8 +192,8 @@ export function AppSidebar({ ...props }) {
               tooltip="Sign Out"
               className="font-medium text-white"
             >
-              <LogOut className="text-[#B4E90E]" />
-              {state === "expanded" && <span className="text-white">Sign Out</span>}
+              <LogOut className="text-[#B4E90E] cursor-pointer" />
+              {state === "expanded" && <span className="text-white cursor-pointer">Sign Out</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
           {state === "collapsed" && (

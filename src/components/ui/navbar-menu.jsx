@@ -1,14 +1,14 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu as MenuIcon, X, LogOut } from "lucide-react";
+import { Menu as MenuIcon, X, LogOut, ChevronRight } from "lucide-react";
 import { useTranslations, useLocale } from 'next-intl';
 import LocaleDropdown from "../local-dropdown";
 import logo from "@/assets/stayfit11.png";
-import { useAuth } from "@/context/authContext"; // Import the useAuth hook
+import { useAuth } from "@/context/authContext";
 
 const transition = {
   type: "spring",
@@ -58,11 +58,107 @@ export const MenuItem = ({ setActive, active, item, href, children, isMobile }) 
   );
 };
 
+// Profile Avatar Component
+const ProfileAvatar = ({ user, signOut }) => {
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const profileRef = useRef(null);
+  const locale = useLocale();
+  const t = useTranslations('HomePage');
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user?.firstName && !user?.email) return "U";
+    if (user?.firstName) {
+      const nameParts = user.firstName.split(" ");
+      if (nameParts.length === 1) return nameParts[0].charAt(0).toUpperCase();
+      return (nameParts[0].charAt(0) + nameParts[nameParts.length - 1].charAt(0)).toUpperCase();
+    }
+    return user.email.charAt(0).toUpperCase();
+  };
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [profileRef]);
+
+  // Determine which dashboard link to show based on user role
+  const getDashboardLink = () => {
+    if (!user?.role) return null;
+    
+    if (user.role === 'coach') {
+      return (
+        <Link 
+          href={`/${locale}/coach`}
+          className="block text-[#B4E90E] hover:underline mb-2"
+          onClick={() => setShowProfileMenu(false)}
+        >
+          Coach Dashboard
+        </Link>
+      );
+    } else if (user.role === 'admin' || user.role === 'superadmin') {
+      return (
+        <Link 
+          href={`/${locale}/admin`}
+          className="block text-[#B4E90E] hover:underline mb-2"
+          onClick={() => setShowProfileMenu(false)}
+        >
+          Admin Dashboard
+        </Link>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div ref={profileRef} className="relative">
+      <button 
+        onClick={() => setShowProfileMenu(!showProfileMenu)} 
+        className="flex items-center justify-center w-8 h-8 rounded-full bg-[#B4E90E] text-black text-sm font-bold"
+        aria-label="Toggle profile menu"
+      >
+        {getUserInitials()}
+      </button>
+      
+      {showProfileMenu && (
+        <div className="absolute top-full mt-2 right-0 w-48 p-3 bg-gradient-to-r from-black via-black to-[#b4e90e]/10 rounded-md shadow-lg text-sm z-50 border border-[#b4e90e]/20">
+          <div className="absolute -top-2 right-3 w-4 h-4 bg-black transform rotate-45 border-t border-l border-[#b4e90e]/20"></div>
+          <div className="flex">
+            <p className="text-white font-medium mb-1 mr-1">{user?.firstName || "User"}</p>
+            <p className="text-white font-medium mb-1">{user?.lastName || "lastName"}</p>
+          </div>
+          <p className="text-gray-300 mb-2 break-words">{user?.email || "email@example.com"}</p>
+          
+          <Link 
+            href={`/${locale}/profile`}
+            className="block text-[#B4E90E] hover:underline mb-2"
+            onClick={() => setShowProfileMenu(false)}
+          >
+            View Profile
+          </Link>
+          
+          {/* Role-based dashboard link */}
+          {getDashboardLink()}
+          
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const DesktopMenu = ({ setActive, children }) => {
   const t = useTranslations('HomePage');
   const locale = useLocale();
-  const { user, isAuthenticated, signOut } = useAuth();
-
+  const { mongoUser:user, isAuthenticated, signOut } = useAuth();
+  console.log(user)
   return (
     <nav
       onMouseLeave={() => setActive(null)}
@@ -73,16 +169,19 @@ export const DesktopMenu = ({ setActive, children }) => {
       <LocaleDropdown />
       
       {isAuthenticated ? (
-        <div className="flex items-center gap-3">
-          <span className="text-white text-sm hidden md:block">{user?.email}</span>
-          <button onClick={signOut} className="flex items-center gap-1 text-[#b4e90e]">
-            <LogOut size={16} />
-            <span>{t('logout')}</span>
+        <div className="flex items-center gap-4">
+          <ProfileAvatar user={user} />
+          <button 
+            onClick={signOut}
+            className="flex items-center gap-1 text-[#b4e90e] hover:underline w-full cursor-pointer"
+          >
+            <LogOut size={14} />
+            <span className="cursor-pointer">{t('logout')}</span>
           </button>
         </div>
       ) : (
         <Link href={`/${locale}/auth/login`}>
-          <button className="px-6 py-1 bg-[#b4e90e] text-[#0d111a] font-semibold rounded-full hover:bg-customGreen/90 transition-colors">
+          <button className="px-6 py-1 bg-[#b4e90e] text-[#0d111a] font-semibold rounded-full hover:bg-customGreen/90 transition-colors cursor-pointer">
             {t('register')}
           </button>
         </Link>
@@ -138,7 +237,7 @@ const Navbar = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [mobileSubmenu, setMobileSubmenu] = useState(null);
   
-  const { user, isLoading, isAuthenticated, signOut } = useAuth();
+  const { mongoUser:user, isLoading, isAuthenticated, signOut } = useAuth();
   const t = useTranslations('HomePage');
   const locale = useLocale();
 
@@ -175,7 +274,8 @@ const Navbar = () => {
       {/* Mobile Menu */}
       <nav className="relative w-full rounded-none border-b border-[#b4e90e]/[0.1] bg-gradient-to-r from-black via-black to-[#b4e90e]/20 lg:hidden flex items-center px-4 py-1">
         <Image src={logo} alt="STAY FiT" width={130} height={40} className="text-[#b4e90e] font-bold text-2xl font-inter" />
-        <div className="ml-auto flex">
+        <div className="ml-auto flex items-center gap-2">
+          
           <LocaleDropdown />
           <button
             className="flex items-center justify-center rounded-md p-2 text-[#b4e90e] hover:bg-black/20 focus:outline-none"
@@ -265,23 +365,61 @@ const Navbar = () => {
                 <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#B4E90E]"></div>
               </div>
             ) : isAuthenticated ? (
-              <>
-                {user?.email && (
-                  <div className="text-white text-sm mb-2 text-center">
-                    {user.email}
+              <div className="flex items-center justify-center gap-2">
+                <div className="flex flex-col items-center">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#B4E90E] text-black text-lg font-bold mb-2">
+                    {user?.firstName? 
+                      user.firstName.split(" ")[0].charAt(0).toUpperCase() + 
+                      (user.firstName.split(" ").length > 1 ? user.firstName.split(" ")[1].charAt(0).toUpperCase() : "") 
+                      : 
+                      user?.email?.charAt(0).toUpperCase() || "U"
+                    }
                   </div>
-                )}
-                <button 
-                  onClick={() => {
-                    signOut();
-                    setIsMenuOpen(false);
-                  }} 
-                  className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-[#b4e90e] text-[#b4e90e] rounded-full"
-                >
-                  <LogOut size={16} />
-                  <span>{t('logout')}</span>
-                </button>
-              </>
+                  <div className="flex">
+                    <p className="text-white font-medium mb-1 mr-1">{user?.firstName || "User"}</p>
+                    <p className="text-white font-medium mb-1">{user?.lastName || "lastName"}</p>
+                  </div>
+                  <Link 
+                    href={`/${locale}/profile`} 
+                    className="text-[#B4E90E] text-sm hover:underline mb-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    View Profile
+                  </Link>
+                  
+                  {/* Role-based dashboard links for mobile */}
+                  {user?.role === 'coach' && (
+                    <Link 
+                      href={`/${locale}/coach`} 
+                      className="text-[#B4E90E] text-sm hover:underline mb-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Coach Dashboard
+                    </Link>
+                  )}
+                  
+                  {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                    <Link 
+                      href={`/${locale}/admin`} 
+                      className="text-[#B4E90E] text-sm hover:underline mb-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  
+                  <button 
+                    onClick={() => {
+                      signOut();
+                      setIsMenuOpen(false);
+                    }} 
+                    className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-[#b4e90e] text-[#b4e90e] rounded-full"
+                  >
+                    <LogOut size={16} />
+                    <span>{t('logout')}</span>
+                  </button>
+                </div>
+              </div>
             ) : (
               <Link 
                 href={`/${locale}/auth/login`} 
