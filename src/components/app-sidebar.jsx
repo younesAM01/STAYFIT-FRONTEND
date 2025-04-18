@@ -34,8 +34,6 @@ export function AppSidebar({ ...props }) {
   const { state } = useSidebar()
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const profileRef = useRef(null)
-  console.log(mongoUser)
-
   // Define navigation items based on user role
   const getNavItems = () => {
     const isAdmin = mongoUser?.role === 'admin' || mongoUser?.role === 'super_admin'

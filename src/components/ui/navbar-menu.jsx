@@ -158,7 +158,6 @@ export const DesktopMenu = ({ setActive, children }) => {
   const t = useTranslations('HomePage');
   const locale = useLocale();
   const { mongoUser:user, isAuthenticated, signOut } = useAuth();
-  console.log(user)
   return (
     <nav
       onMouseLeave={() => setActive(null)}

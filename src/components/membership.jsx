@@ -51,19 +51,52 @@ const MemberShip = () => {
   }, [mongoUser]);
 
   const fetchUpcomingSessions = async () => {
+    if (!mongoUser?._id) return;
+
     setSessionLoading(true);
     try {
-      // Adjust this URL to your API endpoint for sessions
-      const response = await fetch(`http://localhost:3000/api/session?clientId=${mongoUser._id}`);
+      const response = await fetch(`/api/session?clientId=${mongoUser._id}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch upcoming sessions');
+        throw new Error(`Failed to fetch upcoming sessions: ${response.statusText}`);
       }
       const data = await response.json();
-      // Filter sessions to only include those with status 'scheduled'
-      const scheduledSessions = data.filter(session => session.status === 'scheduled');
-      setUpcomingSessions(scheduledSessions);
+      console.log("Fetched sessions data:", data);
+
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      const upcomingAndScheduledSessions = Array.isArray(data) ? data.filter(session => {
+        if (!session || typeof session !== 'object' || (session.status !== 'scheduled' && session.status !== 'confirmed')) {
+            return false;
+        }
+
+        let sessionDateObj;
+        try {
+            if (session.sessionDate) {
+                sessionDateObj = new Date(session.sessionDate);
+                if (isNaN(sessionDateObj.getTime())) {
+                    console.warn(`Invalid sessionDate format found: ${session.sessionDate} for session ${session._id}`);
+                    return false;
+                }
+            } else {
+                console.warn(`Missing sessionDate for session ${session._id}`);
+                return false;
+            }
+        } catch (e) {
+            console.error(`Error parsing sessionDate ${session.sessionDate} for session ${session._id}:`, e);
+            return false;
+        }
+
+        const sessionStartOfDay = new Date(sessionDateObj.getFullYear(), sessionDateObj.getMonth(), sessionDateObj.getDate());
+        return sessionStartOfDay >= today;
+      }) : [];
+
+      console.log("Filtered upcoming sessions (Scheduled/Confirmed & Future/Today):", upcomingAndScheduledSessions);
+      setUpcomingSessions(upcomingAndScheduledSessions);
+
     } catch (error) {
       console.error('Error fetching upcoming sessions:', error);
+      setUpcomingSessions([]);
     } finally {
       setSessionLoading(false);
     }
