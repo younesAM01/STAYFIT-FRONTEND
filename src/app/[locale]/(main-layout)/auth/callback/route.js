@@ -7,6 +7,7 @@ import { handleOAuthUser } from '@/app/[locale]/(main-layout)/auth/actions'
 export async function GET(request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const returnUrl = requestUrl.searchParams.get('returnUrl')
   
   if (code) {
     const cookieStore = await cookies()
@@ -37,13 +38,34 @@ export async function GET(request) {
     
     if (user) {
       // Call handleOAuthUser to sync with MongoDB
-      await handleOAuthUser(user.id)
+      const result = await handleOAuthUser(user.id)
+      
+      if (result && result.mongoUser) {
+        // Get role-based redirect URL
+        const redirectUrl = getRoleBasedRedirectUrl(result.mongoUser.role)
+        return NextResponse.redirect(new URL(redirectUrl, request.url))
+      }
     }
     
-    // Redirect to the dashboard (this matches your server action redirectTo)
-    return NextResponse.redirect(new URL('/en/dashboard', request.url))
+    // Fallback redirect if role-based logic fails
+    return NextResponse.redirect(new URL('/en', request.url))
   }
   
   // If no code, redirect to login
   return NextResponse.redirect(new URL('/en/login', request.url))
+}
+
+// Helper function to determine redirect URL based on user role
+function getRoleBasedRedirectUrl(role) {
+  switch(role) {
+    case "client":
+      return '/en/client-profile'
+    case "coach":
+      return '/en/coach'
+    case "admin":
+    case "superadmin":
+      return '/en/admin'
+    default:
+      return '/en' // Default fallback
+  }
 }

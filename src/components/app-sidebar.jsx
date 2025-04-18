@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Settings,
   Users,
+  Calendar
 } from "lucide-react"
 
 import {
@@ -21,34 +22,59 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/context/authContext"
+import { useLocale } from "next-intl"
 
+export function AppSidebar({ ...props }) {
+  const locale = useLocale()
+  const { mongoUser } = useAuth()
+  const { state } = useSidebar()
+  console.log(mongoUser)
 
-
-const data = {
-  navMain: [
-    {
+  // Define navigation items based on user role
+  const getNavItems = () => {
+    const isAdmin = mongoUser?.role === 'admin' || mongoUser?.role === 'super_admin'
+    
+    // Dashboard link differs based on role
+    const dashboardItem = {
       title: "Dashboard",
       icon: LayoutDashboard,
-      href: "/dashboard",
-    },
-    {
+      href: isAdmin ? `/${locale}/admin` : `/${locale}/coach`,
+    }
+    
+    // Calendar link differs based on role
+    const calendarItem = {
+      title: "Calendar",
+      icon: Calendar,
+      href: isAdmin ? `/${locale}/admin/calendar` : `/${locale}/coach/calendar`,
+    }
+    
+    const usersItem = {
       title: "Users",
       icon: Users,
-      href: "/users",
-    },
-  ],
-  navBottom: [
+      href: `/${locale}/admin/users`
+    }
+    
+    // Build nav items array based on role
+    let navItems = [dashboardItem, calendarItem]
+    
+    // If user is admin or super admin, add the users link
+    if (isAdmin) {
+      navItems = [dashboardItem, usersItem, calendarItem]
+    }
+    
+    return navItems
+  }
+
+  const navMain = getNavItems()
+  
+  const navBottom = [
     {
       title: "Settings",
       icon: Settings,
       url: "#",
     },
-    
-  ],
-}
-
-export function AppSidebar({ ...props }) {
-  const { state } = useSidebar()
+  ]
 
   return (
     <Sidebar collapsible="icon" {...props} className="subtle-brand-background">
@@ -70,10 +96,10 @@ export function AppSidebar({ ...props }) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
-          {data.navMain.map((item) => (
+          {navMain.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild isActive={item.isActive} tooltip={item.title}>
-                <a href={item.url} className="font-medium text-white">
+                <a href={item.href} className="font-medium text-white">
                   {item.customIcon || <item.icon className="text-[#B4E90E]" />}
                   <span className="text-white">{item.title}</span>
                 </a>
@@ -95,7 +121,7 @@ export function AppSidebar({ ...props }) {
       </SidebarContent>
       <SidebarFooter>
         <SidebarMenu>
-          {data.navBottom.map((item) => (
+          {navBottom.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild tooltip={item.title}>
                 <a href={item.url} className="font-medium text-white">

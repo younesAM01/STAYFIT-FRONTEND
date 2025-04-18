@@ -5,7 +5,7 @@ import { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { createGoogleUser, loginUser } from "../actions"
+import { createGoogleUser, getUser } from "../actions"
 import { useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase/client"
 import { useLocale } from "use-intl"
@@ -24,7 +24,9 @@ export function LoginForm({ onToggle }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const local = useLocale();
-  const returnUrl = searchParams.get('returnUrl') || `/${local}/dashboard`
+  
+  // We'll determine this based on user role later
+  const defaultReturnUrl = `/${local}`
 
   const [formData, setFormData] = useState({
     email: "",
@@ -44,6 +46,23 @@ export function LoginForm({ onToggle }) {
     }
   }
 
+  // Helper function to get redirect URL based on user role
+  const getRedirectUrl = (role) => {
+    const urlBase = `/${local}`
+    
+    switch(role) {
+      case "client":
+        return `${urlBase}/client-profile`
+      case "coach":
+        return `${urlBase}/coach`
+      case "admin":
+      case "super admin":
+        return `${urlBase}/admin`
+      default:
+        return `${urlBase}` // Default fallback
+    }
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setGlobalError(null)
@@ -54,7 +73,7 @@ export function LoginForm({ onToggle }) {
       const validatedData = loginSchema.parse(formData)
 
       // Direct client-side auth with Supabase
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email: validatedData.email,
         password: validatedData.password
       })
@@ -65,16 +84,17 @@ export function LoginForm({ onToggle }) {
       }
       
       // Call server action to handle any additional server-side logic if needed
-      await loginUser({
-        email: validatedData.email,
-        password: validatedData.password
-      })
-
+      const userData = await getUser(data.user.id)
+      console.log(userData)
+      
+      // Get appropriate redirect URL based on user role
+      const roleBasedRedirectUrl = getRedirectUrl(userData.role)
+      
       // Force a router refresh to update auth state across the app
       router.refresh()
       
-      // Redirect to return URL or dashboard
-      router.push(returnUrl)
+      // Redirect based on role
+      router.push(roleBasedRedirectUrl)
     } catch (error) {
       if (error instanceof z.ZodError) {
         // Handle validation errors
@@ -104,19 +124,30 @@ export function LoginForm({ onToggle }) {
       if (sessionData?.session?.user) {
         const user = sessionData.session.user
         console.log(user)
-        await createGoogleUser({
+        
+        // Create or get Google user
+        const response = await createGoogleUser({
           email: user.email,
           supabaseId: user.id,
           firstName: user.user_metadata?.given_name || user.user_metadata?.name?.split(' ')[0] || '',
           lastName: user.user_metadata?.family_name || user.user_metadata?.name?.split(' ').slice(1).join(' ') || '',
           provider: 'google',
-          role: "client" // Ensure role is set to "client"
+          role: "client" // Default role is client
         })
-  
-        router.push(returnUrl)
+        
+        // Get the user data from MongoDB to determine role
+        const userData = await getUser(user.id)
+        
+        // Get appropriate redirect URL based on user role
+        const roleBasedRedirectUrl = getRedirectUrl(userData.mongoUser.role)
+        
+        // Redirect based on role
+        router.push(roleBasedRedirectUrl)
         return
       }
   
+      // If no session exists, initiate Google OAuth
+      const returnUrl = searchParams.get('returnUrl') || defaultReturnUrl
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
@@ -135,7 +166,7 @@ export function LoginForm({ onToggle }) {
       setGlobalError(error instanceof Error ? error.message : 'Google sign-in failed')
       setIsGoogleLoading(false)
     }
-  }
+  } 
   
 
   return (

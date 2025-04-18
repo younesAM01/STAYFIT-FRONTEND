@@ -48,30 +48,24 @@ export async function registerUser(data) {
   }
 }
 
-export async function loginUser(data) {
+export async function getUser(id) {
   try {
-    const supabase = await createServerSupabaseClient()
+    await connectMongoDB()
+    const mongoUser = await User.findOne({ supabaseId: id })
     
-    // Supabase Authentication
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
-    })
-
-    if (authError) {
-      throw new Error(authError.message)
+    if (!mongoUser) {
+      throw new Error('User not found in database')
     }
-
-    // Return success response
-    return { 
-      success: true, 
-      user: authData.user 
+ 
+    // Return success response with plain object
+    return {   
+      role: mongoUser.role
     }
   } catch (error) {
-    console.error('Login error:', error)
+    console.error('Get User error:', error)
     return { 
       success: false, 
-      error: error instanceof Error ? error.message : 'Login failed' 
+      error: error instanceof Error ? error.message : 'failed Get User' 
     }
   }
 }
@@ -91,11 +85,11 @@ export async function createGoogleUser(userData) {
     await connectMongoDB()
     
     // Check if user already exists in MongoDB
-    const existingUser = await User.findOne({ supabaseId: userData.supabaseId })
+    let mongoUser = await User.findOne({ supabaseId: userData.supabaseId })
     
-    if (!existingUser) {
+    if (!mongoUser) {
       // Create new user in MongoDB with Google data
-      await User.create({
+      mongoUser = await User.create({
         email: userData.email,
         supabaseId: userData.supabaseId,
         firstName: userData.firstName,
@@ -105,7 +99,13 @@ export async function createGoogleUser(userData) {
       })
     }
     
-    return { success: true }
+    // Convert Mongoose document to plain object
+    const userObject = mongoUser.toJSON ? mongoUser.toJSON() : JSON.parse(JSON.stringify(mongoUser))
+    
+    return { 
+      success: true,
+      mongoUser: userObject
+    }
   } catch (error) {
     console.error('Google user creation error:', error)
     return { 
@@ -113,7 +113,7 @@ export async function createGoogleUser(userData) {
       error: error instanceof Error ? error.message : 'User creation failed' 
     }
   }
-}
+} 
 
 
 // In your actions.js file, add this function:
@@ -130,9 +130,9 @@ export async function handleOAuthUser(userId) {
     await connectMongoDB()
     
     // Check if user already exists in MongoDB
-    const existingUser = await User.findOne({ supabaseId: user.id })
+    let mongoUser = await User.findOne({ supabaseId: user.id })
     
-    if (!existingUser) {
+    if (!mongoUser) {
       // Create new user in MongoDB with Google data
       const userData = {
         email: user.email,
@@ -143,10 +143,16 @@ export async function handleOAuthUser(userId) {
         role: "client" // Assign "client" role
       }
       
-      await User.create(userData)
+      mongoUser = await User.create(userData)
     }
     
-    return { success: true }
+    // Convert Mongoose document to plain object
+    const userObject = mongoUser.toJSON ? mongoUser.toJSON() : JSON.parse(JSON.stringify(mongoUser))
+    
+    return { 
+      success: true,
+      mongoUser: userObject
+    }
   } catch (error) {
     console.error('OAuth user handling error:', error)
     return { 
