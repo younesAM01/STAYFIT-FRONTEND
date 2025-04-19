@@ -1,20 +1,31 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import { ChevronRight, ChevronLeft, Calendar, Info, User, Mail, MapPin, Package } from 'lucide-react';
-import { useAuth } from '@/context/authContext';
+"use client";
+import React, { useState, useEffect } from "react";
+import {
+  ChevronRight,
+  ChevronLeft,
+  Calendar,
+  Info,
+  User,
+  Mail,
+  MapPin,
+  Package,
+} from "lucide-react";
+import { useAuth } from "@/context/authContext";
 
 const CoachCalendar = () => {
   const { mongoUser } = useAuth();
   const coachId = mongoUser?._id;
 
-  const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStartDate(new Date()));
+  const [currentWeekStart, setCurrentWeekStart] = useState(
+    getWeekStartDate(new Date())
+  );
   const [hoveredSession, setHoveredSession] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
   const [coachSessions, setCoachSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  console.log(coachSessions)
-  
+  console.log(coachSessions);
+
   const fetchCoachSessions = async (coachId) => {
     setIsLoading(true);
     try {
@@ -42,8 +53,8 @@ const CoachCalendar = () => {
     const handleMouseMove = (e) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
-    
-    window.addEventListener('mousemove', handleMouseMove);
+
+    window.addEventListener("mousemove", handleMouseMove);
 
     // Check if device is mobile
     const checkMobile = () => {
@@ -51,18 +62,18 @@ const CoachCalendar = () => {
     };
 
     checkMobile(); // Initial check
-    window.addEventListener('resize', checkMobile);
-    
+    window.addEventListener("resize", checkMobile);
+
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('resize', checkMobile);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("resize", checkMobile);
     };
   }, []);
 
   // Modified to include hours from 8 AM to 10 PM (22:00)
   const hours = Array.from({ length: 15 }, (_, i) => i + 8); // 8 AM to 10 PM
   const weekDays = getWeekDays(currentWeekStart);
-  
+
   const goToNextWeek = () => {
     const nextWeek = new Date(currentWeekStart);
     nextWeek.setDate(nextWeek.getDate() + 7);
@@ -83,26 +94,26 @@ const CoachCalendar = () => {
   const getSessionHour = (sessionTime) => {
     const timeMatch = sessionTime.match(/(\d+)([AP]M)/);
     if (!timeMatch) return null;
-    
+
     let hour = parseInt(timeMatch[1], 10);
     const meridian = timeMatch[2];
-    
+
     // Convert to 24-hour format
-    if (meridian === 'PM' && hour < 12) {
+    if (meridian === "PM" && hour < 12) {
       hour += 12;
-    } else if (meridian === 'AM' && hour === 12) {
+    } else if (meridian === "AM" && hour === 12) {
       hour = 0;
     }
-    
+
     return hour;
   };
 
   // Find sessions for a specific day and hour
   const getSessionForTimeSlot = (day, hour) => {
-    return coachSessions.find(session => {
+    return coachSessions.find((session) => {
       const sessionDate = new Date(session.sessionDate);
       const sessionHour = getSessionHour(session.sessionTime);
-      
+
       // Check if session date matches the day and session hour matches the hour
       return (
         sessionDate.getDate() === day.date.getDate() &&
@@ -117,10 +128,10 @@ const CoachCalendar = () => {
   const formatSessionTime = (sessionTime) => {
     const timeMatch = sessionTime.match(/(\d+)([AP]M)/);
     if (!timeMatch) return sessionTime;
-    
+
     const hour = timeMatch[1];
     const meridian = timeMatch[2];
-    
+
     return `${hour}:00 ${meridian}`;
   };
 
@@ -128,77 +139,79 @@ const CoachCalendar = () => {
   const calculateEndTime = (startTime, durationMinutes) => {
     const timeMatch = startTime.match(/(\d+)([AP]M)/);
     if (!timeMatch) return null;
-    
+
     let hour = parseInt(timeMatch[1], 10);
     const meridian = timeMatch[2];
-    
+
     // Convert to 24-hour format
-    if (meridian === 'PM' && hour < 12) {
+    if (meridian === "PM" && hour < 12) {
       hour += 12;
-    } else if (meridian === 'AM' && hour === 12) {
+    } else if (meridian === "AM" && hour === 12) {
       hour = 0;
     }
-    
+
     // Add duration
     const endDate = new Date();
     endDate.setHours(hour, 0, 0, 0);
     endDate.setMinutes(endDate.getMinutes() + durationMinutes);
-    
+
     // Format back to 12-hour format
     let endHour = endDate.getHours();
-    const endMeridian = endHour >= 12 ? 'PM' : 'AM';
-    
+    const endMeridian = endHour >= 12 ? "PM" : "AM";
+
     if (endHour > 12) {
       endHour -= 12;
     } else if (endHour === 0) {
       endHour = 12;
     }
-    
+
     return `${endHour}:00 ${endMeridian}`;
   };
 
   const getSessionBackgroundColor = (session) => {
-    if (!session) return 'hover:bg-[#1a1e2a]';
+    if (!session) return "hover:bg-[#1a1e2a]";
     switch (session.status) {
-      case 'scheduled':
-        return 'bg-blue-400';
-      case 'completed':
-        return 'bg-green-400';
-      case 'cancelled':
-        return 'bg-[#3e2a2a]';
+      case "scheduled":
+        return "bg-blue-400";
+      case "completed":
+        return "bg-green-400";
+      case "cancelled":
+        return "bg-[#3e2a2a]";
       default:
-        return 'bg-[#223039]';
+        return "bg-[#223039]";
     }
   };
 
   return (
     <div className="w-full p-2 sm:p-6 mb-28">
-      <h1 className="text-xl sm:text-2xl font-bold mb-16 sm:mb-10 text-white">Coach Calendar</h1>
-      
+      <h1 className="text-xl sm:text-2xl font-bold mb-16 sm:mb-10 text-white">
+        Coach Calendar
+      </h1>
+
       <div className="w-full mx-auto bg-[#0d111a] text-white rounded-lg shadow border border-gray-700">
         <div className="flex justify-between items-center p-2 sm:p-4 border-b border-gray-700">
           <div className="flex items-center gap-1 sm:gap-2">
             <Calendar className="text-[#B4E90E] hidden sm:block" size={20} />
             <h2 className="text-lg sm:text-xl font-bold">Weekly Schedule</h2>
           </div>
-          
+
           <div className="flex items-center gap-1 sm:gap-2">
-            <button 
-              onClick={goToPreviousWeek} 
+            <button
+              onClick={goToPreviousWeek}
               className="p-1 sm:p-2 rounded-full hover:bg-gray-800 text-gray-300"
             >
               <ChevronLeft size={16} />
             </button>
-            
-            <button 
+
+            <button
               onClick={goToToday}
               className="px-2 py-1 text-xs sm:text-sm bg-[#2a3142] text-[#B4E90E] rounded-md hover:bg-[#353e52]"
             >
               Today
             </button>
-            
-            <button 
-              onClick={goToNextWeek} 
+
+            <button
+              onClick={goToNextWeek}
               className="p-1 sm:p-2 rounded-full hover:bg-gray-800 text-gray-300"
             >
               <ChevronRight size={16} />
@@ -219,16 +232,21 @@ const CoachCalendar = () => {
                 <div className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium text-gray-500 border-r border-gray-700 sticky left-0 bg-[#0d111a] z-10">
                   GMT+00
                 </div>
-                
+
                 {weekDays.map((day) => {
-                  const isToday = day.date.toDateString() === new Date().toDateString();
+                  const isToday =
+                    day.date.toDateString() === new Date().toDateString();
                   return (
-                    <div 
-                      key={day.dateStr} 
-                      className={`p-1 sm:p-3 text-center border-r border-gray-700 ${isToday ? 'bg-blue-900' : ''}`}
+                    <div
+                      key={day.dateStr}
+                      className={`p-1 sm:p-3 text-center border-r border-gray-700 ${isToday ? "bg-blue-900" : ""}`}
                     >
-                      <div className="text-xs sm:text-sm font-medium text-gray-400">{day.name.toUpperCase()}</div>
-                      <div className={`text-lg sm:text-2xl font-bold ${isToday ? 'text-blue-300' : 'text-white'}`}>
+                      <div className="text-xs sm:text-sm font-medium text-gray-400">
+                        {day.name.toUpperCase()}
+                      </div>
+                      <div
+                        className={`text-lg sm:text-2xl font-bold ${isToday ? "text-blue-300" : "text-white"}`}
+                      >
                         {day.date.getDate()}
                       </div>
                     </div>
@@ -238,34 +256,53 @@ const CoachCalendar = () => {
 
               {/* Time slots */}
               {hours.map((hour) => (
-                <div key={hour} className="grid grid-cols-8 border-b border-gray-700">
+                <div
+                  key={hour}
+                  className="grid grid-cols-8 border-b border-gray-700"
+                >
                   <div className="p-1 sm:p-2 text-right text-xs text-gray-500 border-r border-gray-700 sticky left-0 bg-[#0d111a] z-10">
                     {formatHour(hour)}
                   </div>
-                  
+
                   {weekDays.map((day) => {
                     const session = getSessionForTimeSlot(day, hour);
-                    
+
                     return (
-                      <div 
-                        key={`${day.dateStr}-${hour}`} 
+                      <div
+                        key={`${day.dateStr}-${hour}`}
                         className={`border-r border-gray-700 relative ${getSessionBackgroundColor(session)}`}
-                        style={{ height: '50px' }}
+                        style={{ height: "50px" }}
                       >
                         {session && (
-                          <div 
+                          <div
                             className="absolute inset-0 m-1 p-1 text-white text-xs rounded overflow-hidden cursor-pointer transition-all hover:bg-[#35505d]"
-                            onMouseEnter={() => !isMobile && setHoveredSession(session)}
-                            onMouseLeave={() => !isMobile && setHoveredSession(null)}
-                            onClick={() => setHoveredSession(hoveredSession === session ? null : session)}
+                            onMouseEnter={() =>
+                              !isMobile && setHoveredSession(session)
+                            }
+                            onMouseLeave={() =>
+                              !isMobile && setHoveredSession(null)
+                            }
+                            onClick={() =>
+                              setHoveredSession(
+                                hoveredSession === session ? null : session
+                              )
+                            }
                           >
                             <div className="flex items-center gap-1">
-                              <User size={10} className="text-[#B4E90E] hidden sm:block" />
-                              <span className="font-bold truncate text-xs">{session.client.firstName} {session.client.lastName}</span>
+                              <User
+                                size={10}
+                                className="text-[#B4E90E] hidden sm:block"
+                              />
+                              <span className="font-bold truncate text-xs">
+                                {session.client.firstName}{" "}
+                                {session.client.lastName}
+                              </span>
                             </div>
                             <div className="text-gray-300 mt-1 hidden sm:flex items-center gap-1">
                               <MapPin size={8} />
-                              <span className="truncate text-xs">{session.location}</span>
+                              <span className="truncate text-xs">
+                                {session.location}
+                              </span>
                             </div>
                             <div className="text-[#B4E90E] text-xs mt-1">
                               {formatSessionTime(session.sessionTime)}
@@ -284,33 +321,44 @@ const CoachCalendar = () => {
 
       {/* Session info modal for mobile / tooltip for desktop */}
       {hoveredSession && (
-        <div 
+        <div
           className={`
-            ${isMobile ? 
-              'fixed inset-0 flex items-center justify-center bg-[#0d111a] text-white bg-opacity-50 z-50 p-4' : 
-              'fixed bg-[#0d111a] p-4 rounded-lg shadow-lg border border-[#2a3142] z-50 w-72 text-white'}
+            ${
+              isMobile
+                ? "fixed inset-0 flex items-center justify-center bg-[#0d111a] text-white bg-opacity-50 z-50 p-4"
+                : "fixed bg-[#0d111a] p-4 rounded-lg shadow-lg border border-[#2a3142] z-50 w-72 text-white"
+            }
           `}
-          style={!isMobile ? { 
-            top: `${mousePosition.y + 10}px`, 
-            left: `${mousePosition.x + 10}px`,
-            transform: mousePosition.x > window.innerWidth - 300 ? 'translateX(-100%)' : 'translateX(0)'
-          } : {}}
+          style={
+            !isMobile
+              ? {
+                  top: `${mousePosition.y + 10}px`,
+                  left: `${mousePosition.x + 10}px`,
+                  transform:
+                    mousePosition.x > window.innerWidth - 300
+                      ? "translateX(-100%)"
+                      : "translateX(0)",
+                }
+              : {}
+          }
           onClick={() => isMobile && setHoveredSession(null)}
         >
-          <div 
+          <div
             className={`
-              ${isMobile ? 
-                'bg-[#0d111a] p-4 rounded-lg w-full max-w-sm' : ''}
+              ${isMobile ? "bg-[#0d111a] p-4 rounded-lg w-full max-w-sm" : ""}
             `}
             onClick={(e) => isMobile && e.stopPropagation()}
           >
             <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b border-gray-700">
               <div className="flex items-center gap-2">
                 <User size={18} className="text-[#B4E90E]" />
-                <h3 className="font-bold text-lg">{hoveredSession.client.firstName} {hoveredSession.client.lastName}</h3>
+                <h3 className="font-bold text-lg">
+                  {hoveredSession.client.firstName}{" "}
+                  {hoveredSession.client.lastName}
+                </h3>
               </div>
               {isMobile && (
-                <button 
+                <button
                   onClick={() => setHoveredSession(null)}
                   className="text-gray-400 hover:text-white"
                 >
@@ -318,7 +366,7 @@ const CoachCalendar = () => {
                 </button>
               )}
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-start gap-2">
                 <Mail size={16} className="text-gray-400 mt-1 flex-shrink-0" />
@@ -327,44 +375,64 @@ const CoachCalendar = () => {
                   <p className="text-sm">{hoveredSession.client.email}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-2">
-                <Calendar size={16} className="text-gray-400 mt-1 flex-shrink-0" />
+                <Calendar
+                  size={16}
+                  className="text-gray-400 mt-1 flex-shrink-0"
+                />
                 <div>
                   <p className="text-xs text-gray-400">Session Time</p>
                   <p className="text-sm">
-                    {new Date(hoveredSession.sessionDate).toLocaleDateString('en-US', { 
-                      weekday: 'short', 
-                      month: 'short', 
-                      day: 'numeric' 
-                    })}, {formatSessionTime(hoveredSession.sessionTime)} - {calculateEndTime(hoveredSession.sessionTime, hoveredSession.duration)}
+                    {new Date(hoveredSession.sessionDate).toLocaleDateString(
+                      "en-US",
+                      {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      }
+                    )}
+                    , {formatSessionTime(hoveredSession.sessionTime)} -{" "}
+                    {calculateEndTime(
+                      hoveredSession.sessionTime,
+                      hoveredSession.duration
+                    )}
                   </p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-2">
-                <MapPin size={16} className="text-gray-400 mt-1 flex-shrink-0" />
+                <MapPin
+                  size={16}
+                  className="text-gray-400 mt-1 flex-shrink-0"
+                />
                 <div>
                   <p className="text-xs text-gray-400">Location</p>
                   <p className="text-sm">{hoveredSession.location}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-start gap-2">
-                <Package size={16} className="text-gray-400 mt-1 flex-shrink-0" />
+                <Package
+                  size={16}
+                  className="text-gray-400 mt-1 flex-shrink-0"
+                />
                 <div>
                   <p className="text-xs text-gray-400">Package</p>
                   <p className="text-sm">{hoveredSession.pack.category}</p>
                 </div>
               </div>
-              
-              {hoveredSession.client.diseases && hoveredSession.client.diseases.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-gray-700">
-                  <p className="text-xs text-gray-400 mb-1">Health Notes</p>
-                  <p className="text-sm italic text-gray-300">{hoveredSession.client.diseases.join(', ')}</p>
-                </div>
-              )}
-              
+
+              {hoveredSession.client.diseases &&
+                hoveredSession.client.diseases.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-gray-700">
+                    <p className="text-xs text-gray-400 mb-1">Health Notes</p>
+                    <p className="text-sm italic text-gray-300">
+                      {hoveredSession.client.diseases.join(", ")}
+                    </p>
+                  </div>
+                )}
+
               <div className="mt-2 pt-2 border-t border-gray-700">
                 <p className="text-xs text-gray-400 mb-1">Client Details</p>
                 <div className="grid grid-cols-2 gap-2 text-sm">
@@ -389,24 +457,29 @@ const CoachCalendar = () => {
               {hoveredSession.status && (
                 <div className="mt-2 pt-2 border-t border-gray-700">
                   <p className="text-xs text-gray-400">Status</p>
-                  <p className={`text-sm font-medium ${
-                    hoveredSession.status === 'scheduled' ? 'text-blue-400' :
-                    hoveredSession.status === 'completed' ? 'text-green-400' :
-                    hoveredSession.status === 'cancelled' ? 'text-red-400' : 'text-gray-300'
-                  }`}>
-                    {hoveredSession.status.charAt(0).toUpperCase() + hoveredSession.status.slice(1)}
+                  <p
+                    className={`text-sm font-medium ${
+                      hoveredSession.status === "scheduled"
+                        ? "text-blue-400"
+                        : hoveredSession.status === "completed"
+                          ? "text-green-400"
+                          : hoveredSession.status === "cancelled"
+                            ? "text-red-400"
+                            : "text-gray-300"
+                    }`}
+                  >
+                    {hoveredSession.status.charAt(0).toUpperCase() +
+                      hoveredSession.status.slice(1)}
                   </p>
                 </div>
               )}
             </div>
           </div>
         </div>
-      
-            
       )}
     </div>
   );
-}
+};
 
 // Helper functions
 function getWeekStartDate(date) {
@@ -419,16 +492,16 @@ function getWeekStartDate(date) {
 
 function getWeekDays(startDate) {
   // Reordered to start with Monday
-  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  
+  const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
   return Array.from({ length: 7 }, (_, i) => {
     const date = new Date(startDate);
     date.setDate(date.getDate() + i);
-    
+
     return {
       name: dayNames[i], // Use the reordered array instead of date.getDay()
       date: new Date(date),
-      dateStr: formatDateKey(date)
+      dateStr: formatDateKey(date),
     };
   });
 }
@@ -438,7 +511,7 @@ function formatDateKey(date) {
 }
 
 function formatHour(hour) {
-  return `${hour % 12 || 12} ${hour < 12 ? 'AM' : 'PM'}`;
+  return `${hour % 12 || 12} ${hour < 12 ? "AM" : "PM"}`;
 }
 
 export default CoachCalendar;

@@ -107,15 +107,21 @@ export function AppSidebar({ ...props }) {
         )}
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild tooltip="Lime Platform">
-              <Image src={logo} alt="STAY FiT" width={40} height={40} />
+            <SidebarMenuButton className=" text-[#B4E90E] font-semibold hover:text-[#9acd0a] transition-colors duration-200" size="lg" asChild tooltip="Lime Platform">
+              {state === "collapsed" ? (
+                <div className="flex items-center justify-center w-4 h-4 rounded-full bg-[#B4E90E] text-black text-xs font-bold">
+                  SF
+                </div>
+              ) : (
+                <span>Stay Fit</span>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="mt-4">
         <SidebarMenu>
           {navMain.map((item) => (
             <SidebarMenuItem key={item.title}>
