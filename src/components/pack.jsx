@@ -166,7 +166,7 @@ const MembershipPlans = () => {
               viewport={{ once: false, amount: 0.3 }}
               className={`w-full md:w-1/3 border ${isMiddle ? 'border-2 border-[#B4E90E] shadow-2xl' : 'border-gray-700 hover:border-[#B4E90E] shadow-lg'} rounded-lg p-6 transform transition-transform hover:scale-105 hover:shadow-[#B4E90E]`}
             >
-              <h2 className="text-xl font-bold text-[#B4E90E] mb-4 text-center">{pack.category}</h2>
+              <h2 className="text-xl font-bold text-[#B4E90E] mb-4 text-center">{pack.category?.[locale]}</h2>
               
               <div className="text-center mb-6">
                 <span className="text-4xl font-bold text-[#B4E90E]">{formatPrice(selectedSession.price)}</span>

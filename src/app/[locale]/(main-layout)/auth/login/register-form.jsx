@@ -6,33 +6,32 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { registerUser } from "../actions"
-import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 
-const registerSchema = z
-  .object({
-    firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
-    lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
-    email: z.string().email({ message: "Please enter a valid email address" }),
-    password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-    confirmPassword: z.string().min(6, { message: "Confirm password must be at least 6 characters" }),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  })
 
 export function RegisterForm({ onToggle }) {
+  const t = useTranslations("RegisterPage")
   const [errors, setErrors] = useState({})
   const [globalError, setGlobalError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const router = useRouter()
-
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
+  });
+  const registerSchema = z
+  .object({
+    firstName: z.string().min(2, { message: t("firstNameError") }),
+    lastName: z.string().min(2, { message: t("lastNameError") }),
+    email: z.string().email({ message: t("emailError") }),
+    password: z.string().min(6, { message: t("passwordError") }),
+    confirmPassword: z.string().min(6, { message: t("confirmPasswordError") }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: t("confirmPasswordError"),
+    path: ["confirmPassword"],
   })
 
   const handleChange = (e) => {
@@ -98,8 +97,8 @@ export function RegisterForm({ onToggle }) {
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold text-white">Create an account</h1>
-        <p className="text-gray-400">Enter your information to get started</p>
+        <h1 className="text-3xl font-bold text-white">{t("createAnAccount")}</h1>
+        <p className="text-gray-400">{t("enterYourInformationToGetStarted")}</p>
       </div>
 
       {globalError && (
@@ -112,7 +111,7 @@ export function RegisterForm({ onToggle }) {
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="firstName" className="text-white">
-              First name
+              {t("firstName")}
             </Label>
             <Input
               id="firstName"
@@ -127,7 +126,7 @@ export function RegisterForm({ onToggle }) {
 
           <div className="space-y-2">
             <Label htmlFor="lastName" className="text-white">
-              Last name
+              {t("lastName")}
             </Label>
             <Input
               id="lastName"
@@ -143,7 +142,7 @@ export function RegisterForm({ onToggle }) {
 
         <div className="space-y-2">
           <Label htmlFor="email" className="text-white">
-            Email
+            {t("email")}
           </Label>
           <Input
             id="email"
@@ -159,7 +158,7 @@ export function RegisterForm({ onToggle }) {
 
         <div className="space-y-2">
           <Label htmlFor="password" className="text-white">
-            Password
+            {t("password")}
           </Label>
           <Input
             id="password"
@@ -175,7 +174,7 @@ export function RegisterForm({ onToggle }) {
 
         <div className="space-y-2">
           <Label htmlFor="confirmPassword" className="text-white">
-            Confirm Password
+            {t("confirmPassword")}
           </Label>
           <Input
             id="confirmPassword"
@@ -194,14 +193,14 @@ export function RegisterForm({ onToggle }) {
           disabled={isSubmitting}
           className="w-full bg-[#B4E90E] hover:bg-[#a3d40d] text-black font-medium disabled:opacity-50"
         >
-          {isSubmitting ? 'Creating Account...' : 'Create Account'}
+          {isSubmitting ? t("creatingAccount") : t("createAccount")}
         </Button>
       </form>
 
       <div className="text-center text-sm text-gray-400">
-        Already have an account?{" "}
+        {t("alreadyHaveAnAccount")}
         <button type="button" onClick={onToggle} className="text-[#B4E90E] hover:underline font-medium">
-          Sign in
+          {t("signIn")}
         </button>
       </div>
     </div>

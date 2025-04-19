@@ -8,15 +8,13 @@ import { Label } from "@/components/ui/label"
 import { createGoogleUser, getUser } from "../actions"
 import { useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase/client"
-import { useLocale } from "use-intl"
+import { useLocale, useTranslations } from "next-intl"
 import Link from "next/link"
 
-const loginSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-})
+
 
 export function LoginForm({ onToggle }) {
+  const t = useTranslations("LoginPage")
   const [errors, setErrors] = useState({})
   const [globalError, setGlobalError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -24,7 +22,10 @@ export function LoginForm({ onToggle }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const local = useLocale();
-  
+  const loginSchema = z.object({
+    email: z.string().email({ message: t("emailError") }),
+    password: z.string().min(6, { message: t("passwordError") }),
+  })
   // We'll determine this based on user role later
   const defaultReturnUrl = `/${local}`
 
@@ -79,7 +80,7 @@ export function LoginForm({ onToggle }) {
       })
 
       if (error) {
-        setGlobalError(error.message || 'Login failed. Please check your credentials.')
+        setGlobalError(error.message || t("loginFailed"))
         return
       }
       
@@ -107,7 +108,7 @@ export function LoginForm({ onToggle }) {
         setErrors(formattedErrors)
       } else {
         // Handle unexpected errors
-        setGlobalError(error instanceof Error ? error.message : 'An unexpected error occurred')
+        setGlobalError(error instanceof Error ? error.message : t("unexpectedError"))
       }
     } finally {
       setIsSubmitting(false)
@@ -172,8 +173,8 @@ export function LoginForm({ onToggle }) {
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold text-white">Welcome back</h1>
-        <p className="text-gray-400">Sign in to your account</p>
+        <h1 className="text-3xl font-bold text-white">{t("welcomeBack")}</h1>
+        <p className="text-gray-400">{t("signInToYourAccount")}</p>
       </div>
 
       {globalError && (
@@ -185,7 +186,7 @@ export function LoginForm({ onToggle }) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="email" className="text-white">
-            Email
+            {t("email")}
           </Label>
           <Input
             id="email"
@@ -201,7 +202,7 @@ export function LoginForm({ onToggle }) {
 
         <div className="space-y-2">
           <Label htmlFor="password" className="text-white">
-            Password
+            {t("password")}
           </Label>
           <Input
             id="password"
@@ -215,7 +216,7 @@ export function LoginForm({ onToggle }) {
           {errors.password && <p className="text-sm text-red-500">{errors.password}</p>}
           <div className="flex justify-end">
             <Link href={`/${local}/auth/forgot-password`} className="text-xs text-[#B4E90E] hover:underline">
-              Forgot password?
+              {t("forgotPassword")}
             </Link>
           </div>
         </div>
@@ -225,7 +226,7 @@ export function LoginForm({ onToggle }) {
           disabled={isSubmitting}
           className="w-full bg-[#B4E90E] hover:bg-[#a3d40d] text-black font-medium disabled:opacity-50"
         >
-          {isSubmitting ? 'Signing In...' : 'Sign In'}
+          {isSubmitting ? t("signingIn") : t("signIn")}
         </Button>
       </form>
 
@@ -234,7 +235,7 @@ export function LoginForm({ onToggle }) {
           <span className="w-full border-t border-gray-700"></span>
         </div>
         <div className="relative flex justify-center text-xs">
-          <span className="bg-[#0d111a] px-2 text-gray-400">Or continue with</span>
+          <span className="bg-[#0d111a] px-2 text-gray-400">{t("orContinueWith")}</span>
         </div>
       </div>
 
@@ -251,7 +252,7 @@ export function LoginForm({ onToggle }) {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Connecting...
+            {t("connecting")}
           </span>
         ) : (
           <>
@@ -274,15 +275,15 @@ export function LoginForm({ onToggle }) {
               />
               <path d="M1 1h22v22H1z" fill="none" />
             </svg>
-            Sign in with Google
+            {t("signInWithGoogle")}
           </>
         )}
       </Button>
 
       <div className="text-center text-sm text-gray-400">
-        Don't have an account?{" "}
+        {t("dontHaveAnAccount")}
         <button type="button" onClick={onToggle} className="text-[#B4E90E] hover:underline font-medium">
-          Sign up
+          {t("signUp")}
         </button>
       </div>
     </div>

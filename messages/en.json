@@ -12,6 +12,9 @@
     "servicestitle": "Our Services",
     "register": "Log In",
     "logout": "Log Out",
+    "coachDashboard": "Coach Dashboard",
+    "adminDashboard": "Admin Dashboard",
+    "viewProfile": "View Profile",
     "General Fitness": "General Fitness",
     "GeneralFitnessDescription": "Do you find yourself quickly tiring when climbing stairs? Don't worry! We offer a fitness program specifically designed for your age and weight, using circuit training and an endurance approach to help you regain your fitness and energy.",
     "Pre/Postnatal Exercises": "Pre/Postnatal Exercises",
@@ -32,7 +35,7 @@
     "sessions": "Sessions",
     "expiry": "Expiration time",
     "days": "Day",
-    
+
     "ContactPage": {
       "title": "CONTACT US",
       "subtitle": "FOR MORE INFORMATION!",
@@ -87,105 +90,105 @@
     "swimming": "Swimming",
     "viewProfile": "View Profile",
     "bookNow": "Book Now"
-  }
-,"Servicespage": {
-      "title": "TRANSFORM YOUR BODY, TRANSFORM YOUR LIFE",
-      "subtitle": "KEEP BODY FIT & STRONG",
-      "description": "Train to be stronger both physically and mentally. Get ready for the next level.",
-      "subscribe": "SUBSCRIBE",
-      "services": "OUR SERVICES",
-      "focus": "FOCUS ON YOUR WORKOUTS NOT YOUR WORRIES"
-    }
-    ,"aboutme":{
-      "navigation": {
-        "about": "ABOUT",
-        "specialties": "SPECIALTIES",
-        "certifications": "CERTIFICATIONS"
+  },
+  "Servicespage": {
+    "title": "TRANSFORM YOUR BODY, TRANSFORM YOUR LIFE",
+    "subtitle": "KEEP BODY FIT & STRONG",
+    "description": "Train to be stronger both physically and mentally. Get ready for the next level.",
+    "subscribe": "SUBSCRIBE",
+    "services": "OUR SERVICES",
+    "focus": "FOCUS ON YOUR WORKOUTS NOT YOUR WORRIES"
+  },
+  "aboutme": {
+    "navigation": {
+      "about": "ABOUT",
+      "specialties": "SPECIALTIES",
+      "certifications": "CERTIFICATIONS"
+    },
+    "sections": {
+      "about": {
+        "title": "About Me"
       },
-      "sections": {
-        "about": {
-          "title": "About Me"
-        },
-        "specialties": {
-          "title": "Specialties"
-        },
-        "certifications": {
-          "title": "Certifications"
-        }
+      "specialties": {
+        "title": "Specialties"
       },
-      "cta": {
-        "title": "Ready to Transform Your Fitness?",
-        "description": "Book a session with Coach Oussama and start your fitness journey today.",
-        "button": "Book a Session"
+      "certifications": {
+        "title": "Certifications"
       }
     },
-    "ProfilePage": {
-      "title": "Profile Page",
-      "description": "This is the profile page for the user.",
-      "info": "Info",
-      "membership": "Membership",
-      "book": "Book",
-      "contact": "Contact",
-      "physical": "Physical",
-      "background": "Background",
-      "fitness": "Fitness",
-      "personal": "Personal",
-      "edit": "Edit",
-      "weight": "Weight",
-      "height": "Height",
-      "health": "Health",
-      "preferred": "Preferred",
-      "nationality": "Nationality",
-      "profile": "Profile",
-      "cancel": "Cancel",
-      "save": "Save",
-      "firstName": "First Name",
-      "lastName": "Last Name",
-      "email": "Email",
-      "phoneNumber": "Phone Number",
-      "city": "City",
-      "age": "Age",
-      "diseases": "Diseases",
-      "preferredLanguage": "Preferred Language",
-      "goals": "Goals",
-      "healthConsiderations": "Health Considerations"
-    },
-    "MembershipPage": {
-      "title": "Membership Details",
-      "activePackage": "Active Package",
-      "remainingSessions": "Remaining Sessions",
-      "daysUntilExpiration": "Days Until Expiration",
-      "upcomingSessions": "Upcoming Sessions",
-      "loadingSessions": "Loading sessions...",
-      "noUpcomingSessions": "No upcoming sessions scheduled",
-      "bookASession": "Book a Session",
-      "purchaseAPackage": "Purchase a membership to access our services",
-      "noActivePackage": "No Active Package",
-      "noActiveMembership": "No Active Membership",
-      "sessions": "Sessions",
-      "days": "Days",
-      "purchaseAMembership": "Purchase a membership to access our services",
-      "buyAPackage": "Buy a Package",
-      "cancelSession": "Cancel Session",
-      "cancelSessionConfirmation": "Are you sure you want to cancel your session on",
-      "keepSession": "Keep Session"
-    },
-    "BookingPage": {
-      "title": "Book a Session",
-      "bookingSummary": "Booking Summary",
-      "coach": "Coach",
-      "date": "Date",
-      "time": "Time",
-      "location": "Location",
-      "confirmBooking": "Confirm Booking",
-      "backToCoaches": "Back to Coaches",
-      "backToCalendar": "Back to Calendar",
-      "backToBooking": "Back to Booking",
-      "selectACoachAndScheduleATimeThatWorksForYou": "Select a Coach and Schedule a Time That Works for You",
-      "chooseCoach": "Choose Coach",
-      "selectTime": "Select Time",
-      "confirm": "Confirm",
-      "selectCoach": "Select Coach"
+    "cta": {
+      "title": "Ready to Transform Your Fitness?",
+      "description": "Book a session with Coach Oussama and start your fitness journey today.",
+      "button": "Book a Session"
+    }
+  },
+  "ProfilePage": {
+    "title": "Profile Page",
+    "description": "This is the profile page for the user.",
+    "info": "Info",
+    "membership": "Membership",
+    "book": "Book",
+    "contact": "Contact",
+    "physical": "Physical",
+    "background": "Background",
+    "fitness": "Fitness",
+    "personal": "Personal",
+    "edit": "Edit",
+    "weight": "Weight",
+    "height": "Height",
+    "health": "Health",
+    "preferred": "Preferred",
+    "nationality": "Nationality",
+    "profile": "Profile",
+    "cancel": "Cancel",
+    "save": "Save",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "phoneNumber": "Phone Number",
+    "city": "City",
+    "age": "Age",
+    "diseases": "Diseases",
+    "preferredLanguage": "Preferred Language",
+    "goals": "Goals",
+    "healthConsiderations": "Health Considerations"
+  },
+  "MembershipPage": {
+    "title": "Membership Details",
+    "activePackage": "Active Package",
+    "remainingSessions": "Remaining Sessions",
+    "daysUntilExpiration": "Days Until Expiration",
+    "upcomingSessions": "Upcoming Sessions",
+    "loadingSessions": "Loading sessions...",
+    "noUpcomingSessions": "No upcoming sessions scheduled",
+    "bookASession": "Book a Session",
+    "purchaseAPackage": "Purchase a membership to access our services",
+    "noActivePackage": "No Active Package",
+    "noActiveMembership": "No Active Membership",
+    "sessions": "Sessions",
+    "days": "Days",
+    "purchaseAMembership": "Purchase a membership to access our services",
+    "buyAPackage": "Buy a Package",
+    "cancelSession": "Cancel Session",
+    "cancelSessionConfirmation": "Are you sure you want to cancel your session on",
+    "keepSession": "Keep Session"
+  },
+  "BookingPage": {
+    "title": "Book a Session",
+    "bookingSummary": "Booking Summary",
+    "coach": "Coach",
+    "date": "Date",
+    "time": "Time",
+    "location": "Location",
+    "confirmBooking": "Confirm Booking",
+    "backToCoaches": "Back to Coaches",
+    "backToCalendar": "Back to Calendar",
+    "backToBooking": "Back to Booking",
+    "selectACoachAndScheduleATimeThatWorksForYou": "Select a Coach and Schedule a Time That Works for You",
+    "chooseCoach": "Choose Coach",
+    "selectTime": "Select Time",
+    "confirm": "Confirm",
+    "selectCoach": "Select Coach"
   },
   "BookingCalendar": {
     "membershipRequired": "Membership Required",
@@ -200,7 +203,55 @@
     "continueToConfirmation": "Continue to Confirmation",
     "sessionLocation": "Session Location",
     "locationRequired": "Please enter a location before continuing."
+  },
+  "LoginPage": {
+    "welcomeBack": "Welcome Back",
+    "signInToYourAccount": "Sign in to your account",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "orContinueWith": "Or continue with",
+    "signInWithGoogle": "Sign in with Google",
+    "dontHaveAnAccount": "Don't have an account? ",
+    "signUp": "Sign up ",
+    "connecting": "Connecting...",
+    "loginFailed": "Login failed. Please check your credentials.",
+    "unexpectedError": "An unexpected error occurred",
+    "emailError": "Please enter a valid email address",
+    "passwordError": "Password must be at least 6 characters"
+  },
+  "RegisterPage": {
+    "createAnAccount": "Create an account",
+    "enterYourInformationToGetStarted": "Enter your information to get started",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "alreadyHaveAnAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "creatingAccount": "Creating Account...",
+    "createAccount": "Create Account",
+    "firstNameError": "First name must be at least 2 characters",
+    "lastNameError": "Last name must be at least 2 characters",
+    "confirmPasswordError": "Passwords do not match",
+    "emailError": "Please enter a valid email address",
+    "passwordError": "Password must be at least 6 characters"
+  },
+  "CheckoutPage": {
+    "checkout": "Checkout",
+    "yourInformation": "Your Information",
+    "yourSelectedPackage": "Your Selected Package",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "address": "Address",
+    "city": "City",
+    "zipCode": "Zip Code",
+    "phoneNumber": "Phone Number",
+    "yourSelectedPackage": "Your Selected Package"
+
   }
 }
-
-

@@ -570,7 +570,7 @@ function EditProfileModal({
                 <input
                   type="number"
                   name="age"
-                  value={formData.age}
+                  value={formData.age || 0}
                   onChange={handleInputChange}
                   className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
                 />

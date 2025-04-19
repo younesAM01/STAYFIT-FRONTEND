@@ -11,10 +11,12 @@ import {
   Package,
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
+import { useLocale } from "next-intl";
 
 const CoachCalendar = () => {
   const { mongoUser } = useAuth();
   const coachId = mongoUser?._id;
+  const locale = useLocale();
 
   const [currentWeekStart, setCurrentWeekStart] = useState(
     getWeekStartDate(new Date())
@@ -188,7 +190,7 @@ const CoachCalendar = () => {
         Coach Calendar
       </h1>
 
-      <div className="w-full mx-auto bg-[#0d111a] text-white rounded-lg shadow border border-gray-700">
+      <div className="w-full mx-auto bg-gray-900 border-gray-800 text-white rounded-lg shadow border ">
         <div className="flex justify-between items-center p-2 sm:p-4 border-b border-gray-700">
           <div className="flex items-center gap-1 sm:gap-2">
             <Calendar className="text-[#B4E90E] hidden sm:block" size={20} />
@@ -229,7 +231,7 @@ const CoachCalendar = () => {
             <div className="min-w-max md:w-full">
               {/* Calendar header */}
               <div className="grid grid-cols-8 border-b border-gray-700">
-                <div className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium text-gray-500 border-r border-gray-700 sticky left-0 bg-[#0d111a] z-10">
+                <div className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium text-gray-500 border-r border-gray-700 sticky left-0 z-10">
                   GMT+00
                 </div>
 
@@ -260,7 +262,7 @@ const CoachCalendar = () => {
                   key={hour}
                   className="grid grid-cols-8 border-b border-gray-700"
                 >
-                  <div className="p-1 sm:p-2 text-right text-xs text-gray-500 border-r border-gray-700 sticky left-0 bg-[#0d111a] z-10">
+                  <div className="p-1 sm:p-2 text-right text-xs text-gray-500 border-r border-gray-700 sticky left-0 z-10">
                     {formatHour(hour)}
                   </div>
 
@@ -419,7 +421,7 @@ const CoachCalendar = () => {
                 />
                 <div>
                   <p className="text-xs text-gray-400">Package</p>
-                  <p className="text-sm">{hoveredSession.pack.category}</p>
+                  <p className="text-sm">{hoveredSession.pack?.category?.[locale]}</p>
                 </div>
               </div>
 

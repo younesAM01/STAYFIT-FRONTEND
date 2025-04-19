@@ -101,7 +101,7 @@ const ProfileAvatar = ({ user, signOut }) => {
           className="block text-[#B4E90E] hover:underline mb-2"
           onClick={() => setShowProfileMenu(false)}
         >
-          Coach Dashboard
+          {t("coachDashboard")}
         </Link>
       );
     } else if (user.role === 'admin' || user.role === 'superadmin') {
@@ -111,7 +111,7 @@ const ProfileAvatar = ({ user, signOut }) => {
           className="block text-[#B4E90E] hover:underline mb-2"
           onClick={() => setShowProfileMenu(false)}
         >
-          Admin Dashboard
+          {t("adminDashboard")}
         </Link>
       );
     }
@@ -142,7 +142,7 @@ const ProfileAvatar = ({ user, signOut }) => {
             className="block text-[#B4E90E] hover:underline mb-2"
             onClick={() => setShowProfileMenu(false)}
           >
-            View Profile
+            {t("viewProfile")}
           </Link>
           
           {/* Role-based dashboard link */}
@@ -383,7 +383,7 @@ const Navbar = () => {
                     className="text-[#B4E90E] text-sm hover:underline mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    View Profile
+                    {t("viewProfile")}
                   </Link>
                   
                   {/* Role-based dashboard links for mobile */}
@@ -393,7 +393,7 @@ const Navbar = () => {
                       className="text-[#B4E90E] text-sm hover:underline mb-2"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      Coach Dashboard
+                      {t("coachDashboard")}
                     </Link>
                   )}
                   
@@ -403,7 +403,7 @@ const Navbar = () => {
                       className="text-[#B4E90E] text-sm hover:underline mb-2"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      Admin Dashboard
+                      {t("adminDashboard")}
                     </Link>
                   )}
                   
