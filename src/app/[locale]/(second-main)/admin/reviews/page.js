@@ -1,11 +1,10 @@
 'use client'
-import UsersPage from "@/components/adminuser"
+import ReviewsPage from "@/components/adminreview"
 export default function DashboardPage() {
   return (
     <div >
-        <UsersPage/>
+        <ReviewsPage/>
     </div>
   )
 }
-
 
