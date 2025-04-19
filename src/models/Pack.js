@@ -2,9 +2,16 @@ import mongoose from 'mongoose';
 
 const PackSchema = new mongoose.Schema({
   category: {
-    type: String,
-    enum: ['Pack Single', 'Body Package', 'Pack Nutrition'],
-    required: true
+    en: {
+      type: String,
+      enum: ['Pack Single', 'Body Package', 'Pack Nutrition'],
+      required: true
+    },
+    ar: {
+      type: String,
+      enum: ['باقة فردية', 'باقة الجسم', 'باقة التغذية'],
+      required: true
+    }
   },
   sessions: [
     {

@@ -138,7 +138,7 @@ const ProfileAvatar = ({ user, signOut }) => {
           <p className="text-gray-300 mb-2 break-words">{user?.email || "email@example.com"}</p>
           
           <Link 
-            href={`/${locale}/profile`}
+            href={`/${locale}/client-profile`}
             className="block text-[#B4E90E] hover:underline mb-2"
             onClick={() => setShowProfileMenu(false)}
           >

@@ -10,7 +10,7 @@ import {
 import { useAuth } from "@/context/authContext"
 import SessionBooking from "@/components/book-session"
 import MemberShip from "@/components/membership"
-
+import { useTranslations } from "next-intl" 
 const DEFAULT_PROFILE_PIC = "https://t3.ftcdn.net/jpg/05/26/60/52/360_F_526605284_O2zMSOvCx4VIGY2nQKlbavo3UW9w0oDF.jpg"
 
 export default function ClientProfile() {
@@ -20,6 +20,8 @@ export default function ClientProfile() {
   const [packId, setPackId] = useState("")
   const [loading, setLoading] = useState(true);
   const [clientPack , setClientPack ] = useState({})
+
+  const t = useTranslations('ProfilePage');
   // Add this function to ClientProfile
 const refreshClientPack = useCallback(async () => {
   if (mongoUser?._id) {
@@ -148,7 +150,7 @@ const refreshClientPack = useCallback(async () => {
     const hasChanges = Object.keys(formData).some(
       (key) => JSON.stringify(formData[key]) !== JSON.stringify(clientInfo[key])
     );
-    
+    console.log(formData)
     if (!hasChanges || !mongoUser?.supabaseId) {
       setIsEditModalOpen(false);
       return;
@@ -245,6 +247,7 @@ const refreshClientPack = useCallback(async () => {
 
 // ProfileHero Component
 function ProfileHero({ clientInfo }) {
+  const t = useTranslations('ProfilePage');
   return (
     <div className="relative h-[30vh] sm:h-[50vh] md:h-[60vh] lg:h-[60vh] overflow-hidden">
       <motion.div 
@@ -285,9 +288,9 @@ function ProfileHero({ clientInfo }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 mt-2 sm:mt-3"
+              className="text-sm sm:text-base md:text-lg lg:text-xl  text-gray-300 mt-2 sm:mt-3"
             >
-              Client Profile
+              {t('title')}
             </motion.p>
           </div>
         </div>
@@ -298,10 +301,11 @@ function ProfileHero({ clientInfo }) {
 
 // TabNavigation Component
 function TabNavigation({ activeTab, setActiveTab }) {
+  const t = useTranslations('ProfilePage');
   const tabs = [
-    { id: "info", label: "Client Info" },
-    { id: "membership", label: "Membership Details" },
-    { id: "book", label: "Book Session" }
+    { id: "info", label: t('info') },
+    { id: "membership", label: t('membership') },
+    { id: "book", label: t('book') }
   ];
   
   return (
@@ -333,25 +337,26 @@ function TabNavigation({ activeTab, setActiveTab }) {
 
 // ProfileInfoTab Component
 function ProfileInfoTab({ clientInfo, setIsEditModalOpen }) {
+  const t = useTranslations('ProfilePage');
   const infoCards = [
     {
-      title: "Contact Details",
+      title: t('contact'),
       icon: User,
       items: [
-        { label: "Email", value: clientInfo.email, icon: Mail },
-        { label: "Phone", value: clientInfo.phoneNumber, icon: Phone },
-        { label: "City", value: clientInfo.city, icon: MapPin },
-        { label: "Age", value: `${clientInfo.age} years`, icon: Calendar }
+        { label: t('email'), value: clientInfo.email, icon: Mail },
+        { label: t('phoneNumber'), value: clientInfo.phoneNumber, icon: Phone },
+        { label: t('city'), value: clientInfo.city, icon: MapPin },
+        { label: t('age'), value: `${clientInfo.age} years`, icon: Calendar }
       ]
     },
     {
-      title: "Physical Details",
+      title: t('physical'),
       icon: Ruler,
       items: [
-        { label: "Weight", value: `${clientInfo.weight} kg`, icon: Weight },
-        { label: "Height", value: `${clientInfo.height} cm`, icon: Ruler },
+        { label: t('weight'), value: `${clientInfo.weight} kg`, icon: Weight },
+        { label: t('height'), value: `${clientInfo.height} cm`, icon: Ruler },
         { 
-          label: "Health Considerations", 
+          label: t('healthConsiderations'), 
           value: clientInfo.diseases.length > 0 ? null : "None", 
           list: clientInfo.diseases,
           icon: Heart 
@@ -359,19 +364,19 @@ function ProfileInfoTab({ clientInfo, setIsEditModalOpen }) {
       ]
     },
     {
-      title: "Background",
+      title: t('background'),
       icon: Globe,
       items: [
-        { label: "Preferred Language", value: clientInfo.preferredLanguage, icon: Globe },
-        { label: "Nationality", value: clientInfo.nationality, icon: Flag }
+        { label: t('preferredLanguage'), value: clientInfo.preferredLanguage, icon: Globe },
+        { label: t('nationality'), value: clientInfo.nationality, icon: Flag }
       ]
     },
     {
-      title: "Fitness Goals",
+      title: t('fitness'),
       icon: Target,
       items: [
         { 
-          label: "", 
+          label: t('goals'), 
           value: clientInfo.goals.length > 0 ? null : "None",
           list: clientInfo.goals.map(goal => ({ text: goal })),
           listType: "bullet"
@@ -386,10 +391,11 @@ function ProfileInfoTab({ clientInfo, setIsEditModalOpen }) {
       animate={{ opacity: 1, y: 0 }}
       className="mx-auto"
     >
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl sm:text-3xl font-bold flex items-center">
+      <div className="flex flex-col items-center justify-center mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold flex items-center justify-center mb-4">
           <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] mr-3 sm:mr-4"></span>
-          Personal Information
+          {t('title')}
+          <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] ml-3 sm:ml-4"></span>
         </h2>
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -398,7 +404,7 @@ function ProfileInfoTab({ clientInfo, setIsEditModalOpen }) {
           className="flex items-center gap-2 bg-[#161c2a] hover:bg-[#1f2937] text-white px-3 py-2 rounded-lg font-medium text-sm transition-colors"
         >
           <Edit size={16} className="text-[#B4E90E]" />
-          Edit Profile
+          {t('edit')}
         </motion.button>
       </div>
       
@@ -474,6 +480,7 @@ function EditProfileModal({
   handleSubmit, 
   setIsEditModalOpen 
 }) {
+  const t = useTranslations('ProfilePage');
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm bg-black/40">
       <motion.div 
@@ -484,7 +491,7 @@ function EditProfileModal({
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold flex items-center">
             <Edit className="text-[#B4E90E] mr-2" size={20} />
-            Edit Profile Information
+            {t('edit')}
           </h3>
           <button 
             onClick={() => setIsEditModalOpen(false)} 
@@ -498,31 +505,84 @@ function EditProfileModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Personal Details Column */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-[#B4E90E] text-sm uppercase tracking-wider">Personal Details</h4>
+              <h4 className="font-semibold text-[#B4E90E] text-sm uppercase tracking-wider">{t('personal')}</h4>
               
-              {["firstName", "lastName", "email", "phoneNumber", "city", "age"].map(field => (
-                <div key={field}>
-                  <label className="block text-sm font-medium text-gray-400 mb-1">
-                    {field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')}
-                  </label>
-                  <input
-                    type={field === "email" ? "email" : field === "age" ? "number" : "text"}
-                    name={field}
-                    value={formData[field]}
-                    onChange={handleInputChange}
-                    className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
-                    required={["firstName", "lastName", "email"].includes(field)}
-                  />
-                </div>
-              ))}
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('firstName')}</label>
+                <input
+                  type="text"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleInputChange}
+                  className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('lastName')}</label>
+                <input
+                  type="text"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('email')}</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('phoneNumber')}</label>
+                <input
+                  type="text"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleInputChange}
+                  className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('city')}</label>
+                <input
+                  type="text"
+                  name="city"
+                  value={formData.city || ''}
+                  onChange={handleInputChange}
+                  className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('age')}</label>
+                <input
+                  type="number"
+                  name="age"
+                  value={formData.age}
+                  onChange={handleInputChange}
+                  className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
+                />
+              </div>
             </div>
             
             {/* Physical & Background Column */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-[#B4E90E] text-sm uppercase tracking-wider">Physical & Background</h4>
+              <h4 className="font-semibold text-[#B4E90E] text-sm uppercase tracking-wider">{t('physical')}</h4>
               
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Weight (kg)</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('weight')}</label>
                 <input
                   type="number"
                   name="weight"
@@ -533,7 +593,7 @@ function EditProfileModal({
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Height (cm)</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('height')}</label>
                 <input
                   type="number"
                   name="height"
@@ -544,7 +604,7 @@ function EditProfileModal({
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Health Considerations (comma separated)</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('health')}</label>
                 <input
                   type="text"
                   value={formData.diseases.join(', ')}
@@ -554,7 +614,7 @@ function EditProfileModal({
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Preferred Language</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('preferredLanguage')}</label>
                 <input
                   type="text"
                   name="preferredLanguage"
@@ -565,7 +625,7 @@ function EditProfileModal({
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Nationality</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('nationality')}</label>
                 <input
                   type="text"
                   name="nationality"
@@ -576,7 +636,7 @@ function EditProfileModal({
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-1">Fitness Goals (comma separated)</label>
+                <label className="block text-sm font-medium text-gray-400 mb-1">{t('fitness')}</label>
                 <input
                   type="text"
                   value={formData.goals.join(', ')}
@@ -588,7 +648,7 @@ function EditProfileModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">Profile Image URL</label>
+            <label className="block text-sm font-medium text-gray-400 mb-1">{t('profile')}</label>
             <input
               type="text"
               name="profilePic"
@@ -604,13 +664,13 @@ function EditProfileModal({
               onClick={() => setIsEditModalOpen(false)}
               className="px-4 py-2 bg-[#161c2a] text-white rounded-lg hover:bg-[#1f2937] transition-colors"
             >
-              Cancel
+              {t('cancel')}
             </button>
             <button
               type="submit"
               className="px-4 py-2 bg-[#B4E90E] text-[#0a0e15] font-medium rounded-lg hover:bg-[#a3d00c] transition-colors"
             >
-              Save Changes
+              {t('save')}
             </button>
           </div>
         </form>

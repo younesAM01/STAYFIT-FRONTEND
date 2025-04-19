@@ -12,15 +12,7 @@ import {
   Tooltip,
   LabelList,
 } from "recharts";
-import {
-  Calendar,
-  CheckCircle,
-  Clock,
-  FileText,
-  Users,
-  X,
-  XCircle,
-} from "lucide-react";
+import { Calendar, CheckCircle, Clock, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 import {
@@ -39,7 +31,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/authContext";
 
 export default function CoachDashboard() {
@@ -51,30 +42,24 @@ export default function CoachDashboard() {
   const [coachSessions, setCoachSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- State for Calculated Stats ---
   const [monthlyStats, setMonthlyStats] = useState({
     scheduled: 0,
     completed: 0,
     canceled: 0,
     total: 0,
   });
-  // --- End State for Calculated Stats ---
-
-  console.log("Fetched Coach Sessions:", coachSessions); // Log fetched data
 
   const fetchCoachSessions = async (coachId) => {
     setIsLoading(true);
     try {
       const response = await fetch(`/api/session?coachId=${coachId}`);
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`Failed to fetch sessions: ${response.status}`);
-      }
       const data = await response.json();
-      // Ensure data is an array, default to empty array if not
       setCoachSessions(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching coach sessions:", error);
-      setCoachSessions([]); // Set to empty array on error
+      setCoachSessions([]);
     } finally {
       setIsLoading(false);
     }
@@ -84,102 +69,57 @@ export default function CoachDashboard() {
     if (coachId) {
       fetchCoachSessions(coachId);
     } else {
-      setIsLoading(false); // Set loading to false if no coachId
-      setCoachSessions([]); // Ensure sessions are empty if no coachId
+      setIsLoading(false);
+      setCoachSessions([]);
     }
   }, [coachId]);
 
-  // --- Calculate Stats for Cards ---
   useEffect(() => {
-    if (!isLoading && coachSessions && coachSessions.length > 0) {
+    if (!isLoading && coachSessions?.length > 0) {
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
 
-      let scheduledCount = 0;
-      let completedCount = 0;
-      let canceledCount = 0;
-
-      coachSessions.forEach((session) => {
-        try {
-          // Ensure sessionDate is valid before creating a Date object
+      const stats = coachSessions.reduce(
+        (acc, session) => {
           if (session.sessionDate) {
             const sessionDate = new Date(session.sessionDate);
-            // Check if date is valid before proceeding
             if (!isNaN(sessionDate.getTime())) {
               const sessionMonth = sessionDate.getMonth();
               const sessionYear = sessionDate.getFullYear();
 
-              // Check if the session is in the current month and year
               if (
                 sessionMonth === currentMonth &&
                 sessionYear === currentYear
               ) {
-                // Use lowercase for status comparison for consistency
-                const status = session.status
-                  ? session.status.toLowerCase()
-                  : "";
-
-                if (status === "scheduled" || status === "confirmed") {
-                  scheduledCount++;
-                } else if (status === "completed") {
-                  completedCount++;
-                } else if (status === "canceled" || status === "cancelled") {
-                  // Handle both spellings if necessary
-                  canceledCount++;
-                }
+                const status = session.status?.toLowerCase() || "";
+                if (status === "scheduled" || status === "confirmed")
+                  acc.scheduled++;
+                else if (status === "completed") acc.completed++;
+                else if (status === "canceled" || status === "cancelled")
+                  acc.canceled++;
               }
-            } else {
-              console.warn(
-                "Invalid sessionDate found:",
-                session.sessionDate,
-                "in session:",
-                session._id
-              );
             }
-          } else {
-            console.warn("Missing sessionDate in session:", session._id);
           }
-        } catch (e) {
-          console.error(
-            "Error processing session date:",
-            session.sessionDate,
-            e
-          );
-        }
-      });
+          return acc;
+        },
+        { scheduled: 0, completed: 0, canceled: 0, total: coachSessions.length }
+      );
 
-      setMonthlyStats({
-        scheduled: scheduledCount,
-        completed: completedCount,
-        canceled: canceledCount,
-        total: coachSessions.length, // Total count remains all-time
-      });
-      console.log("Calculated Monthly Stats:", {
-        scheduledCount,
-        completedCount,
-        canceledCount,
-        total: coachSessions.length,
-      }); // Log calculated stats
-    } else if (!isLoading && (!coachSessions || coachSessions.length === 0)) {
-      // Reset stats if there are no sessions or loading is finished
+      setMonthlyStats(stats);
+    } else if (!isLoading) {
       setMonthlyStats({ scheduled: 0, completed: 0, canceled: 0, total: 0 });
-      console.log("No sessions found or loading finished, resetting stats.");
     }
   }, [coachSessions, isLoading]);
-  // --- End Calculate Stats for Cards ---
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Animation variants (kept as is)
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
+      transition: { staggerChildren: 0.1 },
     },
   };
 
@@ -196,55 +136,38 @@ export default function CoachDashboard() {
     },
   };
 
-  // --- Updated Stats Data for Cards ---
   const sessionStatsCards = useMemo(
     () => [
       {
         title: "Sessions Scheduled",
-        value: monthlyStats.scheduled.toString(), // Use calculated value
+        value: monthlyStats.scheduled.toString(),
         icon: Clock,
-        description: "This month", // Updated description
-        // change: "+12%", // Removed or adjust logic if needed
-        // changeType: "positive", // Removed or adjust logic if needed
+        description: "This month",
       },
       {
         title: "Sessions Completed",
-        value: monthlyStats.completed.toString(), // Use calculated value
+        value: monthlyStats.completed.toString(),
         icon: CheckCircle,
-        description: "This month", // Updated description
-        // change: "+8%", // Removed or adjust logic if needed
-        // changeType: "positive", // Removed or adjust logic if needed
+        description: "This month",
       },
       {
         title: "Sessions Cancelled",
-        value: monthlyStats.canceled.toString(), // Use calculated value
+        value: monthlyStats.canceled.toString(),
         icon: XCircle,
-        description: "This month", // Updated description
-        // change: "-2%", // Removed or adjust logic if needed
-        // changeType: "negative", // Removed or adjust logic if needed
+        description: "This month",
       },
       {
         title: "Total Sessions",
-        value: monthlyStats.total.toString(), // Use calculated value
+        value: monthlyStats.total.toString(),
         icon: Calendar,
-        description: "All time", // Kept as all time
-        // change: "+24%", // Removed or adjust logic if needed
-        // changeType: "positive", // Removed or adjust logic if needed
+        description: "All time",
       },
     ],
     [monthlyStats]
-  ); // Dependency array includes monthlyStats
-  // --- End Updated Stats Data for Cards ---
+  );
 
-  // --- Updated Monthly Sessions Data Logic for Last 4 Months and Next 2 Months ---
   const monthlySessions = useMemo(() => {
-    // Get current date
     const now = new Date();
-
-    // Array to hold last 4 months plus next 2 months data (total 7 months including current)
-    const monthsData = [];
-
-    // Array of month names in English
     const monthNames = [
       "Jan",
       "Feb",
@@ -259,294 +182,155 @@ export default function CoachDashboard() {
       "Nov",
       "Dec",
     ];
+    const monthsData = [];
 
-    // Generate data for the last 4 months
-    for (let i = 4; i > 0; i--) {
-      // Create a new date for each month by going back i months
-      const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-
-      // Get month index (0-11)
-      const monthIndex = monthDate.getMonth();
-
-      // Get month name from the array
-      const monthName = monthNames[monthIndex];
-
-      // Add year for clarity if the range spans multiple years
-      const label =
-        now.getFullYear() !== monthDate.getFullYear()
-          ? `${monthName}`
-          : monthName;
-
-      // Initialize with structured object
-      monthsData.push({
-        name: label,
-        sessions: 0, // Will be populated with real data if available
-        monthNum: monthIndex,
-        year: monthDate.getFullYear(),
-      });
-    }
-
-    // Add current month
-    monthsData.push({
-      name: monthNames[now.getMonth()],
-      sessions: 0,
-      monthNum: now.getMonth(),
-      year: now.getFullYear(),
-    });
-
-    // Generate data for the next 2 months
-    for (let i = 1; i <= 2; i++) {
-      // Create a new date for each month by going forward i months
+    // Generate data for last 4 months, current month, and next 2 months
+    for (let i = -4; i <= 2; i++) {
       const monthDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
-
-      // Get month index (0-11)
       const monthIndex = monthDate.getMonth();
-
-      // Get month name from the array
       const monthName = monthNames[monthIndex];
-
-      // Add year for clarity if the range spans multiple years
       const label =
         now.getFullYear() !== monthDate.getFullYear()
           ? `${monthName}`
           : monthName;
 
-      // Initialize with structured object
       monthsData.push({
         name: label,
-        sessions: 0, // Will be populated with real data if available
+        sessions: 0,
         monthNum: monthIndex,
         year: monthDate.getFullYear(),
       });
     }
 
-    // Count sessions per month if session data is available
-    if (coachSessions && coachSessions.length > 0) {
+    if (coachSessions?.length > 0) {
       coachSessions.forEach((session) => {
-        try {
-          if (session.sessionDate) {
-            const sessionDate = new Date(session.sessionDate);
-
-            // Check if date is valid
-            if (!isNaN(sessionDate.getTime())) {
-              const sessionMonth = sessionDate.getMonth();
-              const sessionYear = sessionDate.getFullYear();
-
-              // Find if this session belongs to one of our months
-              const monthEntry = monthsData.find(
-                (m) => m.monthNum === sessionMonth && m.year === sessionYear
-              );
-
-              // If found, increment the session count
-              if (
-                monthEntry &&
-                session.status &&
-                (session.status.toLowerCase() === "completed" ||
-                  session.status.toLowerCase() === "confirmed" ||
-                  session.status.toLowerCase() === "scheduled")
-              ) {
-                monthEntry.sessions++;
-              }
+        if (session.sessionDate) {
+          const sessionDate = new Date(session.sessionDate);
+          if (!isNaN(sessionDate.getTime())) {
+            const sessionMonth = sessionDate.getMonth();
+            const sessionYear = sessionDate.getFullYear();
+            const monthEntry = monthsData.find(
+              (m) => m.monthNum === sessionMonth && m.year === sessionYear
+            );
+            if (monthEntry && session.status?.toLowerCase() === "completed") {
+              monthEntry.sessions++;
             }
           }
-        } catch (e) {
-          console.error("Error counting monthly sessions:", e);
         }
       });
     }
 
-    // Return the complete data object for the chart
     return monthsData;
   }, [coachSessions]);
-  // --- End Updated Monthly Sessions Data Logic ---
 
-  // --- New Weekly Sessions Data Logic ---
   const weeklySessionsData = useMemo(() => {
-    // Get current date
     const now = new Date();
-
-    // Calculate the start of the current week (Sunday)
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
 
-    // Array to hold data for each day of the current week
     const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const currentWeekData = [];
-
-    // Generate data structure for the current week
-    for (let i = 0; i < 7; i++) {
+    const currentWeekData = daysOfWeek.map((day, i) => {
       const dayDate = new Date(startOfWeek);
       dayDate.setDate(startOfWeek.getDate() + i);
+      return {
+        name: day,
+        sessions: 0,
+        fullDate: new Date(dayDate),
+      };
+    });
 
-      currentWeekData.push({
-        name: daysOfWeek[i],
-        sessions: 0, // Will be populated with real data
-        fullDate: new Date(dayDate), // Store full date for comparison
-      });
-    }
-
-    // Count sessions per day of the week if session data is available
-    if (coachSessions && coachSessions.length > 0) {
+    if (coachSessions?.length > 0) {
       coachSessions.forEach((session) => {
-        try {
-          if (session.sessionDate) {
-            const sessionDate = new Date(session.sessionDate);
-
-            // Check if date is valid
-            if (!isNaN(sessionDate.getTime())) {
-              // Find if this session belongs to one of our days this week
-              const dayEntry = currentWeekData.find(
-                (day) =>
-                  sessionDate.getDate() === day.fullDate.getDate() &&
-                  sessionDate.getMonth() === day.fullDate.getMonth() &&
-                  sessionDate.getFullYear() === day.fullDate.getFullYear()
-              );
-
-              // If found, increment the session count (count all non-cancelled sessions)
-              if (
-                dayEntry &&
-                session.status &&
-                session.status.toLowerCase() !== "cancelled" &&
-                session.status.toLowerCase() !== "canceled"
-              ) {
-                dayEntry.sessions++;
-              }
+        if (session.sessionDate) {
+          const sessionDate = new Date(session.sessionDate);
+          if (!isNaN(sessionDate.getTime())) {
+            const dayEntry = currentWeekData.find(
+              (day) =>
+                sessionDate.getDate() === day.fullDate.getDate() &&
+                sessionDate.getMonth() === day.fullDate.getMonth() &&
+                sessionDate.getFullYear() === day.fullDate.getFullYear()
+            );
+            if (
+              dayEntry &&
+              session.status?.toLowerCase() !== "cancelled" &&
+              session.status?.toLowerCase() !== "canceled"
+            ) {
+              dayEntry.sessions++;
             }
           }
-        } catch (e) {
-          console.error("Error counting daily sessions:", e);
         }
       });
     }
 
-    // Return formatted data for the chart
     return currentWeekData;
   }, [coachSessions]);
 
-  // --- Sorting Function for Table (Kept as is, but improved robustness) ---
-  const sortCoachSessions = (sessions) => {
-    // Return default structure if sessions are not valid
-    if (!sessions || !Array.isArray(sessions)) {
-      console.warn("sortCoachSessions called with invalid input:", sessions);
+  const sortedSessionsForTable = useMemo(() => {
+    if (!coachSessions?.length)
       return { upcoming: [], completed: [], cancelled: [] };
-    }
 
     const currentDate = new Date();
     const sortedSessions = {
       upcoming: [],
       completed: [],
-      cancelled: [], // Use consistent spelling
+      cancelled: [],
     };
 
-    sessions.forEach((session) => {
-      // Basic check for session structure
-      if (!session || typeof session !== "object" || !session._id) {
-        console.warn("Skipping invalid session object:", session);
-        return;
-      }
-      const sessionStatus = session.status
-        ? session.status.toLowerCase()
-        : "unknown";
-      const clientFirstName = session.client?.firstName || "";
-      const clientLastName = session.client?.lastName || "";
-      const clientName =
-        `${clientFirstName} ${clientLastName}`.trim() || "Unknown Client";
-      const duration = `${session.duration || 60} min`;
-      const sessionTime = session.sessionTime || "N/A"; // Handle missing time
-      const location = session.location || "Virtual"; // Add location with default value
-      let sessionDateStr = "Invalid Date";
-      let sessionDateObj = null;
+    coachSessions.forEach((session) => {
+      if (!session?._id) return;
 
-      if (session.sessionDate) {
-        try {
-          sessionDateObj = new Date(session.sessionDate);
-          if (!isNaN(sessionDateObj.getTime())) {
-            sessionDateStr = sessionDateObj.toLocaleDateString("en-US", {
+      const sessionStatus = session.status?.toLowerCase() || "unknown";
+      const clientName =
+        `${session.client?.firstName || ""} ${session.client?.lastName || ""}`.trim() ||
+        "Unknown Client";
+      const sessionDate = session.sessionDate
+        ? new Date(session.sessionDate)
+        : null;
+      const sessionDateStr =
+        sessionDate && !isNaN(sessionDate.getTime())
+          ? sessionDate.toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
               year: "numeric",
-            });
-          } else {
-            sessionDateObj = null; // Invalidate if parsing failed
-            console.warn(
-              "Invalid sessionDate format encountered during sort:",
-              session.sessionDate
-            );
-          }
-        } catch (e) {
-          console.error(
-            "Error parsing session date during sort:",
-            session.sessionDate,
-            e
-          );
-          sessionDateObj = null; // Invalidate on error
-        }
-      } else {
-        console.warn(
-          "Missing sessionDate in session during sort:",
-          session._id
-        );
-      }
+            })
+          : "Invalid Date";
 
       const sessionData = {
         id: session._id,
         client: clientName,
         date: sessionDateStr,
-        time: sessionTime,
-        duration: duration,
-        location: location, // Add location to session data
-        status: session.status || "unknown", // Keep original case for display if needed, or use sessionStatus
+        time: session.sessionTime || "N/A",
+        duration: `${session.duration || 60} min`,
+        location: session.location || "Virtual",
+        status: session.status || "unknown",
       };
 
       if (sessionStatus === "cancelled" || sessionStatus === "canceled") {
-        // Check both spellings
         sortedSessions.cancelled.push(sessionData);
       } else if (sessionStatus === "completed") {
         sortedSessions.completed.push(sessionData);
       } else if (
-        sessionStatus === "scheduled" ||
-        sessionStatus === "confirmed"
+        (sessionStatus === "scheduled" || sessionStatus === "confirmed") &&
+        sessionDate &&
+        sessionDate >= currentDate.setHours(0, 0, 0, 0)
       ) {
-        // Only add to upcoming if the date is valid and in the future or today
-        if (
-          sessionDateObj &&
-          sessionDateObj >= currentDate.setHours(0, 0, 0, 0)
-        ) {
-          // Compare date part only
-          sortedSessions.upcoming.push(sessionData);
-        } else if (!sessionDateObj) {
-          // Handle sessions with invalid/missing dates if needed, maybe add to a specific category or log
-          console.warn(
-            `Session ${session._id} with status ${sessionStatus} has invalid/missing date, not added to upcoming.`
-          );
-        }
-        // Optionally, handle past sessions that are not completed/cancelled differently if needed
-      } else {
-        // Handle other statuses or past non-completed/non-cancelled sessions if necessary
-        console.log(
-          `Session ${session._id} has status: ${sessionStatus} - not categorized for table tabs.`
-        );
+        sortedSessions.upcoming.push(sessionData);
       }
     });
 
-    // Helper function for robust date comparison during sort
     const getDateForSort = (session) => {
       try {
-        // Attempt to reconstruct a sortable date object
         const date = new Date(`${session.date} ${session.time}`);
-        return !isNaN(date.getTime()) ? date : new Date(0); // Return epoch if invalid
+        return !isNaN(date.getTime()) ? date : new Date(0);
       } catch (e) {
-        return new Date(0); // Return epoch on error
+        return new Date(0);
       }
     };
 
-    // Sort upcoming sessions by date (earliest first)
     sortedSessions.upcoming.sort(
       (a, b) => getDateForSort(a) - getDateForSort(b)
     );
-
-    // Sort completed and cancelled sessions by date (latest first)
     sortedSessions.completed.sort(
       (a, b) => getDateForSort(b) - getDateForSort(a)
     );
@@ -555,28 +339,14 @@ export default function CoachDashboard() {
     );
 
     return sortedSessions;
-  };
-
-  // Use useMemo for sorted sessions to avoid recalculating on every render unless coachSessions changes
-  const sortedSessionsForTable = useMemo(
-    () => sortCoachSessions(coachSessions),
-    [coachSessions]
-  );
-  // --- End Sorting Function for Table ---
+  }, [coachSessions]);
 
   const mainColor = "#B4E90E";
-  // const bgColor = "#0d111a" // Defined inline below, keeping variable for reference
-  const textColor = "#FFFFFF"; // Defined inline below, keeping variable for reference
 
-  if (!mounted) {
-    return null; // Or a loading spinner
-  }
+  if (!mounted) return null;
 
   return (
-    // Removed explicit min-h-screen and color, assuming parent provides background/text color
     <div className="container py-6 overflow-x-hidden">
-      {" "}
-      {/* Added padding */}
       <motion.div
         initial="hidden"
         animate="visible"
@@ -592,12 +362,10 @@ export default function CoachDashboard() {
           </p>
         </motion.div>
 
-        {/* --- Stats Cards Using Calculated Values --- */}
         <motion.div
           variants={itemVariants}
           className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
         >
-          {/* Map over the dynamically generated card data */}
           {sessionStatsCards.map((stat, index) => (
             <motion.div
               key={stat.title}
@@ -612,35 +380,26 @@ export default function CoachDashboard() {
                     <CardTitle className="text-sm font-medium text-white py-2">
                       {stat.title}
                     </CardTitle>
-                    {/* Render Icon component */}
                     <stat.icon className="h-4 w-4 text-[#B4E90E]" />
                   </div>
                 </CardHeader>
                 <CardContent className="px-6">
                   <div className="flex items-baseline justify-between">
-                    {/* Display the value from state */}
                     <div className="text-2xl font-bold text-white">
                       {stat.value}
                     </div>
-                    {/* Removed change indicator, add back if needed */}
-                    {/* <div className={`text-xs ${stat.changeType === "positive" ? "text-green-500" : "text-red-500"}`}>
-                      {stat.change}
-                    </div> */}
                   </div>
-                  {/* Display the description (e.g., "This month") */}
                   <p className="text-xs text-gray-400 mt-1">
                     {stat.description}
                   </p>
-                  {/* Progress bar - kept original logic, may need adjustment */}
                   <div className="mt-2 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
                     <motion.div
                       className="h-full rounded-full"
                       style={{ backgroundColor: mainColor }}
                       initial={{ width: 0 }}
-                      // Base the animation on the stat value. Adjust the denominator (20) as needed for scale.
                       animate={{
                         width: `${(Number.parseInt(stat.value) / 20) * 100}%`,
-                      }} // Adjusted denominator
+                      }}
                       transition={{ duration: 1, ease: "easeOut" }}
                     />
                   </div>
@@ -649,14 +408,11 @@ export default function CoachDashboard() {
             </motion.div>
           ))}
         </motion.div>
-        {/* --- End Stats Cards --- */}
 
-        {/* Charts Section (Updated Monthly Sessions Chart) */}
         <motion.div
           variants={itemVariants}
           className="grid gap-4 md:grid-cols-2"
         >
-          {/* Monthly Sessions Chart - UPDATED */}
           <Card className="shadow-md bg-gray-900 border-gray-800">
             <CardHeader>
               <CardTitle className="text-white py-2">
@@ -699,7 +455,6 @@ export default function CoachDashboard() {
             </CardContent>
           </Card>
 
-          {/* Session in this week chart */}
           <Card className="shadow-md bg-gray-900 border-gray-800">
             <CardHeader>
               <CardTitle className="text-white py-2">
@@ -749,7 +504,6 @@ export default function CoachDashboard() {
           </Card>
         </motion.div>
 
-        {/* Recent Activity with Sessions Table (Using sortedSessionsForTable) */}
         <motion.div variants={itemVariants}>
           <Card className="bg-gray-900 border-gray-800">
             <CardHeader>
@@ -785,8 +539,7 @@ export default function CoachDashboard() {
                 <div className="text-center py-10 text-gray-400">
                   Loading sessions...
                 </div>
-              ) : sortedSessionsForTable[activeTab] &&
-                sortedSessionsForTable[activeTab].length > 0 ? (
+              ) : sortedSessionsForTable[activeTab]?.length > 0 ? (
                 <div className="rounded-md border border-gray-800 overflow-x-auto">
                   <Table>
                     <TableHeader className="bg-gray-800">
@@ -813,7 +566,6 @@ export default function CoachDashboard() {
                     </TableHeader>
                     <TableBody>
                       {sortedSessionsForTable[activeTab].map((session) => (
-                        console.log(session),
                         <TableRow
                           key={session.id}
                           className="hover:bg-gray-800/50 border-gray-800"
@@ -831,7 +583,7 @@ export default function CoachDashboard() {
                             {session.duration}
                           </TableCell>
                           <TableCell className="text-gray-300">
-                            {session.location || "Virtual"}
+                            {session.location}
                           </TableCell>
                           <TableCell>
                             <Badge
@@ -848,8 +600,8 @@ export default function CoachDashboard() {
                                           session.status.toLowerCase() ===
                                             "cancelled"
                                         ? "bg-red-900 text-red-200"
-                                        : "bg-gray-700 text-gray-300" // Default badge
-                              } capitalize`} // Added capitalize
+                                        : "bg-gray-700 text-gray-300"
+                              } capitalize`}
                             >
                               {session.status}
                             </Badge>

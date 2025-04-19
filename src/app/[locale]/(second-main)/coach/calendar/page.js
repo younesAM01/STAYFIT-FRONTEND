@@ -207,7 +207,7 @@ const CoachCalendar = () => {
               onClick={goToToday}
               className="px-2 py-1 text-xs sm:text-sm bg-[#2a3142] text-[#B4E90E] rounded-md hover:bg-[#353e52]"
             >
-              Today
+              Current Week
             </button>
 
             <button

@@ -7,9 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
+import { useTranslations } from 'next-intl'
 
-export default function CoachSelection({ onSelect }) {
+export default function CoachSelection({ onSelect }) {  
   const [coaches, setCoaches] = useState([]);
+  const t = useTranslations('BookingPage')
 
   useEffect(() => {
     const fetchCoaches = async () => {
@@ -103,7 +105,7 @@ export default function CoachSelection({ onSelect }) {
               className="w-full bg-[#B4E90E] text-[#0d111a] hover:bg-[#a3d40c] font-semibold py-5 rounded-md shadow-lg shadow-[#B4E90E]/20 transition-all duration-300 hover:shadow-[#B4E90E]/30"
               onClick={() => onSelect(coach._id)}
             >
-              Select Coach
+              {t("selectCoach")}
             </Button>
           </CardFooter>
         </Card>

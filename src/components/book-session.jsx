@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft, Check } from "lucide-react"
 import CoachSelection from "./coach-selection"
 import BookingCalendar from "./booking-calendar"
-
+import { useTranslations } from 'next-intl'
 export default function BookingSection({clientId , setActiveTab , clientPack , refreshClientPack}) {
   const [step, setStep] = useState("coach")
   const [selectedCoachId, setSelectedCoachId] = useState(null)
@@ -19,7 +19,8 @@ export default function BookingSection({clientId , setActiveTab , clientPack , r
   const [coaches, setCoaches] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [refreshSessionsFunction, setRefreshSessionsFunction] = useState(null)
-  
+  const t = useTranslations('BookingPage')
+
   useEffect(() => {
     // Fetch coaches to have access to the coach data
     const fetchCoaches = async () => {
@@ -140,9 +141,9 @@ export default function BookingSection({clientId , setActiveTab , clientPack , r
   return (
     <Card className="w-full bg-[#161c2c] border-[#2a3142]">
       <CardHeader>
-        <CardTitle className="text-white text-2xl">Book a Session</CardTitle>
+        <CardTitle className="text-white text-2xl">{t("title")}</CardTitle>
         <CardDescription className="text-gray-400">
-          Select a coach and schedule a time that works for you
+          {t("selectACoachAndScheduleATimeThatWorksForYou")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -153,21 +154,21 @@ export default function BookingSection({clientId , setActiveTab , clientPack , r
               disabled={step !== "coach"}
               className="data-[state=active]:bg-[#B4E90E] data-[state=active]:text-[#0d111a]"
             >
-              Choose Coach
+              {t("chooseCoach")}
             </TabsTrigger>
             <TabsTrigger
               value="calendar"
               disabled={step !== "calendar"}
               className="data-[state=active]:bg-[#B4E90E] data-[state=active]:text-[#0d111a]"
             >
-              Select Time
+              {t("selectTime")}
             </TabsTrigger>
             <TabsTrigger
               value="confirmation"
               disabled={step !== "confirmation"}
               className="data-[state=active]:bg-[#B4E90E] data-[state=active]:text-[#0d111a]"
             >
-              Confirm
+              {t("confirm")}
             </TabsTrigger>
           </TabsList>
 
@@ -179,7 +180,7 @@ export default function BookingSection({clientId , setActiveTab , clientPack , r
             <div className="mb-4">
               <Button variant="outline" size="sm" onClick={handleBack} className="border-[#2a3142] hover:bg-[#2a3142]">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Coaches
+                {t("backToCoaches")}
               </Button>
             </div>
             <BookingCalendar coachId={selectedCoachId} onSelect={handleDateTimeSelect} />
@@ -189,25 +190,25 @@ export default function BookingSection({clientId , setActiveTab , clientPack , r
             <div className="mb-4">
               <Button variant="outline" size="sm" onClick={handleBack} className="border-[#2a3142] hover:bg-[#2a3142]">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Calendar
+                {t("backToCalendar")}
               </Button>
             </div>
 
             <div className="space-y-6">
               <div className="rounded-lg border border-[#2a3142] p-4 bg-[#0d111a]">
-                <h3 className="font-medium mb-2 text-white">Booking Summary</h3>
+                <h3 className="font-medium mb-2 text-white">{t("bookingSummary")}</h3>
                 <div className="space-y-2 text-white">
                   <p className="text-white">
-                    <span className="text-gray-400">Coach:</span> {selectedCoach ? `${selectedCoach.firstName} ${selectedCoach.lastName}` : ''}
+                    <span className="text-gray-400">{t("coach")}:</span> {selectedCoach ? `${selectedCoach.firstName} ${selectedCoach.lastName}` : ''}
                   </p>
                   <p>
-                    <span className="text-gray-400">Date:</span> {selectedDate?.toLocaleDateString()}
+                    <span className="text-gray-400">{t("date")}:</span> {selectedDate?.toLocaleDateString()}
                   </p>
                   <p>
-                    <span className="text-gray-400">Time:</span> {selectedTime}
+                    <span className="text-gray-400">{t("time")}:</span> {selectedTime}
                   </p>
                   <p>
-                    <span className="text-gray-400">Location:</span> {sessionLocation}
+                    <span className="text-gray-400">{t("location")}:</span> {sessionLocation}
                   </p>
                 </div>
               </div>
@@ -222,7 +223,7 @@ export default function BookingSection({clientId , setActiveTab , clientPack , r
                 ) : (
                   <>
                     <Check className="mr-2 h-4 w-4" />
-                    Confirm Booking
+                    {t("confirmBooking")}
                   </>
                 )}
               </Button>

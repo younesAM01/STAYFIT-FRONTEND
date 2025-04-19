@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronRight, ShoppingCart, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/authContext';
+import { useTranslations } from 'next-intl';
 
 export default function BookingCalendar({ coachId, onSelect }) {
   const { mongoUser } = useAuth();
@@ -17,7 +18,7 @@ export default function BookingCalendar({ coachId, onSelect }) {
   const [hasValidMembership, setHasValidMembership] = useState(false);
   const [sessionLocation, setSessionLocation] = useState('');
   const [locationError, setLocationError] = useState(''); // New state for location error message
-
+  const t = useTranslations('BookingCalendar')
   const hours = Array.from({ length: 16 }, (_, i) => i + 8);
   const weekDays = getWeekDays(currentWeekStart);
   const monthNames = [
@@ -182,7 +183,7 @@ export default function BookingCalendar({ coachId, onSelect }) {
 
   const confirmBooking = () => {
     if (!selectedSlot || !sessionLocation) {
-      setLocationError("Please enter a location before continuing."); // Set error message instead of alert
+      setLocationError(t("locationRequired")); // Set error message instead of alert
       return;
     }
     
@@ -227,10 +228,9 @@ export default function BookingCalendar({ coachId, onSelect }) {
           </div>
           
           <div className="text-center">
-            <h3 className="text-xl sm:text-2xl font-bold mb-4">Membership Required</h3>
+            <h3 className="text-xl sm:text-2xl font-bold mb-4">{t("membershipRequired")}</h3>
             <p className="text-gray-400 mb-6 max-w-md">
-              To book sessions, you need an active membership with remaining sessions. 
-              Please purchase a package or renew your existing membership.
+              {t("membershipRequiredMessage")}
             </p>
             
             <Button 
@@ -238,7 +238,7 @@ export default function BookingCalendar({ coachId, onSelect }) {
               onClick={() => window.location.href = '/packages'}
             >
               <ShoppingCart size={20} />
-              Buy a Package
+              {t("buyAPackage")}
             </Button>
           </div>
         </div>
@@ -247,7 +247,7 @@ export default function BookingCalendar({ coachId, onSelect }) {
   }
 
   return (
-    <div className="w-full bg-[#0d111a] rounded-lg border border-[#2a3142] p-2">
+    <div className="w-full bg-[#0d111a] rounded-lg border border-[#2a3142] p-4">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold text-white">{currentMonthDisplay()}</h2>
         <div className="flex space-x-2">
@@ -266,7 +266,7 @@ export default function BookingCalendar({ coachId, onSelect }) {
               variant="outline"
               className="border-[#2a3142] hover:bg-[#2a3142]"
             >
-              Current Week
+              {t("currentWeek")}
             </Button>
           )}
           
@@ -376,8 +376,8 @@ export default function BookingCalendar({ coachId, onSelect }) {
                             : 'bg-[#1a1e2a] text-gray-600 cursor-not-allowed'
                         }`}
                       >
-                        {sessionOnSlot ? 'Booked' : 
-                         isAvailable && !isPast ? 'Available' : 'Unavailable'}
+                        {sessionOnSlot ? t("booked") : 
+                         isAvailable && !isPast ? t("available") : t("unavailable")}
                       </button>
                     </td>
                   );
@@ -390,13 +390,13 @@ export default function BookingCalendar({ coachId, onSelect }) {
 
       {selectedSlot && (
         <div className="mt-6 p-4 border rounded-lg border-[#2a3142]">
-          <h3 className="text-lg font-medium mb-2 text-white">Selected Time</h3>
+          <h3 className="text-lg font-medium mb-2 text-white">{t("selectedTime")}</h3>
           <p className="mb-4 text-gray-300">
             {selectedSlot.date.toDateString()} at {selectedSlot.formattedTime}
           </p>
           <input
             type="text"
-            placeholder="Enter session location"
+            placeholder={t("sessionLocation")}
             value={sessionLocation}
             onChange={(e) => {
               setSessionLocation(e.target.value);
@@ -409,13 +409,13 @@ export default function BookingCalendar({ coachId, onSelect }) {
             onClick={confirmBooking}
             className="w-full bg-[#B4E90E] text-[#0d111a] hover:bg-[#a3d40c]"
           >
-            Continue to Confirmation
+            {t("continueToConfirmation")}
           </Button>
         </div>
       )}
       
       <div className="mt-4 text-xs text-gray-400 text-center">
-        Note: Slots can only be reserved at least 1 hour before the appointment time.
+        {t("note")}
       </div>
     </div>
   );

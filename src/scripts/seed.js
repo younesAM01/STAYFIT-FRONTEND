@@ -16,7 +16,10 @@ async function seedPacks() {
 
   const packs = [
     {
-      category: 'Pack Single',
+      category: {
+        en: 'Pack Single',
+        ar: 'باقة فردية'
+      },
       sessions: [
         { price: 325, sessionCount: 1, expirationDays: 15 },
         { price: 1794, sessionCount: 6, expirationDays: 30 },
@@ -46,7 +49,10 @@ async function seedPacks() {
       }
     },
     {
-      category: 'Body Package',
+      category: {
+        en: 'Body Package',
+        ar: 'باقة الجسم'
+      },
       sessions: [
         { price: 445, sessionCount: 1, expirationDays: 15 },
         { price: 2394, sessionCount: 6, expirationDays: 30 },
@@ -77,7 +83,10 @@ async function seedPacks() {
       }
     },
     {
-      category: 'Pack Nutrition',
+        category: {
+        en: 'Pack Nutrition',
+        ar: 'باقة التغذية'
+      },
       sessions: [{ price: 499, sessionCount: 1, expirationDays: 15 }],
       features: {
         en: [

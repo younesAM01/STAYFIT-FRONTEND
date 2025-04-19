@@ -58,7 +58,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-
+  city: {
+    type: String,
+    trim: true
+  },
   supabaseId: {
     type: String,
     required: true,
