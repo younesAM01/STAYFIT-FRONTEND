@@ -9,7 +9,9 @@
     "services": "Services",
     "about us": "About Us",
     "contact us": "Contact Us",
-    "register": "Register Now",
+    "servicestitle": "Our Services",
+    "register": "Log In",
+    "logout": "Log Out",
     "General Fitness": "General Fitness",
     "GeneralFitnessDescription": "Do you find yourself quickly tiring when climbing stairs? Don't worry! We offer a fitness program specifically designed for your age and weight, using circuit training and an endurance approach to help you regain your fitness and energy.",
     "Pre/Postnatal Exercises": "Pre/Postnatal Exercises",
@@ -26,53 +28,11 @@
     "testemonia": "WHAT OUR CLIENT SAY",
     "packtitle": "MEMBERSHIP PLAN",
     "packbtn": "GET STARTED",
-    "packs": [
-      {
-        "id": "starter",
-        "name": "STARTER PLAN",
-        "price": "$40",
-        "period": "per month",
-        "features": [
-          "Unlimited club access",
-          "Open 24/7",
-          "Access to live team training",
-          "Spa & fight club",
-          "Functional Fitness 1 on 1",
-          "Personal Health Coaching"
-        ],
-        "highlight": false
-      },
-      {
-        "id": "standard",
-        "name": "STANDARD PLAN",
-        "price": "$100",
-        "period": "per month",
-        "features": [
-          "Unlimited club access",
-          "Diet Plan included",
-          "5 Days a Week",
-          "Open, fight club",
-          "Health and Fitness Tips",
-          "Personal Health Coaching"
-        ],
-        "highlight": true
-      },
-      {
-        "id": "premium",
-        "name": "PREMIUM PLAN",
-        "price": "$140",
-        "period": "per month",
-        "features": [
-          "Membership Card",
-          "7 Days a Week",
-          "Diet Plan included",
-          "Spa & Fight club, Cardio Classes",
-          "Health and Fitness Tips",
-          "Personal Health Coaching"
-        ],
-        "highlight": false
-      }
-    ],
+    "currency": "RS",
+    "sessions": "Sessions",
+    "expiry": "Expiration time",
+    "days": "Day",
+    
     "ContactPage": {
       "title": "CONTACT US",
       "subtitle": "FOR MORE INFORMATION!",
