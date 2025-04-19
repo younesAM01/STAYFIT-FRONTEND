@@ -22,6 +22,8 @@ const CertificationSchema = new mongoose.Schema({
   title: { type: String, required: true },
   org: { type: String, default: "" }
 });
+
+
 const UserSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -40,6 +42,7 @@ const UserSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+
   phoneNumber: {
     type: String,
     trim: true
@@ -55,11 +58,13 @@ const UserSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+
   supabaseId: {
     type: String,
     required: true,
     unique: true
   },
+
   role: {
     type: String,
     enum: ['super admin', 'admin', 'coach', 'client'],
@@ -114,10 +119,13 @@ const UserSchema = new mongoose.Schema({
   provider: {
     type: String
   },
+
   createdAt: {
     type: Date,
     default: Date.now
   }
+
 });
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);
+
