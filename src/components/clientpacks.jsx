@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { CheckCircle, MoreHorizontal, Package, CalendarDays, User, Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useSidebar } from "@/components/ui/sidebar"
-
+import { useLocale } from "next-intl"
 
 
 export default function ClientPacksPage() {
@@ -32,6 +31,7 @@ export default function ClientPacksPage() {
     remainingSessions: 0,
     purchaseState: "pending"
   })
+  const { locale } = useLocale()
 
   // Add state for clients and packs lists
   const [clients, setClients] = useState([])
@@ -129,7 +129,8 @@ export default function ClientPacksPage() {
 
   const getPackDisplayInfo = (pack) => {
     if (!pack) return 'N/A'
-    return `${pack.category} - ${pack.sessions[0]?.sessionCount || 0} sessions`
+    console.log(pack.category?.[locale])
+    return `${pack.category?.[locale]} - ${pack.sessions[0]?.sessionCount || 0} sessions`
   }
 
   const handleAddNewPack = async (e) => {
@@ -259,7 +260,7 @@ export default function ClientPacksPage() {
   const filteredData = clientPacks.filter((pack) => {
     const searchFields = [
       pack.clientName?.toLowerCase() || '',
-      pack.pack?.category?.toLowerCase() || '',
+      pack.pack?.category?.[locale]?.toLowerCase() || '',
       String(pack.packPrice).toLowerCase(),
       pack.purchaseState?.toLowerCase() || '',
     ]

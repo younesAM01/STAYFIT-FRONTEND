@@ -11,16 +11,17 @@ import { useAuth } from "@/context/authContext"
 import SessionBooking from "@/components/book-session"
 import MemberShip from "@/components/membership"
 import { useTranslations } from "next-intl" 
-const DEFAULT_PROFILE_PIC = "https://t3.ftcdn.net/jpg/05/26/60/52/360_F_526605284_O2zMSOvCx4VIGY2nQKlbavo3UW9w0oDF.jpg"
 
 export default function ClientProfile() {
   const { mongoUser, isLoading: authLoading } = useAuth()
   const [activeTab, setActiveTab] = useState("info")
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [packId, setPackId] = useState("")
+  const [packId, setPackId] = useState(null)
   const [loading, setLoading] = useState(true);
   const [clientPack , setClientPack ] = useState({})
-
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [error, setError] = useState(null)
+  const profile = "https://res.cloudinary.com/dkjx65vc7/image/upload/v1745098188/blank-profile-picture-973460_960_720_oxeuux.webp"
   const t = useTranslations('ProfilePage');
   // Add this function to ClientProfile
 const refreshClientPack = useCallback(async () => {
@@ -95,7 +96,7 @@ const refreshClientPack = useCallback(async () => {
     preferredLanguage: "العربية",
     nationality: "",
     goals: [],
-    profilePic: DEFAULT_PROFILE_PIC
+    profilePic: profile
   })
   
   const [formData, setFormData] = useState({ ...clientInfo })
@@ -117,7 +118,7 @@ const refreshClientPack = useCallback(async () => {
         preferredLanguage: mongoUser.preferredLanguage || "العربية",
         nationality: mongoUser.nationality || "--",
         goals: mongoUser.goals || [],
-        profilePic: mongoUser.profilePic || DEFAULT_PROFILE_PIC
+        profilePic: mongoUser.profilePic || profile
       }));
     }
   }, [mongoUser]);
@@ -127,6 +128,60 @@ const refreshClientPack = useCallback(async () => {
     setFormData({ ...clientInfo });
   }, [clientInfo]);
 
+  const handleImageUpload = async (file) => {
+    try {
+      setUploadingImage(true)
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('upload_preset', 'STAYFIT')
+      formData.append('cloud_name', 'dkjx65vc7')
+      formData.append('folder', 'Cloudinary-React')
+
+      const response = await fetch(
+        'https://api.cloudinary.com/v1_1/dkjx65vc7/image/upload',
+        {
+          method: 'POST',
+          body: formData,
+        }
+      )
+
+      const data = await response.json()
+      if (data && data.secure_url) {
+        return data.secure_url
+      } else {
+        throw new Error('Failed to get image URL from Cloudinary')
+      }
+    } catch (err) {
+      console.error('Error details:', err)
+      throw new Error(`Failed to upload image: ${err.message}`)
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    try {
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('File size must be less than 10MB')
+      }
+
+      if (!file.type.startsWith('image/')) {
+        throw new Error('File must be an image')
+      }
+
+      setFormData(prev => ({ ...prev, imageFile: file }))
+      const imageUrl = await handleImageUpload(file)
+      setFormData(prev => ({ ...prev, profilePic: imageUrl }))
+      setError(null)
+    } catch (err) {
+      console.error('Upload error:', err)
+      setError(err.message || 'Failed to upload image. Please try again.')
+    }
+  }
+  
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -162,7 +217,10 @@ const refreshClientPack = useCallback(async () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          profilePic: formData.profilePic // Pass the profilePic URL from formData
+        }),
       });
       
       if (!res.ok) {
@@ -239,6 +297,7 @@ const refreshClientPack = useCallback(async () => {
           handleArrayInputChange={handleArrayInputChange}
           handleSubmit={handleSubmit}
           setIsEditModalOpen={setIsEditModalOpen}
+          handleImageChange={handleImageChange}
         />
       )}
     </div>
@@ -267,7 +326,7 @@ function ProfileHero({ clientInfo }) {
             className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-xl overflow-hidden border-4 border-[#B4E90E] shadow-lg shadow-[#B4E90E]/20"
           >
             <Image
-              src={clientInfo.profilePic}
+              src={clientInfo?.profilePic || profile}
               alt={`${clientInfo.firstName} ${clientInfo.lastName}`}
               width={320}
               height={320}
@@ -478,7 +537,8 @@ function EditProfileModal({
   handleInputChange, 
   handleArrayInputChange, 
   handleSubmit, 
-  setIsEditModalOpen 
+  setIsEditModalOpen,
+  handleImageChange 
 }) {
   const t = useTranslations('ProfilePage');
   return (
@@ -650,10 +710,10 @@ function EditProfileModal({
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">{t('profile')}</label>
             <input
-              type="text"
+              type="file"
               name="profilePic"
-              value={formData.profilePic}
-              onChange={handleInputChange}
+              accept="image/*"
+              onChange={handleImageChange}
               className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
             />
           </div>
