@@ -12,11 +12,7 @@ const SpecialtySchema = new mongoose.Schema({
   description: { type: String, required: true }
 });
 
-const HeroSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  title: { type: String, required: true },
-  image: { type: String, required: true }
-});
+
 
 const CertificationSchema = new mongoose.Schema({
   title: { type: String, required: true },
@@ -88,12 +84,12 @@ const UserSchema = new mongoose.Schema({
   // Coach-specific fields
   aboutContent: { type: AboutSchema, required: false },
   specialties: [{ type: SpecialtySchema, required: false }],
-  heroContent: { type: HeroSchema, required: false },
   certifications: [{ type: CertificationSchema, required: false }],
   hoverImage: {
     type: String,
     trim: true
   },
+  title: { type: String },
   
   // Client-specific fields
   weight: {
