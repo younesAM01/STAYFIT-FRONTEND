@@ -49,7 +49,7 @@ export default function ContactForm() {
 
           <form className="space-y-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <Label 
                   htmlFor="prenom" 
                   className={`text-white ${textAlign}`}
@@ -61,7 +61,7 @@ export default function ContactForm() {
                   className="bg-transparent border-gray-700 rounded-md focus:border-[#eeff00] focus:ring-[#eeff00]" 
                 />
               </div>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <Label 
                   htmlFor="nom" 
                   className={`text-white ${textAlign}`}
@@ -76,7 +76,7 @@ export default function ContactForm() {
             </div>
 
             {/* Repeat similar pattern for other form fields */}
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label 
                 htmlFor="email" 
                 className={`text-white ${textAlign}`}
@@ -91,7 +91,7 @@ export default function ContactForm() {
             </div>
 
             {/* Continue with other form fields similarly */}
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label 
                 htmlFor="telephone" 
                 className={`text-white ${textAlign}`}
@@ -105,7 +105,7 @@ export default function ContactForm() {
               />
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label 
                 htmlFor="objet" 
                 className={`text-white ${textAlign}`}
@@ -118,7 +118,7 @@ export default function ContactForm() {
               />
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label 
                 htmlFor="message" 
                 className={`text-white ${textAlign}`}
@@ -140,7 +140,7 @@ export default function ContactForm() {
                 htmlFor="accept" 
                 className={`text-sm text-gray-300 ${textAlign}`}
               >
-                {t("form.accept")} <span className="text-[#B4E90E]">{t("form.acceptHighlight")}</span>
+                {t("form.accept")} <span className="text-[#B4E90E] ml-1">{t("form.acceptHighlight")}</span>
               </Label>
             </div>
 

@@ -188,7 +188,8 @@
     "chooseCoach": "Choose Coach",
     "selectTime": "Select Time",
     "confirm": "Confirm",
-    "selectCoach": "Select Coach"
+    "selectCoach": "Select Coach",
+    "sessionBookedSuccessfully": "Session booked successfully!"
   },
   "BookingCalendar": {
     "membershipRequired": "Membership Required",
@@ -250,7 +251,27 @@
     "address": "Address",
     "city": "City",
     "zipCode": "Zip Code",
-    "phoneNumber": "Phone Number"
+    "phoneNumber": "Phone Number",
+    "price": "Price :",
+    "expiresIn": "Expires in",
+    "days": "Days",
+    "session": "Session",
+    "packageFeatures": "Package Features",
+    "paymentMethod": "Payment Method",
+    "creditCard": "Credit Card",
+    "applePay": "Apple Pay",
+    "nameOnCard": "Name on Card",
+    "cardNumber": "Card Number",
+    "expiryDate": "Expiry Date",
+    "orderSummary": "Order Summary",
+    "packName": "Pack Name :",
+    "sessions": "Sessions :",
+    "validity": "Validity :",
+    "packPrice": "Pack Price :",
+    "total": "Total :",
+    "cancel": "Cancel",
+    "completePurchase": "Complete Purchase",
+    "currency": "RS"
   },
   "FAQ": {
     "faqtitle": "Frequently Asked Questions",

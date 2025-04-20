@@ -153,7 +153,7 @@ export default function CheckoutPage() {
           );
 
           if (response.ok) {
-            router.push("/client-profile"); // Navigate to home after completion
+            router.push(`/${locale}/client-profile`); // Navigate to home after completion
           } else {
             console.error("Failed to complete purchase:", response.status);
           }
@@ -180,10 +180,11 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Client Information - Left Side */}
           <div>
-            <h2 className="text-xl font-semibold mb-4 text-[#B4E90E]">
+           
+            <Card className="bg-[#161a26] border-[#2a2f3d] p-6 mb-6">
+            <h2 className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
               {t("yourInformation")}
             </h2>
-            <Card className="bg-[#161a26] border-[#2a2f3d] p-6 mb-6">
               <div className="space-y-4">
                 {/* Client's Personal Info Fields */}
                 <div className="grid grid-cols-2 gap-4">
@@ -258,36 +259,37 @@ export default function CheckoutPage() {
             </Card>
 
             {/* Selected Package Information */}
-            <h2 className="text-xl font-semibold mb-4 text-[#B4E90E]">
+            
+            <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
+            <h2 className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
               {t("yourSelectedPackage")}
             </h2>
-            <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
               <div className=" p-4 bg-[#0d111a] rounded-lg border border-[#2a2f3d]">
                 <div className="flex justify-between items-center mb-2">
-                  <span className="font-medium text-[#B4E90E]">
+                  <span className={`font-medium text-[#B4E90E] ${locale === 'ar' ? 'order-2' : ''}`}>
                     {packDetails.category?.[locale]}
                   </span>
-                  <div className="bg-[#B4E90E] text-[#0d111a] px-3 py-1 rounded-full text-sm font-medium">
-                    {selectedPack?.remainingSessions} Session
+                  <div className={`bg-[#B4E90E] text-[#0d111a] px-3 py-1 rounded-full text-sm font-medium ${locale === 'ar' ? 'order-1' : ''}`}>
+                    {selectedPack?.remainingSessions} {t('sessions')}
                   </div>
                 </div>
-                <div className="flex gap-3 text-sm text-gray-300 mb-2">
-                  <span>Price : </span>
-                  <span> {selectedPack?.packPrice} RS</span>
+                <div className={`flex gap-1 text-sm text-gray-300 mb-2 ${locale === 'ar' ? 'flex-row-reverse' : ''}`}>
+                  <span>{t('price')} </span>
+                  <span> {selectedPack?.packPrice}</span> {t('currency')}
                 </div>
-                <div className="text-sm text-gray-300">
-                  Expires in {getDaysLeft(selectedPack?.expirationDate)} days
+                <div className={`text-sm text-gray-300 ${locale === 'ar' ? 'text-right' : ''}`}>
+                  {t('expiresIn')} {getDaysLeft(selectedPack?.expirationDate)} {t('days')}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-[#B4E90E] font-medium mb-2">
-                  Package Features
+                <h3 className={`text-[#B4E90E] font-medium mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
+                    {t('packageFeatures')}
                 </h3>
                 <ul className="space-y-2">
-                  {packDetails.features.en.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckCircle className="h-5 w-5 text-[#B4E90E] mr-2 flex-shrink-0 mt-0.5" />
+                  {packDetails.features[locale].map((feature, index) => (
+                    <li key={index} className={`flex items-start ${locale === 'ar' ? 'flex-row-reverse' : ''}`}>
+                      <CheckCircle className={`h-5 w-5 text-[#B4E90E] flex-shrink-0 mt-0.5 ${locale === 'ar' ? 'ml-2' : 'mr-2'}`} />
                       <span className="text-gray-300 text-sm">{feature}</span>
                     </li>
                   ))}
@@ -298,10 +300,11 @@ export default function CheckoutPage() {
 
           {/* Payment Information - Right Side */}
           <div>
-            <h2 className="text-xl font-semibold mb-4 text-[#B4E90E]">
-              Payment Method
-            </h2>
+           
             <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
+              <h2 className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
+                {t('paymentMethod')}
+              </h2>
               <RadioGroup
                 value={paymentMethod}
                 onValueChange={setPaymentMethod}
@@ -319,7 +322,7 @@ export default function CheckoutPage() {
                       className="text-gray-300 flex items-center"
                     >
                       <CreditCard className="mr-2 h-4 w-4" />
-                      Credit Card
+                      {t('creditCard')}
                     </Label>
                   </div>
 
@@ -334,7 +337,7 @@ export default function CheckoutPage() {
                       className="text-gray-300 flex items-center"
                     >
                       <Apple className="mr-2 h-4 w-4" />
-                      Apple Pay
+                      {t('applePay')}
                     </Label>
                   </div>
                 </div>
@@ -344,7 +347,7 @@ export default function CheckoutPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="cardName" className="text-gray-300">
-                      Name on Card
+                      {t('nameOnCard')}
                     </Label>
                     <Input
                       id="cardName"
@@ -355,7 +358,7 @@ export default function CheckoutPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="cardNumber" className="text-gray-300">
-                      Card Number
+                      {t('cardNumber')}
                     </Label>
                     <Input
                       id="cardNumber"
@@ -367,7 +370,7 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="expiry" className="text-gray-300">
-                        Expiry Date
+                        {t('expiryDate')}
                       </Label>
                       <Input
                         id="expiry"
@@ -391,7 +394,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-center">
                   <Button className="w-full py-6 bg-black hover:bg-gray-900 text-white border border-gray-700 flex items-center justify-center">
                     <Apple className="mr-2 h-5 w-5" />
-                    Pay with Apple Pay
+                    {t('applePay')}
                   </Button>
                 </div>
               )}
@@ -399,36 +402,36 @@ export default function CheckoutPage() {
 
             <div className="mt-16">
               <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
-                <h3 className="text-lg font-medium mb-4 text-[#B4E90E]">
-                  Order Summary
+                <h3 className={`text-[#B4E90E] font-medium mb-4 ${locale === 'ar' ? 'text-right' : ''}`}>
+                  {t('orderSummary')}
                 </h3>
 
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-gray-300">
-                    <span>Pack name</span>
-                    <span>{packDetails.category?.[locale]}</span>
+                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('packName')}</span>
+                    <span className={locale === 'ar' ? 'order-1' : ''}>{packDetails.category?.[locale]}</span>
                   </div>
                   <div className="flex justify-between text-gray-300">
-                    <span>Sessions</span>
-                    <span>{selectedPack.session?.sessionCount}</span>
+                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('sessions')}</span>
+                    <span className={locale === 'ar' ? 'order-1' : ''}>{selectedPack?.remainingSessions}</span>
                   </div>
                   <div className="flex justify-between text-gray-300">
-                    <span>Validity</span>
-                    <span>
-                      {getDaysLeft(selectedPack?.expirationDate)} days
+                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('validity')}</span>
+                    <span className={locale === 'ar' ? 'order-1' : ''}>
+                      {getDaysLeft(selectedPack?.expirationDate)} {t('days')}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-300">
-                    <span>Pack Price</span>
-                    <span>{selectedPack?.packPrice} RS</span>
+                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('packPrice')}</span>
+                    <span className={locale === 'ar' ? 'order-1' : ''}>{selectedPack?.packPrice} RS</span>
                   </div>
                 </div>
 
                 <Separator className="my-4 bg-[#2a2f3d]" />
 
-                <div className="flex justify-between font-bold">
-                  <span className="text-gray-300">Total</span>
-                  <span className="text-[#B4E90E]">
+                <div className="flex justify-between text-gray-300 font-bold">
+                  <span className={locale === 'ar' ? 'order-2' : ''}>{t('total')}</span>
+                  <span className={locale === 'ar' ? 'order-1' : ''}>
                     {selectedPack?.packPrice} RS
                   </span>
                 </div>
@@ -439,13 +442,13 @@ export default function CheckoutPage() {
                   onClick={handleCancel}
                   className="w-1/2 bg-red-500 hover:bg-red-500 text-white font-bold py-3"
                 >
-                  Cancel
+                  {t('cancel')}
                 </Button>
                 <Button
                   onClick={handleCompletePurchase}
                   className="w-1/2 bg-[#B4E90E] hover:bg-[#a3d00d] text-[#0d111a] font-bold py-3"
                 >
-                  Complete Purchase
+                  {t('completePurchase')}
                 </Button>
               </div>
             </div>

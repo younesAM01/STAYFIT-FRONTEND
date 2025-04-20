@@ -192,7 +192,8 @@
     "chooseCoach": "اختر المدرب",
     "selectTime": "اختر الوقت",
     "confirm": "تأكيد",
-    "selectCoach": "اختر المدرب"
+    "selectCoach": "اختر المدرب",
+    "sessionBookedSuccessfully": "تم حجز الجلسة بنجاح"
   },
   "BookingCalendar": {
     "membershipRequired": "العضوية مطلوبة",
@@ -254,7 +255,27 @@
     "address": "العنوان",
     "city": "المدينة",
     "zipCode": "الرمز البريدي",
-    "phoneNumber": "رقم الهاتف"
+    "phoneNumber": "رقم الهاتف",
+    "price": " : السعر",
+    "expiresIn": "  ينتهي في",
+    "days": " يوم",
+    "session": " جلسة",
+    "packageFeatures": "  ميزات الحزمة",
+    "paymentMethod": "طريقة الدفع",
+    "creditCard": "بطاقة الائتمان",
+    "applePay": "Apple Pay",
+    "nameOnCard": "اسم البطاقة",
+    "cardNumber": "رقم البطاقة",
+    "expiryDate": "تاريخ الانتهاء",
+    "orderSummary": "ملخص الطلب",
+    "packName": ": اسم الحزمة ",
+    "sessions": ": الجلسات ",
+    "validity": ": الصلاحية ",
+    "packPrice": ": سعر الحزمة ",
+    "total": ": المجموع ",
+    "cancel": "إلغاء",
+    "completePurchase": "إكمال الشراء",
+    "currency": "رس"
   },
   "FAQ": {
     "faqtitle": "الأسئلة الشائعة",
