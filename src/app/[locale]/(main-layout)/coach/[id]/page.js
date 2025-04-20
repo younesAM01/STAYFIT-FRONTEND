@@ -14,11 +14,11 @@ import {
   Plus,
   Trash,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/authContext";
-
 export default function CoachProfile() {
+  const locale = useLocale();
   const { mongoUser } = useAuth();
   const [activeTab, setActiveTab] = useState("about");
   const [coachData, setCoachData] = useState(null);
@@ -68,7 +68,9 @@ export default function CoachProfile() {
       ...coachData,
       aboutContent: {
         ...coachData.aboutContent,
-        paragraphs: [...coachData.aboutContent.paragraphs],
+        paragraphs: {
+          ...coachData.aboutContent.paragraphs,
+        },
         languages: [...coachData.aboutContent.languages],
       },
       specialties: [...coachData.specialties],
@@ -92,9 +94,30 @@ export default function CoachProfile() {
     });
   };
 
+  const handleTitleChange = (e) => {
+    const value = e.target.value;
+    setEditFormData({
+      ...editFormData,
+      title: {
+        ...editFormData.title,
+        [locale]: value, // Only update the current locale version
+      },
+    });
+  };
+
   const handleParagraphChange = (index, value) => {
-    const updatedParagraphs = [...editFormData.aboutContent.paragraphs];
-    updatedParagraphs[index] = value;
+    // Clone the paragraphs object first to maintain all locales
+    const updatedParagraphs = { ...editFormData.aboutContent.paragraphs };
+
+    // Clone the current locale array
+    const localeSpecificParagraphs = [...updatedParagraphs[locale]];
+
+    // Update the specific paragraph in the current locale
+    localeSpecificParagraphs[index] = value;
+
+    // Update the paragraphs object with the modified locale array
+    updatedParagraphs[locale] = localeSpecificParagraphs;
+
     setEditFormData({
       ...editFormData,
       aboutContent: {
@@ -105,18 +128,35 @@ export default function CoachProfile() {
   };
 
   const addParagraph = () => {
+    // Clone the paragraphs object first to maintain all locales
+    const updatedParagraphs = { ...editFormData.aboutContent.paragraphs };
+
+    // Clone the current locale array and add empty paragraph
+    const localeSpecificParagraphs = [...updatedParagraphs[locale], ""];
+
+    // Update the paragraphs object with the modified locale array
+    updatedParagraphs[locale] = localeSpecificParagraphs;
+
     setEditFormData({
       ...editFormData,
       aboutContent: {
         ...editFormData.aboutContent,
-        paragraphs: [...editFormData.aboutContent.paragraphs, ""],
+        paragraphs: updatedParagraphs,
       },
     });
   };
 
   const removeParagraph = (index) => {
-    const updatedParagraphs = [...editFormData.aboutContent.paragraphs];
-    updatedParagraphs.splice(index, 1);
+    // Clone the paragraphs object first to maintain all locales
+    const updatedParagraphs = { ...editFormData.aboutContent.paragraphs };
+
+    // Clone and modify the current locale array
+    const localeSpecificParagraphs = [...updatedParagraphs[locale]];
+    localeSpecificParagraphs.splice(index, 1);
+
+    // Update the paragraphs object with the modified locale array
+    updatedParagraphs[locale] = localeSpecificParagraphs;
+
     setEditFormData({
       ...editFormData,
       aboutContent: {
@@ -168,10 +208,25 @@ export default function CoachProfile() {
 
   const handleSpecialtyChange = (index, field, value) => {
     const updatedSpecialties = [...editFormData.specialties];
-    updatedSpecialties[index] = {
-      ...updatedSpecialties[index],
-      [field]: value,
-    };
+
+    // Handle differently based on whether the field is localized
+    if (field === "title" || field === "description") {
+      // Create or update the locale-specific field
+      updatedSpecialties[index] = {
+        ...updatedSpecialties[index],
+        [field]: {
+          ...updatedSpecialties[index][field],
+          [locale]: value,
+        },
+      };
+    } else {
+      // For non-localized fields, update directly
+      updatedSpecialties[index] = {
+        ...updatedSpecialties[index],
+        [field]: value,
+      };
+    }
+
     setEditFormData({
       ...editFormData,
       specialties: updatedSpecialties,
@@ -179,12 +234,19 @@ export default function CoachProfile() {
   };
 
   const addSpecialty = () => {
+    // Create a new specialty with empty localized fields
+    const newSpecialty = {
+      title: { en: "", ar: "" },
+      description: { en: "", ar: "" },
+    };
+
+    // Set initial values for current locale
+    newSpecialty.title[locale] = "";
+    newSpecialty.description[locale] = "";
+
     setEditFormData({
       ...editFormData,
-      specialties: [
-        ...editFormData.specialties,
-        { title: "", description: "" },
-      ],
+      specialties: [...editFormData.specialties, newSpecialty],
     });
   };
 
@@ -199,10 +261,25 @@ export default function CoachProfile() {
 
   const handleCertificationChange = (index, field, value) => {
     const updatedCertifications = [...editFormData.certifications];
-    updatedCertifications[index] = {
-      ...updatedCertifications[index],
-      [field]: value,
-    };
+
+    // Handle differently based on whether the field is localized
+    if (field === "title") {
+      // Create or update the locale-specific field
+      updatedCertifications[index] = {
+        ...updatedCertifications[index],
+        [field]: {
+          ...updatedCertifications[index][field],
+          [locale]: value,
+        },
+      };
+    } else {
+      // For non-localized fields (like 'org'), update directly
+      updatedCertifications[index] = {
+        ...updatedCertifications[index],
+        [field]: value,
+      };
+    }
+
     setEditFormData({
       ...editFormData,
       certifications: updatedCertifications,
@@ -210,9 +287,18 @@ export default function CoachProfile() {
   };
 
   const addCertification = () => {
+    // Create a new certification with empty localized fields
+    const newCertification = {
+      title: { en: "", ar: "" },
+      org: "",
+    };
+
+    // Set initial values for current locale
+    newCertification.title[locale] = "";
+
     setEditFormData({
       ...editFormData,
-      certifications: [...editFormData.certifications, { title: "", org: "" }],
+      certifications: [...editFormData.certifications, newCertification],
     });
   };
 
@@ -278,7 +364,10 @@ export default function CoachProfile() {
       setImagePreview(imageUrl);
 
       console.log("Image uploaded successfully:", imageUrl);
-      console.log("Updated formData:", { ...editFormData, profilePic: imageUrl });
+      console.log("Updated formData:", {
+        ...editFormData,
+        profilePic: imageUrl,
+      });
 
       setError(null);
     } catch (err) {
@@ -286,12 +375,9 @@ export default function CoachProfile() {
       setError(err.message || "Failed to upload image. Please try again.");
     }
   };
-  
 
   const saveChanges = async () => {
     try {
-      // Here you would normally upload the image and save the data
-      // For now we'll just simulate the API call and update local state
       console.log(editFormData);
       const res = await fetch(`/api/users?supabaseId=${mongoUser.supabaseId}`, {
         method: "PUT",
@@ -308,21 +394,7 @@ export default function CoachProfile() {
       }
       const updatedData = await res.json();
       console.log("Server response:", updatedData);
-      // Update local state
       setCoachData(updatedData);
-
-      // You would normally send this to your API
-      // const formData = new FormData()
-      // formData.append('coachData', JSON.stringify(editFormData))
-      // if (selectedImage) {
-      //   formData.append('profilePic', selectedImage)
-      // }
-      // const response = await fetch(`/api/users/${coachId}`, {
-      //   method: 'PUT',
-      //   body: formData,
-      // })
-      // const updatedData = await response.json()
-      // setCoachData(updatedData)
     } catch (err) {
       console.error("Error saving coach data:", err);
     } finally {
@@ -354,7 +426,7 @@ export default function CoachProfile() {
   return (
     <div className="min-h-screen bg-[#0d111a] text-white">
       {/* Hero Section with Background */}
-      <div className="relative h-[40vh] sm:h-[50vh] md:h-[60vh] lg:h-[60vh] overflow-hidden">
+      <div className="relative h-[40vh] sm:h-[30vh] md:h-[60vh] lg:h-[60vh] overflow-hidden">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -389,12 +461,23 @@ export default function CoachProfile() {
                 <motion.h1
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold tracking-tight"
+                  className={`text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold tracking-tight ${locale === "ar" ? "text-right" : ""}`}
                 >
-                  COACH{" "}
-                  <span className="text-[#B4E90E]">
-                    {coachData?.firstName} {coachData?.lastName}
-                  </span>
+                  {locale === "ar" ? (
+                    <>
+                      <span className="text-[#B4E90E]">
+                        {coachData?.firstName} {coachData?.lastName}
+                      </span>{" "}
+                      {t("coach")}
+                    </>
+                  ) : (
+                    <>
+                      {t("coach")}{" "}
+                      <span className="text-[#B4E90E]">
+                        {coachData?.firstName} {coachData?.lastName}
+                      </span>
+                    </>
+                  )}
                 </motion.h1>
                 <button
                   onClick={openEditModal}
@@ -408,9 +491,9 @@ export default function CoachProfile() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 mt-2 sm:mt-3"
+                className={`text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 mt-2 sm:mt-3 ${locale === "ar" ? "text-center" : ""}`}
               >
-                {coachData?.title}
+                {locale === "en" ? coachData?.title.en : coachData?.title.ar}
               </motion.p>
             </div>
           </div>
@@ -472,17 +555,19 @@ export default function CoachProfile() {
               {t("sections.about.title")}
               <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] ml-3 sm:mr-4"></span>
             </h2>
-            {coachData?.aboutContent?.paragraphs.map((paragraph, index) => (
-              <motion.p
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 * (index + 1) }}
-                className="text-base sm:text-lg leading-relaxed mb-6 sm:mb-8 text-center text-gray-300"
-              >
-                {paragraph}
-              </motion.p>
-            ))}
+            {coachData?.aboutContent?.paragraphs[locale].map(
+              (paragraph, index) => (
+                <motion.p
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 * (index + 1) }}
+                  className="text-base sm:text-lg leading-relaxed mb-6 sm:mb-8 text-center text-gray-300"
+                >
+                  {paragraph}
+                </motion.p>
+              )
+            )}
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -547,10 +632,14 @@ export default function CoachProfile() {
                     </div>
                     <div>
                       <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">
-                        {specialty.title}
+                        {locale === "en"
+                          ? specialty.title.en
+                          : specialty.title.ar}
                       </h3>
                       <p className="text-sm sm:text-base text-gray-400">
-                        {specialty.description}
+                        {locale === "en"
+                          ? specialty.description.en
+                          : specialty.description.ar}
                       </p>
                     </div>
                   </div>
@@ -586,7 +675,7 @@ export default function CoachProfile() {
                     <Medal className="text-[#B4E90E] flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6" />
                     <div>
                       <h3 className="text-sm sm:text-base font-bold">
-                        {cert.title}
+                        {locale === "en" ? cert.title.en : cert.title.ar}
                       </h3>
                       {cert.org && (
                         <p className="text-xs sm:text-sm text-gray-400">
@@ -743,8 +832,8 @@ export default function CoachProfile() {
                       <input
                         type="text"
                         name="title"
-                        value={editFormData?.title || ""}
-                        onChange={handleInputChange}
+                        value={editFormData?.title?.[locale] || ""}
+                        onChange={handleTitleChange}
                         className="w-full p-2 bg-[#161c2a] border border-[#252d3d] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B4E90E]"
                       />
                     </div>
@@ -754,7 +843,7 @@ export default function CoachProfile() {
                 {/* About Me */}
                 <div>
                   <h3 className="text-lg font-bold mb-4">About Me</h3>
-                  {editFormData?.aboutContent?.paragraphs.map(
+                  {editFormData?.aboutContent?.paragraphs[locale]?.map(
                     (paragraph, index) => (
                       <div key={index} className="mb-4 relative">
                         <textarea
@@ -867,7 +956,7 @@ export default function CoachProfile() {
                           </label>
                           <input
                             type="text"
-                            value={specialty.title}
+                            value={specialty.title?.[locale] || ""}
                             onChange={(e) =>
                               handleSpecialtyChange(
                                 index,
@@ -884,7 +973,7 @@ export default function CoachProfile() {
                             Description
                           </label>
                           <textarea
-                            value={specialty.description}
+                            value={specialty.description?.[locale] || ""}
                             onChange={(e) =>
                               handleSpecialtyChange(
                                 index,
@@ -929,7 +1018,7 @@ export default function CoachProfile() {
                           </label>
                           <input
                             type="text"
-                            value={cert.title}
+                            value={cert.title?.[locale] || ""}
                             onChange={(e) =>
                               handleCertificationChange(
                                 index,

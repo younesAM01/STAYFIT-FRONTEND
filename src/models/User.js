@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 const AboutSchema = new mongoose.Schema({
-  paragraphs: [{ type: String, required: true }],
+  paragraphs: {
+    en: [{ type: String, required: true }],
+    ar: [{ type: String, required: true }]
+  },
   languages: [{
     code: { type: String, required: true },
     name: { type: String, required: true }
@@ -8,15 +11,27 @@ const AboutSchema = new mongoose.Schema({
 });
 
 const SpecialtySchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: { type: String, required: true }
+  title: {
+    en: { type: String, required: true },
+    ar: { type: String, required: true }
+  },
+  description: {
+    en: { type: String, required: true },
+    ar: { type: String, required: true }
+  }
 });
 
 
 
 const CertificationSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  org: { type: String, default: "" }
+    title: {
+    en: { type: String, required: true },
+    ar: { type: String, required: true }
+  },
+  org: {
+    type: String,
+    default: ""
+  }
 });
 
 
@@ -82,14 +97,17 @@ const UserSchema = new mongoose.Schema({
   },
   
   // Coach-specific fields
-  aboutContent: { type: AboutSchema, required: false },
+  aboutContent: { type: AboutSchema, required: true },
   specialties: [{ type: SpecialtySchema, required: false }],
   certifications: [{ type: CertificationSchema, required: false }],
   hoverImage: {
     type: String,
     trim: true
   },
-  title: { type: String },
+  title: { 
+    ar: { type: String },
+    en: { type: String }
+  },
   
   // Client-specific fields
   weight: {

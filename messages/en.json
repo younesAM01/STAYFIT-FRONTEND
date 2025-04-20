@@ -120,7 +120,8 @@
       "title": "Ready to Transform Your Fitness?",
       "description": "Book a session with Coach Oussama and start your fitness journey today.",
       "button": "Book a Session"
-    }
+    },
+    "coach": "Coach"
   },
   "ProfilePage": {
     "title": "Profile Page",
