@@ -250,8 +250,24 @@
     "address": "Address",
     "city": "City",
     "zipCode": "Zip Code",
-    "phoneNumber": "Phone Number",
-    "yourSelectedPackage": "Your Selected Package"
-
+    "phoneNumber": "Phone Number"
+  },
+  "FAQ": {
+    "faqtitle": "Frequently Asked Questions",
+    "faqdescription": "We are here to help you with any questions you may have. If you don't find what you need, please contact us at",
+    "question1": "How do I book a session with a coach on StayFit?",
+    "answer1": "To book a session with one of our professional coaches:",
+    "answer11": "1. Purchase a session pack from our membership options.",
+    "answer12": "2. Navigate to the Book Session area in your profile.",
+    "answer13": "3. Choose an available coach based on your requirements.",
+    "answer14": "4. Select your preferred date, time, and location from the available options.",
+    "answer15": "5. Confirm your booking.",
+    "answer16": "Once confirmed, You can view all your upcoming sessions in the 'Upcoming Sessions' section of your profile.",
+    "question2": "Can I cancel or reschedule my reserved session with a coach?",
+    "answer2": "Yes, you can cancel or reschedule your reserved session with a coach. To do so, navigate to the Book Session area in your profile and select the session you wish to cancel or reschedule. You can also contact our support team to assist you.",
+    "question3": "How can I find coaches who specialize in specific areas like cardio or boxing?",
+    "answer3": "To find coaches who specialize in specific areas like cardio or boxing, you can use the search functionality on our coaches page. You can search by coach name or by the area of expertise.",
+    "question4": "What fitness levels are accommodated in your various training sessions?",
+    "answer4": "Our training sessions accommodate all fitness levels, from beginners to advanced athletes. Each coach session like in , cardio, boxing, swimming, and kids' sessions—offers tiered programming designed to match your current abilities while providing appropriate challenges for growth. Our coaches will assess your fitness level during your first session and tailor the training accordingly. As you progress, your coach will adjust the intensity and complexity of exercises to ensure you continue to improve and reach your fitness goals safely and effectively."
   }
 }

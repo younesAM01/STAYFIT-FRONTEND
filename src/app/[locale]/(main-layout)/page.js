@@ -1,5 +1,6 @@
 import AboutUs from "@/components/about-section";
 import ContactForm from "@/components/contactus";
+import FAQ from "@/components/faq";
 import HeroSection from "@/components/hero-section";
 import FitnessNavbar from "@/components/moving-bare";
 import MembershipPlans from "@/components/pack";
@@ -24,6 +25,7 @@ export default async function Home() {
       <TestimonialSlider /> 
       <MembershipPlans />
       <ContactForm /> 
+      <FAQ />
       </div>
     </main>
   );
