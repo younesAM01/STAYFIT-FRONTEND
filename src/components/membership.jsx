@@ -8,11 +8,12 @@ import {
   User,
   X,
   AlertCircle,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { useLocale, useTranslations } from "next-intl";
 
-const Membership = () => {
+const Membership = ({ setActiveTab }) => {
   const { mongoUser } = useAuth();
   const [memberships, setMemberships] = useState([]);
   const [upcomingSessions, setUpcomingSessions] = useState([]);
@@ -220,7 +221,7 @@ const Membership = () => {
                       {packDetails?.category?.[locale] || "Loading package..."}
                     </h3>
                     <p className="text-gray-400">
-                        {t("activePackage")}
+                      {t("activePackage")}
                       {memberships.length > 1 ? `#${index + 1}` : ""}
                     </p>
                   </div>
@@ -338,7 +339,9 @@ const Membership = () => {
                 <p className="text-gray-400">{t("noUpcomingSessions")}</p>
                 <button
                   className="mt-6 bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-2 px-6 rounded-lg transition-colors inline-flex items-center gap-2"
-                  onClick={() => (window.location.href = "/book-session")}
+                  onClick={() => {
+                    setActiveTab("book");
+                  }}
                 >
                   <Calendar size={18} />
                   {t("bookASession")}
@@ -371,7 +374,9 @@ const Membership = () => {
             <div className="col-span-1 md:col-span-2 bg-[#0d111a] p-6 rounded-lg border border-[#161c2a] flex flex-col items-center">
               <div className="flex items-center gap-3 mb-6">
                 <ShoppingCart className="text-[#B4E90E]" />
-                <h4 className="text-lg font-semibold">{t("noActiveMembership")}</h4>
+                <h4 className="text-lg font-semibold">
+                  {t("noActiveMembership")}
+                </h4>
               </div>
 
               <div className="text-center mb-6">
@@ -389,9 +394,7 @@ const Membership = () => {
                     <span>0</span>
                   </div>
                 </div>
-                <p className="text-gray-400 mb-6">
-                  {t("purchaseAMembership")}
-                </p>
+                <p className="text-gray-400 mb-6">{t("purchaseAMembership")}</p>
               </div>
 
               <button
@@ -419,10 +422,7 @@ const Membership = () => {
               <h3 className="text-xl font-bold">{t("cancelSession")}</h3>
             </div>
 
-            <p className="mb-6">
-              {t("cancelSessionConfirmation")}
-              
-            </p>
+            <p className="mb-6">{t("cancelSessionConfirmation")}</p>
 
             <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
               <button

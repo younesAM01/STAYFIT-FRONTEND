@@ -202,7 +202,7 @@ const MembershipPlans = () => {
                   >
                     {pack.sessions.map((session) => (
                       <option key={session._id} value={session._id}>
-                        {session.sessionCount} {t('sessions', 'Sessions')} - {formatPrice(session.price)}
+                         {t('sessions', 'Sessions')} {session.sessionCount} - {formatPrice(session.price)} {t('currency', 'RS')}
                       </option>
                     ))}
                   </select>

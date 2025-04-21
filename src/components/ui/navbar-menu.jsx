@@ -59,7 +59,7 @@ export const MenuItem = ({ setActive, active, item, href, children, isMobile }) 
 };
 
 // Profile Avatar Component
-const ProfileAvatar = ({ user, signOut }) => {
+const ProfileAvatar = ({ user }) => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const profileRef = useRef(null);
   const locale = useLocale();
@@ -138,7 +138,7 @@ const ProfileAvatar = ({ user, signOut }) => {
           <p className="text-gray-300 mb-2 break-words">{user?.email || "email@example.com"}</p>
           
           <Link 
-            href={`/${locale}/client-profile`}
+            href={user?.role === 'coach' ? `/${locale}/coach/${user?._id}` : `/${locale}/client-profile`}
             className="block text-[#B4E90E] hover:underline mb-2"
             onClick={() => setShowProfileMenu(false)}
           >

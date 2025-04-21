@@ -1,6 +1,9 @@
 import mongoose from 'mongoose';
 const AboutSchema = new mongoose.Schema({
-  paragraphs: [{ type: String, required: true }],
+  paragraphs: {
+    en: [{ type: String, required: true }],
+    ar: [{ type: String, required: true }]
+  },
   languages: [{
     code: { type: String, required: true },
     name: { type: String, required: true }
@@ -8,21 +11,26 @@ const AboutSchema = new mongoose.Schema({
 });
 
 const SpecialtySchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: { type: String, required: true }
-});
-
-const HeroSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  title: { type: String, required: true },
-  image: { type: String, required: true }
+  title: {
+    en: { type: String, required: true },
+    ar: { type: String, required: true }
+  },
+  description: {
+    en: { type: String, required: true },
+    ar: { type: String, required: true }
+  }
 });
 
 const CertificationSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  org: { type: String, default: "" }
+  title: {
+    en: { type: String, required: true },
+    ar: { type: String, required: true }
+  },
+  org: {
+    type: String,
+    default: ""
+  }
 });
-
 
 const UserSchema = new mongoose.Schema({
   email: {
@@ -42,7 +50,6 @@ const UserSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-
   phoneNumber: {
     type: String,
     trim: true
@@ -67,7 +74,6 @@ const UserSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-
   role: {
     type: String,
     enum: ['super admin', 'admin', 'coach', 'client'],
@@ -84,18 +90,29 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  
-  // Coach-specific fields
-  aboutContent: { type: AboutSchema, required: false },
+  aboutContent: { type: AboutSchema, required: true },
   specialties: [{ type: SpecialtySchema, required: false }],
-  heroContent: { type: HeroSchema, required: false },
   certifications: [{ type: CertificationSchema, required: false }],
   hoverImage: {
     type: String,
     trim: true
   },
-  
-  // Client-specific fields
+  title: { 
+    ar: { type: String },
+    en: { type: String }
+  },
+  available: {
+    en: {
+      type: String,
+      enum: ['Available only for women', 'Available for all'],
+      required: false
+    },
+    ar: {
+      type: String,
+      enum: ['متاح للنساء فقط', 'متاح للجميع'],
+      required: false
+    }
+  },
   weight: {
     type: Number
   },
@@ -106,7 +123,6 @@ const UserSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
-  
   preferredLanguage: {
     type: String,
     trim: true
@@ -122,12 +138,10 @@ const UserSchema = new mongoose.Schema({
   provider: {
     type: String
   },
-
   createdAt: {
     type: Date,
     default: Date.now
   }
-
 });
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);

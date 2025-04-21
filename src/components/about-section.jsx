@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 
 const AboutUs = () => {
-  const vid = require("../../public/homevid.mp4");
+  const vid = "https://res.cloudinary.com/dkjx65vc7/video/upload/v1745094824/homevid_n5g9hc.mp4";
   const t = useTranslations('HomePage');
   const locale = useLocale();
   const [isPlaying, setIsPlaying] = useState(false);

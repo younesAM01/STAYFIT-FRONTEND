@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { ChevronRight, ShoppingCart, Calendar } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@/context/authContext';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 export default function BookingCalendar({ coachId, onSelect }) {
+  const locale = useLocale();
   const { mongoUser } = useAuth();
   const today = new Date();
   const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStartDate(today));
@@ -228,18 +229,20 @@ export default function BookingCalendar({ coachId, onSelect }) {
           </div>
           
           <div className="text-center">
-            <h3 className="text-xl sm:text-2xl font-bold mb-4">{t("membershipRequired")}</h3>
+            <h3 className="text-xl text-white sm:text-2xl font-bold mb-4">{t("membershipRequired")}</h3>
             <p className="text-gray-400 mb-6 max-w-md">
               {t("membershipRequiredMessage")}
             </p>
             
-            <Button 
-              className="bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
-              onClick={() => window.location.href = '/packages'}
-            >
-              <ShoppingCart size={20} />
-              {t("buyAPackage")}
-            </Button>
+            <div className="flex justify-center">
+              <Button 
+                className="bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
+                onClick={() => window.location.href = `/${locale}`}
+              >
+                <ShoppingCart size={20} />
+                {t("buyAPackage")}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
