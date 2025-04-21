@@ -31,6 +31,7 @@
     },
     "testemonia": "ماذا يقول عملاؤنا",
     "packtitle": "خطة العضوية",
+    "pricestart": "ابتداء من",
     "packbtn": "ابدأ الآن",
     "currency": "ر س",
     "sessions": "جلسة",
@@ -64,7 +65,7 @@
       "quickLinks": {
         "title": "روابط سريعة",
         "about": "من نحن",
-        "terms": "الشروط والأحكام",
+        "contact": "اتصل بنا",
         "services": "الخدمات",
         "trainers": "مدربينا",
         "faq": "الأسئلة الشائعة"
@@ -120,7 +121,7 @@
     },
     "cta": {
       "title": "هل أنت مستعد لتحويل لياقتك البدنية؟",
-      "description": "احجز جلسة مع المدرب أسامة وابدأ رحلة لياقتك البدنية اليوم.",
+      "description": "احجز جلسة مع مدربينا وابدأ رحلة لياقتك البدنية اليوم.",
       "button": "احجز جلسة"
     },
     "coach": "المدرب"
@@ -176,7 +177,12 @@
     "buyAPackage": "شراء حزمة",
     "cancelSession": "إلغاء الجلسة",
     "cancelSessionConfirmation": "هل أنت متأكد أنك تريد إلغاء الجلسة على",
-    "keepSession": "حفظ الجلسة"
+    "keepSession": "حفظ الجلسة",
+    "noAboutContent": "لم يتم إضافة معلومات عن المدرب بعد.",
+    "cannotCancel": "لا يمكن إلغاء",
+    "session12HourRule": "يجب إلغاء الجلسات قبل ١٢ ساعة على الأقل. في حال الإلغاء المتأخر أو عدم الحضور، سيتم خصم قيمة الجلسة من باقتك.",
+    "cancellationPolicy": "سياسة الإلغاء",
+    "cancellationPolicyInfo": "يجب إلغاء الجلسات قبل ١٢ ساعة على الأقل. في حال الإلغاء المتأخر أو عدم الحضور، سيتم خصم قيمة الجلسة من باقتك."
   },
   "BookingPage": {
     "title": "حجز جلسة",
@@ -194,7 +200,8 @@
     "selectTime": "اختر الوقت",
     "confirm": "تأكيد",
     "selectCoach": "اختر المدرب",
-    "sessionBookedSuccessfully": "تم حجز الجلسة بنجاح"
+    "sessionBookedSuccessfully": "تم حجز الجلسة بنجاح",
+    "noCoachesAvailable": "لا يوجد مدربين متاحين"
   },
   "BookingCalendar": {
     "membershipRequired": "العضوية مطلوبة",

@@ -111,8 +111,8 @@ const CoachCalendar = () => {
   };
 
   // Find sessions for a specific day and hour
-  const getSessionForTimeSlot = (day, hour) => {
-    return coachSessions.find((session) => {
+  const getSessionsForTimeSlot = (day, hour) => {
+    return coachSessions.filter((session) => {
       const sessionDate = new Date(session.sessionDate);
       const sessionHour = getSessionHour(session.sessionTime);
 
@@ -124,6 +124,30 @@ const CoachCalendar = () => {
         sessionHour === hour
       );
     });
+  };
+
+  // Get active (non-cancelled) session for a time slot if available, otherwise return cancelled one
+  const getPrioritySessionForTimeSlot = (day, hour) => {
+    const sessions = getSessionsForTimeSlot(day, hour);
+    
+    if (!sessions || sessions.length === 0) {
+      return null;
+    }
+    
+    // First look for scheduled/active sessions
+    const scheduledSession = sessions.find(session => session.status === "scheduled");
+    if (scheduledSession) {
+      return scheduledSession;
+    }
+    
+    // Then look for completed sessions
+    const completedSession = sessions.find(session => session.status === "completed");
+    if (completedSession) {
+      return completedSession;
+    }
+    
+    // Otherwise, return the first cancelled session or any other status
+    return sessions[0];
   };
 
   // Format session time for display (e.g., "8AM" -> "8:00 AM")
@@ -267,7 +291,11 @@ const CoachCalendar = () => {
                   </div>
 
                   {weekDays.map((day) => {
-                    const session = getSessionForTimeSlot(day, hour);
+                    // Get session with priority for scheduled over cancelled
+                    const session = getPrioritySessionForTimeSlot(day, hour);
+                    // Get all sessions to show count badge if multiple sessions exist
+                    const allSessionsInSlot = getSessionsForTimeSlot(day, hour);
+                    const sessionCount = allSessionsInSlot.length;
 
                     return (
                       <div
@@ -290,15 +318,22 @@ const CoachCalendar = () => {
                               )
                             }
                           >
-                            <div className="flex items-center gap-1">
-                              <User
-                                size={10}
-                                className="text-[#B4E90E] hidden sm:block"
-                              />
-                              <span className="font-bold truncate text-xs">
-                                {session.client.firstName}{" "}
-                                {session.client.lastName}
-                              </span>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1">
+                                <User
+                                  size={10}
+                                  className="text-[#B4E90E] hidden sm:block"
+                                />
+                                <span className="font-bold truncate text-xs">
+                                  {session.client.firstName}{" "}
+                                  {session.client.lastName}
+                                </span>
+                              </div>
+                              {sessionCount > 1 && (
+                                <span className="bg-[#B4E90E] text-black text-xs px-1 rounded-full">
+                                  {sessionCount}
+                                </span>
+                              )}
                             </div>
                             <div className="text-gray-300 mt-1 hidden sm:flex items-center gap-1">
                               <MapPin size={8} />

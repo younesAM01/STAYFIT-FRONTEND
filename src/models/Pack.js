@@ -1,6 +1,10 @@
 import mongoose from 'mongoose';
 
 const PackSchema = new mongoose.Schema({
+  startPrice: {
+    type: Number,
+    required: true
+  },
   category: {
     en: {
       type: String,

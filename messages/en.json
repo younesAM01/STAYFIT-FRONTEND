@@ -30,6 +30,7 @@
     },
     "testemonia": "WHAT OUR CLIENT SAY",
     "packtitle": "MEMBERSHIP PLAN",
+    "pricestart": "Starting At",
     "packbtn": "GET STARTED",
     "currency": "RS",
     "sessions": "Sessions",
@@ -63,7 +64,7 @@
       "quickLinks": {
         "title": "Quick Links",
         "about": "About Us",
-        "terms": "Terms & Conditions",
+        "contact": "Contact Us",
         "services": "Services",
         "trainers": "Our Trainers",
         "faq": "FAQ"
@@ -118,7 +119,7 @@
     },
     "cta": {
       "title": "Ready to Transform Your Fitness?",
-      "description": "Book a session with Coach Oussama and start your fitness journey today.",
+      "description": "Book a session with our Coaches and start your fitness journey today.",
       "button": "Book a Session"
     },
     "coach": "Coach"
@@ -172,7 +173,13 @@
     "buyAPackage": "Buy a Package",
     "cancelSession": "Cancel Session",
     "cancelSessionConfirmation": "Are you sure you want to cancel your session on",
-    "keepSession": "Keep Session"
+    "keepSession": "Keep Session",
+    "noAboutContent": "No information about the coach has been added yet.",
+    "cannotCancel": "Cannot cancel",
+    "session12HourRule": "Sessions must be cancelled at least 12 hours in advance. Late cancellations or no-shows will result in the session being deducted from your package.",
+    "cancellationPolicy": "Cancellation Policy",
+    "cancellationPolicyInfo": "Sessions must be cancelled at least 12 hours in advance. Late cancellations or no-shows will result in the session being deducted from your package."
+
   },
   "BookingPage": {
     "title": "Book a Session",
@@ -190,7 +197,8 @@
     "selectTime": "Select Time",
     "confirm": "Confirm",
     "selectCoach": "Select Coach",
-    "sessionBookedSuccessfully": "Session booked successfully!"
+    "sessionBookedSuccessfully": "Session booked successfully!",
+    "noCoachesAvailable": "No coaches available"
   },
   "BookingCalendar": {
     "membershipRequired": "Membership Required",

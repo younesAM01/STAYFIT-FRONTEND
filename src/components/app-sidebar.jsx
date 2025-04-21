@@ -23,10 +23,8 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
-import logo from "@/assets/stayfit11.png";
 import { useAuth } from "@/context/authContext"
 import { useLocale } from "next-intl"
-import Image from "next/image"
 
 export function AppSidebar({ ...props }) {
   const locale = useLocale()
@@ -175,7 +173,7 @@ export function AppSidebar({ ...props }) {
                   </div>
                   <p className="text-gray-300 mb-2 break-words">{mongoUser?.email || "email@example.com"}</p>
                   <a 
-                    href={`/${locale}/profile`} 
+                    href={`/${locale}/${mongoUser?.role === 'admin' ? 'profile' : `coach/${mongoUser?._id}`}`} 
                     className="block text-[#B4E90E] hover:underline mb-2 cursor-pointer"
                   >
                     View Profile

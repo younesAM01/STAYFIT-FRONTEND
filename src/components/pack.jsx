@@ -169,7 +169,8 @@ const MembershipPlans = () => {
               <h2 className="text-xl font-bold text-[#B4E90E] mb-4 text-center">{pack.category?.[locale]}</h2>
               
               <div className="text-center mb-6">
-                <span className="text-4xl font-bold text-[#B4E90E]">{formatPrice(selectedSession.price)}</span>
+                <h3 className="text-lg font-bold text-white mb-2">{t('pricestart')}</h3>
+                <span className="text-4xl font-bold text-[#B4E90E]">{pack?.startPrice}</span>
                 <span className="text-sm text-white ml-1">{t('currency', 'RS')}</span>
               </div>
               

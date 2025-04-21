@@ -97,7 +97,7 @@ const UserSchema = new mongoose.Schema({
   },
   
   // Coach-specific fields
-  aboutContent: { type: AboutSchema, required: true },
+  aboutContent: { type: AboutSchema, required: false },
   specialties: [{ type: SpecialtySchema, required: false }],
   certifications: [{ type: CertificationSchema, required: false }],
   hoverImage: {
@@ -108,7 +108,10 @@ const UserSchema = new mongoose.Schema({
     ar: { type: String },
     en: { type: String }
   },
-  
+  coachActive:{
+    type: Boolean,
+    default: false
+  },
   // Client-specific fields
   weight: {
     type: Number
