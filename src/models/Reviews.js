@@ -4,13 +4,13 @@ const ReviewSchema = new mongoose.Schema({
   name: {
     en: {
       type: String,
-      required: false,
+      required: true,
       trim: true,
       default: ""
     },
     ar: {
       type: String,
-      required: false,
+      required: true,
       trim: true,
       default: ""
     }
@@ -18,13 +18,13 @@ const ReviewSchema = new mongoose.Schema({
   trainerName: {
     en: {
       type: String,
-      required: false,
+      required: true,
       trim: true,
       default: ""
     },
     ar: {
       type: String,
-      required: false,
+      required: true,
       trim: true,
       default: ""
     }
@@ -52,6 +52,18 @@ const ReviewSchema = new mongoose.Schema({
   image: {
     type: String,
     required: true,
+    trim: true,
+    default: 'https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg'
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  coachId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   createdAt: {
     type: Date,
@@ -62,4 +74,6 @@ const ReviewSchema = new mongoose.Schema({
 // Make sure we remove any existing model before creating a new one (helps with hot reloading issues)
 mongoose.models = {};
 
-export default mongoose.models.Review || mongoose.model('Review', ReviewSchema)
+const Review = mongoose.models.Review || mongoose.model('Review', ReviewSchema)
+
+export default Review;

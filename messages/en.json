@@ -243,7 +243,6 @@
   "CheckoutPage": {
     "checkout": "Checkout",
     "yourInformation": "Your Information",
-    "yourSelectedPackage": "Your Selected Package",
     "firstName": "First Name",
     "lastName": "Last Name",
     "email": "Email",

@@ -351,6 +351,9 @@ console.log(packs)
               </CardContent>
             </Card>
           </div>
+
+          <div className="border-t border-white/10 my-6"></div>
+
           <div className="flex items-end justify-end gap-3 m-3">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
@@ -386,44 +389,44 @@ console.log(packs)
                 </div>
               ) : (
                 <div className="relative overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full border-collapse">
                     <thead className="sticky top-0 bg-gray-900 border-gray-800 z-10">
                       <tr className="border-b border-white/10">
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Category</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Session Options</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Features (EN)</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Features (AR)</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Category</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Session Options</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Features (EN)</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Features (AR)</th>
                         <th className="h-10 px-4 text-right text-sm font-medium text-white/60">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredData.length === 0 ? (
                         <tr>
-                          <td colSpan="5" className="p-4 text-center text-white">
+                          <td colSpan="5" className="p-4 text-center text-white border-b border-white/10">
                             No packs found
                           </td>
                         </tr>
                       ) : (
                         filteredData.map((pack) => (
                           <tr key={pack._id} className="border-b border-white/10 hover:bg-white/5">
-                            <td className="p-4 text-sm font-medium text-white">
+                            <td className="p-4 text-sm font-medium text-white border-r border-white/10">
                               {pack.category?.[locale]}
                             </td>
-                            <td className="p-4 text-sm text-white">
+                            <td className="p-4 text-sm text-white border-r border-white/10">
                               {pack.sessions.map((session, idx) => (
                                 <div key={idx} className="mb-1">
                                   {session.sessionCount} sessions - ${session.price} ({session.expirationDays} days)
                                 </div>
                               ))}
                             </td>
-                            <td className="p-4 text-sm text-white">
+                            <td className="p-4 text-sm text-white border-r border-white/10">
                               <ul className="list-disc pl-4">
                                 {pack.features?.en?.map((feature, idx) => (
                                   <li key={idx}>{feature}</li>
                                 ))}
                               </ul>
                             </td>
-                            <td className="p-4 text-sm text-white">
+                            <td className="p-4 text-sm text-white border-r border-white/10">
                               <ul className="list-disc pl-4">
                                 {pack.features?.ar?.map((feature, idx) => (
                                   <li key={idx}>{feature}</li>
@@ -676,7 +679,7 @@ console.log(packs)
               <Button type="button" variant="ghost" onClick={() => setShowAddForm(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-white text-black hover:bg-gray-100">
+              <Button type="submit" className="bg-white text-black">
                 Add Pack
               </Button>
             </DialogFooter>
@@ -876,7 +879,7 @@ console.log(packs)
           <Button type="button" variant="ghost" onClick={() => setShowEditForm(false)}>
             Cancel
           </Button>
-          <Button type="submit" className="bg-white text-black hover:bg-gray-100">
+          <Button type="submit" className="bg-white text-black">
             Update Pack
           </Button>
         </DialogFooter>

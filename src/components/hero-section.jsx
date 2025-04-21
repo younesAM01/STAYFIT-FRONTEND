@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 
 const HeroSection = () => {
-  const videoSrc = require("../../public/homevid.mp4");
 
   useEffect(() => {
     const videoElement = document.getElementById("hero-video");
@@ -19,7 +18,7 @@ const HeroSection = () => {
       {/* Video Background */}
       <video
         id="hero-video"
-        src={videoSrc}
+        src="https://res.cloudinary.com/dkjx65vc7/video/upload/v1745094824/homevid_n5g9hc.mp4"
         autoPlay
         muted
         className="w-full h-full object-cover z-[-100]"

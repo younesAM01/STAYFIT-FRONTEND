@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label"
 import { useSidebar } from "@/components/ui/sidebar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-
+import { useLocale } from "next-intl"
 export default function SessionsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sessions, setSessions] = useState([])
@@ -24,6 +24,7 @@ export default function SessionsPage() {
   const [showEditForm, setShowEditForm] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedSession, setSelectedSession] = useState(null)
+  const  locale = useLocale()
   const [formData, setFormData] = useState({
     client: "",
     coach: "",
@@ -190,7 +191,7 @@ export default function SessionsPage() {
     }
     
     // Check both name and category fields
-    return pack ? (pack.name || pack.category || 'Unnamed Pack') : 'Unknown Pack';
+    return pack ? (pack.name || pack.category?.[locale] || 'Unnamed Pack') : 'Unknown Pack';
   }
 
   const handleAddSession = async (e) => {
@@ -387,7 +388,7 @@ export default function SessionsPage() {
               </div>
               <Button 
                 variant="outline" 
-                className="bg-white text-black hover:bg-gray-100"
+                className="bg-[#B4E90E] text-black hover:bg-[#B4E90E] cursor-pointer"
                 onClick={() => setShowAddForm(true)}
               >
                 Add New
@@ -398,7 +399,7 @@ export default function SessionsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card className="bg-[#121212] border-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Scheduled Sessions</CardTitle>
+                <CardTitle className="text-sm font-medium text-white mt-2">Scheduled Sessions</CardTitle>
                 <Calendar className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
@@ -407,7 +408,7 @@ export default function SessionsPage() {
             </Card>
             <Card className="bg-[#121212] border-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Completed Sessions</CardTitle>
+                <CardTitle className="text-sm font-medium text-white mt-2">Completed Sessions</CardTitle>
                 <CheckCircle className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
@@ -416,7 +417,7 @@ export default function SessionsPage() {
             </Card>
             <Card className="bg-[#121212] border-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Today's Sessions</CardTitle>
+                <CardTitle className="text-sm font-medium text-white mt-2">Today's Sessions</CardTitle>
                 <CalendarDays className="h-4 w-4 text-white" />
               </CardHeader>
               <CardContent>
@@ -427,7 +428,7 @@ export default function SessionsPage() {
 
           <Card className="bg-[#121212] border-0">
             <CardHeader>
-              <CardTitle className="text-white">All Sessions</CardTitle>
+              <CardTitle className="text-whitemt-6">All Sessions</CardTitle>
               <CardDescription className="text-white/60">Manage sessions, schedules, and appointments</CardDescription>
             </CardHeader>
             <CardContent>
