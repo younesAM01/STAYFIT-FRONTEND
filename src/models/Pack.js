@@ -8,12 +8,10 @@ const PackSchema = new mongoose.Schema({
   category: {
     en: {
       type: String,
-      enum: ['Pack Single', 'Body Package', 'Pack Nutrition'],
       required: true
     },
     ar: {
       type: String,
-      enum: ['باقة فردية', 'باقة الجسم', 'باقة التغذية'],
       required: true
     }
   },
