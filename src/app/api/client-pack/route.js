@@ -64,7 +64,8 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     await connectMongoDB();
-    const { id } = request.query;
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
     const deletedSession = await ClientPack.findByIdAndDelete(id);
     if (!deletedSession) {
       return NextResponse.json({ message: "Session not found" }, { status: 404 });

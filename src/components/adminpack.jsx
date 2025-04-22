@@ -23,6 +23,7 @@ export default function PacksPage() {
   const [selectedPack, setSelectedPack] = useState(null)
   const locale = useLocale();
   const [formData, setFormData] = useState({
+    startPrice: 0,
     category: {
       en: "Pack Single",
       ar: "باقة فردية"
@@ -86,8 +87,7 @@ export default function PacksPage() {
           ar: arFeatures.filter(feature => feature.trim() !== "")
         }
       }
-
-      if (!packData.category || packData.sessions.length === 0 || packData.features.en.length === 0 || packData.features.ar.length === 0) {
+      if (!packData.category || !packData.startPrice || packData.sessions.length === 0 || packData.features.en.length === 0 || packData.features.ar.length === 0) {
         throw new Error('All fields are required')
       }
 
@@ -98,7 +98,7 @@ export default function PacksPage() {
         },
         body: JSON.stringify(packData)
       })
-
+console.log(response)
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Failed to add pack')
@@ -207,6 +207,7 @@ export default function PacksPage() {
 
   const resetForm = () => {
     setFormData({
+      startPrice: 0,
       category: {
         en: "Pack Single",
         ar: "باقة فردية"
@@ -291,7 +292,6 @@ export default function PacksPage() {
     updated[index] = value
     setArFeatures(updated)
   }
-console.log(packs)
   const filteredData = packs.filter((pack) => {
     const categoryEn = pack.category?.en || '';
     const categoryAr = pack.category?.ar || '';
@@ -498,30 +498,61 @@ console.log(packs)
           </DialogHeader>
           <form onSubmit={handleAddPack}>
             <div className="grid gap-4 py-2">
+              {/* Start Price */}
+              <div>
+                <Label htmlFor="startPrice">Start Price</Label>
+                <Input
+                  id="startPrice"
+                  type="number"
+                  value={formData.startPrice}
+                  onChange={(e) => setFormData({...formData, startPrice: Number(e.target.value)})}
+                  className="bg-[#121212] border-white/10 mt-1"
+                  min="0"
+                  required
+                />
+              </div>
+
               {/* Category Selection */}
               <div>
-                <Label htmlFor="category">Category</Label>
-                <Select 
-                  value={formData.category.en} 
-                  onValueChange={(value) => {
-                    setFormData({
-                      ...formData, 
-                      category: {
-                        en: value,
-                        ar: getArabicCategory(value)
-                      }
-                    })
-                  }}
-                >
-                  <SelectTrigger className="bg-[#121212] border-white/10 mt-1">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1F1F1F] border-white/10">
-                    <SelectItem value="Pack Single">Pack Single</SelectItem>
-                    <SelectItem value="Body Package">Body Package</SelectItem>
-                    <SelectItem value="Pack Nutrition">Pack Nutrition</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Category</Label>
+                <div className="grid grid-cols-2 gap-4 mt-1">
+                  <div>
+                    <Label className="text-xs" htmlFor="category-en">English</Label>
+                    <Input
+                      id="category-en"
+                      type="text"
+                      value={formData.category.en}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        category: {
+                          ...formData.category,
+                          en: e.target.value
+                        }
+                      })}
+                      className="bg-[#121212] border-white/10"
+                      placeholder="Enter category in English"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs" htmlFor="category-ar">Arabic</Label>
+                    <Input
+                      id="category-ar"
+                      type="text"
+                      value={formData.category.ar}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        category: {
+                          ...formData.category,
+                          ar: e.target.value
+                        }
+                      })}
+                      className="bg-[#121212] border-white/10"
+                      placeholder="أدخل الفئة بالعربية"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
               
               {/* Session Options */}
@@ -700,28 +731,45 @@ console.log(packs)
             <div className="grid gap-4 py-2">
               {/* Category Selection */}
               <div>
-                <Label htmlFor="edit-category">Category</Label>
-                <Select 
-                  value={formData.category?.en || "Pack Single"} 
-                  onValueChange={(value) => {
-                    setFormData({
-                      ...formData, 
-                      category: {
-                        en: value,
-                        ar: getArabicCategory(value)
-                      }
-                    })
-                  }}
-                >
-                  <SelectTrigger className="bg-[#121212] border-white/10 mt-1">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1F1F1F] border-white/10">
-                    <SelectItem value="Pack Single">Pack Single</SelectItem>
-                    <SelectItem value="Body Package">Body Package</SelectItem>
-                    <SelectItem value="Pack Nutrition">Pack Nutrition</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Category</Label>
+                <div className="grid grid-cols-2 gap-4 mt-1">
+                  <div>
+                    <Label className="text-xs" htmlFor="category-en">English</Label>
+                    <Input
+                      id="category-en"
+                      type="text"
+                      value={formData.category.en}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        category: {
+                          ...formData.category,
+                          en: e.target.value
+                        }
+                      })}
+                      className="bg-[#121212] border-white/10"
+                      placeholder="Enter category in English"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs" htmlFor="category-ar">Arabic</Label>
+                    <Input
+                      id="category-ar"
+                      type="text"
+                      value={formData.category.ar}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        category: {
+                          ...formData.category,
+                          ar: e.target.value
+                        }
+                      })}
+                      className="bg-[#121212] border-white/10"
+                      placeholder="أدخل الفئة بالعربية"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
               
               {/* Session Options */}

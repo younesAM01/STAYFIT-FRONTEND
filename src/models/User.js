@@ -90,7 +90,7 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  aboutContent: { type: AboutSchema, required: true },
+  aboutContent: { type: AboutSchema, required: false },
   specialties: [{ type: SpecialtySchema, required: false }],
   certifications: [{ type: CertificationSchema, required: false }],
   hoverImage: {

@@ -25,7 +25,7 @@ export default function ContactForm() {
             ${locale === 'ar' ? 'md:order-2' : 'md:order-1'}`}
         >
           <img
-            src="https://res.cloudinary.com/dkjx65vc7/image/upload/v1745094946/img1_taeqz7.png"
+            src={img.src}
             alt="Background"
             className="object-cover w-full h-full rounded-2xl"
           />

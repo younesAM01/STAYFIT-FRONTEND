@@ -42,7 +42,7 @@ export function AppSidebar({ ...props }) {
   // Define navigation items based on user role
   const getNavItems = () => {
     const isAdmin = mongoUser?.role === 'admin' || mongoUser?.role === 'super_admin'
-    
+    const isCoach = mongoUser?.role === 'coach'
     // Dashboard link differs based on role
     const dashboardItem = {
       title: "Dashboard",
@@ -94,7 +94,7 @@ export function AppSidebar({ ...props }) {
     }
     
     // Build nav items array based on role
-    let navItems = [dashboardItem, calendarItem]
+    let navItems = []
     
     // If user is admin or super admin, add the users link and other admin items
     if (isAdmin) {
@@ -109,7 +109,13 @@ export function AppSidebar({ ...props }) {
         calendarItem
       ]
     }
-    
+
+    if (isCoach) {
+      navItems = [
+        dashboardItem,
+        calendarItem
+      ]
+    }
     return navItems
   }
 

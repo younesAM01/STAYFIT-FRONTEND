@@ -1,15 +1,17 @@
 import mongoose from 'mongoose';
 
 const PackSchema = new mongoose.Schema({
+  startPrice: {
+    type: Number,
+    required: true
+  },
   category: {
     en: {
       type: String,
-      enum: ['Pack Single', 'Body Package', 'Pack Nutrition'],
       required: true
     },
     ar: {
       type: String,
-      enum: ['باقة فردية', 'باقة الجسم', 'باقة التغذية'],
       required: true
     }
   },
