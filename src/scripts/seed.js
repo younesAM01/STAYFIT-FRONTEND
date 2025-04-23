@@ -1,120 +1,223 @@
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import connectMongoDB from '../lib/mongoDb/connect.js';
-import Pack from '../models/Pack.js';
 import mongoose from 'mongoose';
+import connectMongoDB from '../lib/mongoDb/connect.js';
+import User from '../models/User.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables from .env.local
 dotenv.config({ path: join(__dirname, '../../.env.local') });
 
-async function seedPacks() {
-  await connectMongoDB(); // Connect to DB
+async function seedCoaches() {
+  await connectMongoDB();
 
-  const packs = [
+  const coaches = [
     {
-      category: {
-        en: 'Pack Single',
-        ar: 'باقة فردية'
-      },
-      sessions: [
-        { price: 325, sessionCount: 1, expirationDays: 15 },
-        { price: 1794, sessionCount: 6, expirationDays: 30 },
-        { price: 3486, sessionCount: 12, expirationDays: 60 },
-        { price: 6480, sessionCount: 24, expirationDays: 90 },
-        { price: 13250, sessionCount: 50, expirationDays: 180 }
-      ],
-      features: {
-        en: [
-          'Your first session is free',
-          'Personalized training plan',
-          'Access to all types of workouts',
-          'Comprehensive fitness assessment',
-          'Complete nutritional program for all goals with free guidance',
-          'Free body composition analysis',
-          'Session duration: 60 minutes'
+      email: 'ishak@example.com',
+      firstName: 'Ishak',
+      lastName: 'Coach',
+      supabaseId: 'coach-ishak',
+      role: 'coach',
+      rating: 4.9,
+      reviews: 22,
+      aboutContent: {
+        paragraphs: [
+          'Passionate Personal Trainer Adept At Making Workouts Fun And Rewarding. Expertise In Instructing Clients On Proper Lifting Techniques And Educating Clients On Proper Nutrition And Hydration Needs. Experience Providing Instruction For One On One Session And Ability To Motivate Others Toward Accomplishing Weight Loss.',
+          '🏆 Moroccan kickboxing champion in 2010 and boxing champion for the Greater Shawiya in 2012.'
         ],
-        ar: [
-          'حصتك الأولى مجانيه',
-          'خطة تدريب شخصية',
-          'إمكانيةاختيار جميع أنواع التمارين',
-          'تقييم لياقة بدنية شامل',
-          'برنامج غدائي متكامل لجميع الأهداف وتوجيه مجاني',
-          'تحليل تكوين الجسم مجاني',
-          'مدة الجلسة 60 دقيقة'
+        languages: [
+          { code: 'en', name: 'English' }
         ]
-      }
+      },
+      specialties: [
+        'Weight Management', 'Body Conditioning', 'Martial Arts', 'Grappling', 'Boxing', 'Kettlebell',
+        'Plyometric', 'Bodybuilding', 'Flexibility & Stretching', 'Core training', 'Nutrition'
+      ].map(title => ({ title, description: '' })),
+      certifications: [
+        { title: 'Certified personal trainer (ACE)' },
+        { title: 'Resistance Training Specialist (IFBB)' },
+        { title: 'Hypertrophy level 1 (ASP)' },
+        { title: 'Fat loss specialization (ASP)' },
+        { title: 'Certified personal trainer (ISSI)' },
+        { title: 'Certified specialist sport nutrition (ISSA)' },
+        { title: 'Certified specialist transformation (ISSA)' },
+        { title: 'Certified box 12 (Hatton Academy)' },
+        { title: 'Coach MMA diploma' },
+        { title: 'Coach kick boxing diploma' },
+        { title: 'Coach Muay Thai diploma' },
+        { title: 'Physical therapy' },
+        { title: 'Exercise corrective' }
+      ]
     },
     {
-      category: {
-        en: 'Body Package',
-        ar: 'باقة الجسم'
-      },
-      sessions: [
-        { price: 445, sessionCount: 1, expirationDays: 15 },
-        { price: 2394, sessionCount: 6, expirationDays: 30 },
-        { price: 4548, sessionCount: 12, expirationDays: 60 },
-        { price: 7180, sessionCount: 20, expirationDays: 90 }
-      ],
-      features: {
-        en: [
-          'Two-person training session',
-          'Your first session is free',
-          'Personalized training plan for both individuals',
-          'Access to all types of workouts',
-          'Comprehensive fitness assessment for both individuals',
-          'Complete nutritional program for all goals with free guidance for both individuals',
-          'Free body composition analysis for both individuals',
-          'Session duration: 60 minutes'
+      email: 'oussama@example.com',
+      firstName: 'Oussama',
+      lastName: 'Coach',
+      supabaseId: 'coach-oussama',
+      role: 'coach',
+      rating: 4.8,
+      reviews: 19,
+      aboutContent: {
+        paragraphs: [
+          'Trainer with over 9 years of experience in personal training and boxing. Passionate about helping individuals achieve their health and fitness goals through customized training programs. Committed to providing a motivating and respectful environment for results in fitness and nutrition.'
         ],
-        ar: [
-          'تمرين شخصين مع بعض',
-          'حصتك الأولى مجانيه',
-          'خطة تدريب شخصية لكلا شخصين',
-          'إمكانية اختيار جميع أنواع التمارين',
-          'تقييم لياقة بدنية شامل لكلا الشخصي',
-          'برنامج غدائي متكامل لجميع الأهداف لكلا شخصين وتوجيه مجاني',
-          'تحليل تكوين الجسم مجاني لكلا الشخصين',
-          'مدة الجلسة 60 دقيقة'
+        languages: [
+          { code: 'en', name: 'English' }
         ]
-      }
+      },
+      specialties: [
+        'Personal Training', 'Boxing', 'Kickboxing', 'Muay Thai', 'Weight Management', 'General Fitness', 'Nutrition'
+      ].map(title => ({ title, description: '' })),
+      certifications: [
+        { title: 'Certified Sports Nutrition Coach (NASM)' },
+        { title: 'Certified Personal Trainer (NASM)' },
+        { title: 'Certified Personal Trainer (ISSA)' },
+        { title: 'Certified CPR & AED (ISSA)' },
+        { title: 'Fitness Facility Management (ACE)' },
+        { title: 'Instructor (Hatton Boxing Academy)' },
+        { title: 'Body Combat Instructor (Les Mills)' },
+        { title: 'Nutrition for Performance (Optimum)' },
+        { title: 'Certified Trainer (Global Academy)' },
+        { title: 'Glute Relocation & Hip Correction' },
+        { title: 'Instructor (International Muay Thai Federation)' }
+      ]
     },
     {
-        category: {
-        en: 'Pack Nutrition',
-        ar: 'باقة التغذية'
-      },
-      sessions: [{ price: 499, sessionCount: 1, expirationDays: 15 }],
-      features: {
-        en: [
-          'Free initial online consultation',
-          'Personalized nutrition plan',
-          'Regular assessments to encourage commitment',
-          'Daily support'
+      email: 'khadija@example.com',
+      firstName: 'Khadija',
+      lastName: 'Coach',
+      supabaseId: 'coach-khadija',
+      role: 'coach',
+      rating: 4.9,
+      reviews: 21,
+      aboutContent: {
+        paragraphs: [
+          'Dedicated trainer with over 8 years of experience in personal training, dance, and martial arts. Passionate about creating dynamic sessions that motivate and empower clients.',
+          '🏆 3x Moroccan champion in karate, winner of KSA women’s karate championship, and the Champions Cup in karate.'
         ],
-        ar: [
-          'جلسة استشاريةأولية مجانيه عبر الإنترنت',
-          'خطة غدائية مخصصة',
-          'تقييم دوري لتشجيع الإلتزام بالخطة',
-          'الدعم اليومي'
+        languages: [
+          { code: 'en', name: 'English' }
         ]
-      }
+      },
+      specialties: [
+        'Personal Training', 'Yoga', 'Pilates', 'Karate', 'Boxing', 'Dancing'
+      ].map(title => ({ title, description: '' })),
+      certifications: [
+        { title: 'Certified Personal Trainer (ISSA)' },
+        { title: 'Kickboxing Instructor (ISSA)' },
+        { title: 'Official Zumba Instructor B1' },
+        { title: 'Zumba Instructor ZIN' },
+        { title: 'CPR & AED (Saudi Tred)' },
+        { title: 'Level 4 Fitness Trainer License (LDI)' },
+        { title: 'Elite Trainer (ISSA)' },
+        { title: 'MMA Saudia Certificate' },
+        { title: 'Body Combat & Pump (Les Mills)' },
+        { title: 'Black Belt Shotokan Karate' }
+      ]
+    },
+    {
+      email: 'ghaytha@example.com',
+      firstName: 'Ghaytha',
+      lastName: 'Coach',
+      supabaseId: 'coach-ghaytha',
+      role: 'coach',
+      rating: 4.7,
+      reviews: 16,
+      aboutContent: {
+        paragraphs: [
+          'Certified in personal training, sport injuries, fitness, and nutrition. Passionate about functional training and stretching for sustainable health.'
+        ],
+        languages: [
+          { code: 'en', name: 'English' }
+        ]
+      },
+      specialties: [
+        'Weight Management', 'Body Conditioning', 'Bodybuilding', 'Core Training', 'Flexibility & Stretching', 'Nutrition Counseling', 'Functional Training'
+      ].map(title => ({ title, description: '' })),
+      certifications: [
+        { title: 'Personal Trainer Program Design (ACE)' },
+        { title: 'Sport Injuries (Swedish Academy)' },
+        { title: 'Sport Nutrition (Swedish Academy)' },
+        { title: 'Fitness Course (Swedish Academy)' },
+        { title: 'Aerobic Zumba / Step / Body Barre' },
+        { title: 'Kickboxing Trainer' }
+      ]
+    },
+    {
+      email: 'othman@example.com',
+      firstName: 'Othman',
+      lastName: 'Coach',
+      supabaseId: 'coach-othman',
+      role: 'coach',
+      rating: 5.0,
+      reviews: 25,
+      aboutContent: {
+        paragraphs: [
+          'I am a passionate personal trainer skilled at making workouts enjoyable and rewarding. I have experience teaching clients proper striking techniques and helping them gain self-confidence.',
+          '🏆 Moroccan and international kickboxing and Muay Thai champion with multiple titles from 2016 to 2023.'
+        ],
+        languages: [
+          { code: 'en', name: 'English' }
+        ]
+      },
+      specialties: [
+        'Weight Management', 'Fitness Improvement', 'Martial Arts', 'Boxing', 'Kickboxing', 'Muay Thai', 'Bodybuilding', 'Flexibility & Stretching', 'Core Training'
+      ].map(title => ({ title, description: '' })),
+      certifications: [
+        { title: 'Certified Personal Trainer' },
+        { title: 'Resistance Training Specialist' },
+        { title: 'Fat Loss Specialist' },
+        { title: 'Black Belt Kickboxing' },
+        { title: 'Black Belt Muay Thai' },
+        { title: 'Kickboxing Coach Diploma' },
+        { title: 'Muay Thai Coach Diploma' },
+        { title: 'Corrective Exercise' }
+      ]
+    },
+    {
+      email: 'fatima@example.com',
+      firstName: 'Fatima Zahra',
+      lastName: 'Coach',
+      supabaseId: 'coach-fatima',
+      role: 'coach',
+      rating: 4.95,
+      reviews: 23,
+      aboutContent: {
+        paragraphs: [
+          'I am a passionate personal trainer experienced in Muay Thai and kickboxing. I help clients build self-confidence and reach fitness goals through effective coaching.',
+          '🏆 Moroccan and African champion in multiple combat sports including kickboxing, karate, and Muay Thai.'
+        ],
+        languages: [
+          { code: 'en', name: 'English' }
+        ]
+      },
+      specialties: [
+        'Weight Management', 'Bodybuilding', 'Functional Training', 'Fitness Improvement', 'Martial Arts', 'Boxing', 'Kickboxing', 'Muay Thai', 'Flexibility & Stretching', 'Core Training'
+      ].map(title => ({ title, description: '' })),
+      certifications: [
+        { title: 'Certified Personal Trainer (ISSA)' },
+        { title: 'Resistance Training Specialist' },
+        { title: 'Fat Loss Specialist' },
+        { title: 'Black Belt Kickboxing' },
+        { title: 'Kickboxing Coach Diploma' },
+        { title: 'Muay Thai Coach Diploma' },
+        { title: 'Corrective Exercise' }
+      ]
     }
   ];
 
   try {
-    await Pack.deleteMany(); // Clear previous data
-    await Pack.insertMany(packs);
-    console.log('✅ Packs seeded successfully!');
+    await User.deleteMany({ role: 'coach' });
+    await User.insertMany(coaches);
+    console.log('✅ Coaches seeded successfully!');
   } catch (error) {
-    console.error('❌ Error seeding packs:', error);
+    console.error('❌ Error seeding coaches:', error);
   } finally {
-    console.log("finish")
-    mongoose.connection.close(); // Close connection after seeding
+    console.log('Finish');
+    mongoose.connection.close();
   }
 }
 
-seedPacks();
+seedCoaches();

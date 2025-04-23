@@ -21,10 +21,8 @@ const SpecialtySchema = new mongoose.Schema({
   }
 });
 
-
-
 const CertificationSchema = new mongoose.Schema({
-    title: {
+  title: {
     en: { type: String, required: true },
     ar: { type: String, required: true }
   },
@@ -33,7 +31,6 @@ const CertificationSchema = new mongoose.Schema({
     default: ""
   }
 });
-
 
 const UserSchema = new mongoose.Schema({
   email: {
@@ -53,7 +50,6 @@ const UserSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-
   phoneNumber: {
     type: String,
     trim: true
@@ -78,7 +74,6 @@ const UserSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-
   role: {
     type: String,
     enum: ['super admin', 'admin', 'coach', 'client'],
@@ -95,8 +90,7 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  
-  // Coach-specific fields
+
   aboutContent: { type: AboutSchema, required: false },
   specialties: [{ type: SpecialtySchema, required: false }],
   certifications: [{ type: CertificationSchema, required: false }],
@@ -108,11 +102,25 @@ const UserSchema = new mongoose.Schema({
     ar: { type: String },
     en: { type: String }
   },
+
   coachActive:{
     type: Boolean,
     default: false
   },
   // Client-specific fields
+  available: {
+    en: {
+      type: String,
+      enum: ['Available only for women', 'Available for all'],
+      required: false
+    },
+    ar: {
+      type: String,
+      enum: ['متاح للنساء فقط', 'متاح للجميع'],
+      required: false
+    }
+  },
+
   weight: {
     type: Number
   },
@@ -123,7 +131,6 @@ const UserSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
-  
   preferredLanguage: {
     type: String,
     trim: true
@@ -139,13 +146,10 @@ const UserSchema = new mongoose.Schema({
   provider: {
     type: String
   },
-
   createdAt: {
     type: Date,
     default: Date.now
   }
-
 });
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);
-

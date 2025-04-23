@@ -5,7 +5,12 @@ import {
   Users,
   Calendar,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Package,
+  Star,
+  Briefcase,
+  Clock,
+  Users2
 } from "lucide-react"
 
 import {
@@ -35,7 +40,7 @@ export function AppSidebar({ ...props }) {
   // Define navigation items based on user role
   const getNavItems = () => {
     const isAdmin = mongoUser?.role === 'admin' || mongoUser?.role === 'super_admin'
-    
+    const isCoach = mongoUser?.role === 'coach'
     // Dashboard link differs based on role
     const dashboardItem = {
       title: "Dashboard",
@@ -55,15 +60,60 @@ export function AppSidebar({ ...props }) {
       icon: Users,
       href: `/${locale}/admin/users`
     }
-    
-    // Build nav items array based on role
-    let navItems = [dashboardItem, calendarItem]
-    
-    // If user is admin or super admin, add the users link
-    if (isAdmin) {
-      navItems = [dashboardItem, usersItem, calendarItem]
+
+    const clientpackItem = {
+      title: "Client Packs",
+      icon: Package,
+      href: `/${locale}/admin/clientpack`
+    }
+
+    const packsItem = {
+      title: "Packs",
+      icon: Package,
+      href: `/${locale}/admin/packs`
+    }
+
+    const reviewsItem = {
+      title: "Reviews",
+      icon: Star,
+      href: `/${locale}/admin/reviews`
+    }
+
+    const servicesItem = {
+      title: "Services",
+      icon: Briefcase,
+      href: `/${locale}/admin/services`
+    }
+
+    const sessionsItem = {
+      title: "Sessions",
+      icon: Clock,
+      href: `/${locale}/admin/sessions`
     }
     
+    // Build nav items array based on role
+    let navItems = []
+    
+    // If user is admin or super admin, add the users link and other admin items
+    if (isAdmin) {
+      navItems = [
+        dashboardItem, 
+        usersItem, 
+        clientpackItem,
+        packsItem,
+        reviewsItem,
+        servicesItem,
+        sessionsItem,
+        calendarItem
+      ]
+    }
+
+    if (isCoach) {
+      navItems = [
+        dashboardItem,
+        calendarItem
+      ]
+    }
     return navItems
   }
 

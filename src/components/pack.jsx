@@ -83,23 +83,30 @@ const MembershipPlans = () => {
   const handleGetStarted = async (pack) => {
     try {
       if (!isAuthenticated) {
-        // Redirect to login if user is not authenticated
         router.push(`/${locale}/login?redirect=/membership-plans`);
+        return;
+      }
+
+      if (!mongoUser?._id) {
+        console.error("User ID not found");
         return;
       }
 
       setSubmitting(true);
       const selectedSession = getSelectedSession(pack);      
       
-      
       // Prepare data according to ClientPack schema with MongoDB ObjectId
       const clientPackData = {
-        client: mongoUser._id, // MongoDB User ID
-        pack: pack._id, // MongoDB Pack ID
+        client: mongoUser._id,
+        pack: pack._id,
         expirationDate: calculateExpirationDate(selectedSession.expirationDays),
         remainingSessions: selectedSession.sessionCount,
-        packPrice:selectedSession.price,
-        purchaseState: 'pending'
+        packPrice: selectedSession.price,
+        purchaseState: 'pending',
+        session: {
+          sessionCount: selectedSession.sessionCount,
+          expirationDays: selectedSession.expirationDays
+        }
       };
 
       // Make API call
@@ -112,16 +119,15 @@ const MembershipPlans = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create client pack');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create client pack');
       }
 
-      const result = await response.json();
-      
       // Redirect to checkout page
       router.push(`/${locale}/checkoutPage`);
-    } catch (err) {
-      console.error('Error creating client pack:', err);
-      setError(err.message);
+    } catch (error) {
+      console.error("Error creating client pack:", error);
+      // You might want to show an error message to the user here
     } finally {
       setSubmitting(false);
     }
@@ -133,7 +139,7 @@ const MembershipPlans = () => {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 relative w-full bg-cover bg-center" 
       style={{
-        backgroundImage: "url('https://i.pinimg.com/736x/d2/95/77/d295770e25e76451f2a1d3912903708f.jpg')",  
+        backgroundImage: "url('https://res.cloudinary.com/dkjx65vc7/image/upload/v1745095664/d295770e25e76451f2a1d3912903708f_dlplhc.jpg')",  
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
       }}
     >

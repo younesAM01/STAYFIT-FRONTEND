@@ -2,6 +2,7 @@
 import { useTranslations, useLocale } from 'next-intl';
 import React, { useState, useEffect } from 'react';
 import { Star, StarHalf, ChevronLeft, ChevronRight, Send, Dumbbell } from "lucide-react";
+import { useAuth } from '@/context/authContext';
 
 const TestimonialSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -19,8 +20,9 @@ const TestimonialSlider = () => {
   const [hoverRating, setHoverRating] = useState(0);
   const t = useTranslations('HomePage');
   const locale = useLocale();
-  const [image, setImage] = useState(null);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+  const { mongoUser, isAuthenticated, loading } = useAuth();
+  const [coaches, setCoaches] = useState([]);
+  const [selectedCoach, setSelectedCoach] = useState('');
   
   useEffect(() => {
     // Fetch reviews from the backend
@@ -45,19 +47,61 @@ const TestimonialSlider = () => {
     fetchReviews();
   }, []);
 
+  // Fetch coaches from backend
+  useEffect(() => {
+    const fetchCoaches = async () => {
+      try {
+        console.log('Fetching coaches...');
+        const response = await fetch('/api/coach');
+        const data = await response.json();
+        console.log('Coaches response:', data);
+        
+        if (Array.isArray(data)) {
+          console.log('Setting coaches:', data);
+          setCoaches(data);
+        } else {
+          console.error('Failed to fetch coaches: Invalid data format');
+        }
+      } catch (error) {
+        console.error('Error fetching coaches:', error);
+      }
+    };
+    fetchCoaches();
+  }, []);
+
+  // Add a useEffect to log coaches state changes
+  useEffect(() => {
+    console.log('Coaches state updated:', coaches);
+  }, [coaches]);
+
+  // Add loading state check
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center my-8 py-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
+      </div>
+    );
+  }
+
+  // Pre-fill user information when form is shown and user is logged in
+  useEffect(() => {
+    if (showForm && mongoUser) {
+      console.log('Current mongoUser:', mongoUser);
+      setNewReview(prev => ({
+        ...prev,
+        name: {
+          en: `${mongoUser.firstName} ${mongoUser.lastName}`,
+          ar: `${mongoUser.firstName} ${mongoUser.lastName}`
+        },
+        image: mongoUser.profilePic || mongoUser.profilePicture
+      }));
+    }
+  }, [showForm, mongoUser]);
+
   // Helper function to get the localized content
-  const getLocalizedContent = (item, field, fallback = '') => {
-    if (!item || !item[field]) return fallback;
-    
-    // If the field has the requested locale, use it
-    if (item[field][locale]) return item[field][locale];
-    
-    // Otherwise use the other locale as fallback
-    const otherLocale = locale === 'en' ? 'ar' : 'en';
-    if (item[field][otherLocale]) return item[field][otherLocale];
-    
-    // Last resort: return empty string
-    return fallback;
+  const getLocalizedContent = (item, field) => {
+    if (!item || !item[field]) return '';
+    return item[field][locale] || item[field]['en'] || '';
   };
 
   const nextSlide = () => {
@@ -103,47 +147,68 @@ const TestimonialSlider = () => {
     }));
   };
 
-  const handlePhotoChange = (e) => {
-    setImage(e.target.files[0]);
+  const handleCoachSelect = (e) => {
+    const coachId = e.target.value;
+    setSelectedCoach(coachId);
+    
+    // Find the selected coach from the coaches array
+    const selectedCoachData = coaches.find(coach => coach._id === coachId);
+    
+    if (selectedCoachData) {
+      setNewReview(prev => ({
+        ...prev,
+        trainerName: {
+          en: `${selectedCoachData.firstName} ${selectedCoachData.lastName}`,
+          ar: `${selectedCoachData.firstName} ${selectedCoachData.lastName}`
+        }
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formSubmitting) return;
     setFormSubmitting(true);
+
+    if (!isAuthenticated || !mongoUser) {
+      alert("Please log in to submit a review");
+      setFormSubmitting(false);
+      return;
+    }
+
+    if (!selectedCoach) {
+      alert("Please select a coach");
+      setFormSubmitting(false);
+      return;
+    }
+
+    if (!newReview.rating || newReview.rating < 1) {
+      alert("Please provide a rating between 1 and 5");
+      setFormSubmitting(false);
+      return;
+    }
+
+    if (!mongoUser._id) {
+      alert("User ID is missing. Please try logging in again.");
+      setFormSubmitting(false);
+      return;
+    }
     
     try {
-      // First upload the image to Cloudinary if one is selected
-      let imageUrl = '';
-      if (image) {
-        const data = new FormData();
-        data.append("file", image);
-        data.append("upload_preset", "STAYFIT");
-        data.append("cloud_name", "dkjx65vc7");
-        data.append("folder", "Cloudinary-React");
-
-        const response = await fetch(
-          `https://api.cloudinary.com/v1_1/dkjx65vc7/image/upload`,
-          {
-            method: "POST",
-            body: data,
-          }
-        );
-        const responseData = await response.json();
-        if (responseData && responseData.secure_url) {
-          imageUrl = responseData.secure_url;
-        }
-      }
-
-      // Now submit the review data to your API
       const reviewData = {
-        name: newReview.name,
-        trainerName: newReview.trainerName,
-        quote: newReview.quote,
         rating: newReview.rating,
-        image: imageUrl
+        userId: mongoUser._id,
+        coachId: selectedCoach,
+        quote: newReview.quote || { en: "", ar: "" },
+        name: {
+          en: `${mongoUser.firstName} ${mongoUser.lastName}`,
+          ar: `${mongoUser.firstName} ${mongoUser.lastName}`
+        },
+        trainerName: newReview.trainerName || { en: "", ar: "" },
+        image: mongoUser.profilePic || mongoUser.profilePicture
       };
 
-      console.log('Submitting review data:', reviewData);
+      console.log('Submitting review data:', reviewData); // Debug log
 
       const reviewResponse = await fetch('/api/review', {
         method: 'POST',
@@ -154,11 +219,9 @@ const TestimonialSlider = () => {
       });
 
       const result = await reviewResponse.json();
-      console.log('Review submission response:', result);
+      console.log('Review submission result:', result); // Debug log
 
       if (result.success) {
-        console.log("Review added successfully");
-        
         // Refresh the reviews to include the new one
         const refreshResponse = await fetch('/api/review');
         const refreshData = await refreshResponse.json();
@@ -174,17 +237,38 @@ const TestimonialSlider = () => {
           rating: 0,
           image: null
         });
-        setImage(null);
+        setSelectedCoach('');
         setShowForm(false);
       } else {
         console.error("Error adding review:", result.error);
+        alert(result.error || "Failed to add review");
       }
     } catch (error) {
       console.error("Error submitting review:", error);
+      alert("An error occurred while submitting the review");
     } finally {
       setFormSubmitting(false);
     }
   };
+
+  // Add useEffect to log mongoUser when it changes
+  useEffect(() => {
+    console.log('mongoUser updated:', mongoUser);
+  }, [mongoUser]);
+
+  // Add a useEffect to log auth state changes
+  useEffect(() => {
+    console.log('Auth state changed:', { isAuthenticated, mongoUser });
+  }, [isAuthenticated, mongoUser]);
+
+  // Add loading state for auth
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center my-8 py-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
+      </div>
+    );
+  }
 
   const renderStars = (rating) => {
     const stars = [];
@@ -242,20 +326,22 @@ const TestimonialSlider = () => {
             <span className="ml-4 w-16 md:w-28 h-0.5 bg-[#B4E90E] block"></span>
           </h2>
 
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-[#B4E90E] hover:bg-[#a3d00c] text-[#0d111a] font-bold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105 flex items-center gap-2"
-          >
-            {showForm ? "View Trainer Reviews" : "Rate Your Trainer"}
-            <Dumbbell className="w-4 h-4" />
-          </button>
+          {isAuthenticated && (
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="bg-[#B4E90E] hover:bg-[#a3d00c] text-[#0d111a] font-bold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105 flex items-center gap-2"
+            >
+              {showForm ? "View Trainer Reviews" : "Rate Your Trainer"}
+              <Dumbbell className="w-4 h-4" />
+            </button>
+          )}
         </div>
 
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
           </div>
-        ) : showForm ? (
+        ) : showForm && isAuthenticated ? (
           <div className="bg-[#1a1f2c] p-6 rounded-xl shadow-lg border border-[#B4E90E]/30 max-w-2xl mx-auto">
             <h3 className="text-xl font-bold text-white mb-4">Rate Your Trainer</h3>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -264,52 +350,29 @@ const TestimonialSlider = () => {
               </div>
               {renderRatingInput()}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <input
-                    type="text"
-                    name="name"
-                    value={newReview.name.en || ''}
-                    onChange={(e) => handleInputChange(e, 'en')}
-                    placeholder="Your Name (English)"
-                    className="w-full p-3 rounded-lg bg-[#2a303c] text-white border border-[#B4E90E]/30 focus:border-[#B4E90E] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    name="name"
-                    value={newReview.name.ar || ''}
-                    onChange={(e) => handleInputChange(e, 'ar')}
-                    placeholder="اسمك (بالعربية)"
-                    className="w-full p-3 rounded-lg bg-[#2a303c] text-white border border-[#B4E90E]/30 focus:border-[#B4E90E] focus:outline-none text-right"
-                    dir="rtl"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <input
-                    type="text"
-                    name="trainerName"
-                    value={newReview.trainerName.en || ''}
-                    onChange={(e) => handleInputChange(e, 'en')}
-                    placeholder="Trainer's Name (English)"
-                    className="w-full p-3 rounded-lg bg-[#2a303c] text-white border border-[#B4E90E]/30 focus:border-[#B4E90E] focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    name="trainerName"
-                    value={newReview.trainerName.ar || ''}
-                    onChange={(e) => handleInputChange(e, 'ar')}
-                    placeholder="اسم المدرب (بالعربية)"
-                    className="w-full p-3 rounded-lg bg-[#2a303c] text-white border border-[#B4E90E]/30 focus:border-[#B4E90E] focus:outline-none text-right"
-                    dir="rtl"
-                  />
-                </div>
+              <div className="space-y-2">
+                <label className="block text-left text-white text-sm">
+                  Select Your Coach
+                </label>
+                <select
+                  value={selectedCoach}
+                  onChange={handleCoachSelect}
+                  className="w-full p-3 rounded-lg bg-[#2a303c] text-white border border-[#B4E90E]/30 focus:border-[#B4E90E] focus:outline-none"
+                >
+                  <option value="">Select a coach</option>
+                  {coaches && coaches.length > 0 ? (
+                    coaches.map(coach => (
+                      <option key={coach._id} value={coach._id}>
+                        {coach.firstName} {coach.lastName}
+                      </option>
+                    ))
+                  ) : (
+                    <option disabled>No coaches available</option>
+                  )}
+                </select>
+                {coaches && coaches.length === 0 && (
+                  <p className="text-red-500 text-sm mt-1">No coaches found. Please try again later.</p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -334,18 +397,6 @@ const TestimonialSlider = () => {
                     dir="rtl"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-left text-white text-sm mb-1">
-                  Upload Your Photo
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="w-full p-3 rounded-lg bg-[#2a303c] text-white border border-[#B4E90E]/30 focus:border-[#B4E90E] focus:outline-none"
-                />
               </div>
 
               <button
@@ -381,7 +432,7 @@ const TestimonialSlider = () => {
                 >
                   <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden mb-4 border-2 border-[#B4E90E] p-1">
                     <img 
-                      src={review.image || 'https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg'} 
+                      src={review.userId?.profilePic || review.image || 'https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg'} 
                       alt={getLocalizedContent(review, 'name')} 
                       className="w-full h-full object-cover rounded-full"
                       onError={(e) => {

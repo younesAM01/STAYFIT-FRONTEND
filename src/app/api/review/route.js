@@ -1,5 +1,6 @@
 import connectMongoDB from '@/lib/mongoDb/connect';
 import Review from '@/models/Reviews';
+import User from '@/models/User';
 import { NextResponse } from "next/server";
 
 // Get single review by ID
@@ -11,15 +12,33 @@ export async function GET(request) {
         await connectMongoDB();
 
         if (id) {
-            const review = await Review.findById(id);
+            const review = await Review.findById(id)
+                .populate({
+                    path: 'userId',
+                    select: 'firstName lastName profilePic'
+                })
+                .populate({
+                    path: 'coachId',
+                    select: 'firstName lastName profilePic'
+                });
             if (!review) {
                 return NextResponse.json({ success: false, error: "Review not found" }, { status: 404 });
             }
             return NextResponse.json({ success: true, data: review });
         }
 
-        // Get all reviews
-        const reviews = await Review.find({});
+        // Get all reviews with populated user and coach data
+        const reviews = await Review.find({})
+            .populate({
+                path: 'userId',
+                select: 'firstName lastName profilePic'
+            })
+            .populate({
+                path: 'coachId',
+                select: 'firstName lastName profilePic'
+            })
+            .sort({ createdAt: -1 }); // Sort by newest first
+            
         return NextResponse.json({ success: true, data: reviews });
     } catch (error) {
         console.error('Error fetching review(s):', error);
@@ -31,57 +50,50 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { name, trainerName, quote, rating, image } = body;
+        const { quote, rating, userId, coachId } = body;
 
-        // Basic validation - at least some text content and required fields
-        if (!rating || !image) {
-            return NextResponse.json({ success: false, error: "Rating and image are required fields" }, { status: 400 });
+        // Basic validation - only rating, userId, and coachId are required
+        if (!rating || !userId || !coachId) {
+            return NextResponse.json({ success: false, error: "Rating, user ID, and coach ID are required fields" }, { status: 400 });
+        }
+
+        await connectMongoDB();
+
+        // Fetch user and coach data
+        const user = await User.findById(userId);
+        const coach = await User.findById(coachId);
+
+        if (!user || !coach) {
+            return NextResponse.json({ success: false, error: "User or coach not found" }, { status: 404 });
         }
 
         // Create a data object with default empty values
         const reviewData = {
-            name: { en: "", ar: "" },
-            trainerName: { en: "", ar: "" },
+            name: body.name || {
+                en: `${user.firstName} ${user.lastName}`,
+                ar: `${user.firstName} ${user.lastName}`
+            },
+            trainerName: body.trainerName || {
+                en: `${coach.firstName} ${coach.lastName}`,
+                ar: `${coach.firstName} ${coach.lastName}`
+            },
             quote: { en: "", ar: "" },
             rating,
-            image
+            image: body.image || user.profilePic || user.profilePicture || 'https://www.shutterstock.com/image-vector/default-avatar-profile-icon-social-600nw-1677509740.jpg',
+            userId,
+            coachId
         };
 
-        // Handle name in different formats
-        if (name) {
-            if (typeof name === 'object') {
-                if (name.en) reviewData.name.en = name.en;
-                if (name.ar) reviewData.name.ar = name.ar;
-            } else if (typeof name === 'string') {
-                // Default to English if string is provided without language specification
-                reviewData.name.en = name;
-            }
-        }
-
-        // Handle trainerName in different formats
-        if (trainerName) {
-            if (typeof trainerName === 'object') {
-                if (trainerName.en) reviewData.trainerName.en = trainerName.en;
-                if (trainerName.ar) reviewData.trainerName.ar = trainerName.ar;
-            } else if (typeof trainerName === 'string') {
-                // Default to English if string is provided without language specification
-                reviewData.trainerName.en = trainerName;
-            }
-        }
-
-        // Handle quote in different formats
+        // Handle quote if provided
         if (quote) {
             if (typeof quote === 'object') {
                 if (quote.en) reviewData.quote.en = quote.en;
                 if (quote.ar) reviewData.quote.ar = quote.ar;
             } else if (typeof quote === 'string') {
-                // Default to English if string is provided without language specification
                 reviewData.quote.en = quote;
             }
         }
 
-        await connectMongoDB();
-        
         try {
             const newReview = await Review.create(reviewData);
             return NextResponse.json({ success: true, data: "Review created successfully" });
@@ -94,7 +106,6 @@ export async function POST(request) {
         }
 
     } catch (error) {
-        
         if (error.code === 11000) {
             const duplicateField = Object.keys(error.keyPattern)[0];
             return NextResponse.json({ 

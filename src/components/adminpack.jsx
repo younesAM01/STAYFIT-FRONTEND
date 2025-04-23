@@ -23,6 +23,7 @@ export default function PacksPage() {
   const [selectedPack, setSelectedPack] = useState(null)
   const locale = useLocale();
   const [formData, setFormData] = useState({
+    startPrice: 0,
     category: {
       en: "Pack Single",
       ar: "باقة فردية"
@@ -86,8 +87,7 @@ export default function PacksPage() {
           ar: arFeatures.filter(feature => feature.trim() !== "")
         }
       }
-
-      if (!packData.category || packData.sessions.length === 0 || packData.features.en.length === 0 || packData.features.ar.length === 0) {
+      if (!packData.category || !packData.startPrice || packData.sessions.length === 0 || packData.features.en.length === 0 || packData.features.ar.length === 0) {
         throw new Error('All fields are required')
       }
 
@@ -98,7 +98,7 @@ export default function PacksPage() {
         },
         body: JSON.stringify(packData)
       })
-
+console.log(response)
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Failed to add pack')
@@ -207,6 +207,7 @@ export default function PacksPage() {
 
   const resetForm = () => {
     setFormData({
+      startPrice: 0,
       category: {
         en: "Pack Single",
         ar: "باقة فردية"
@@ -291,7 +292,6 @@ export default function PacksPage() {
     updated[index] = value
     setArFeatures(updated)
   }
-console.log(packs)
   const filteredData = packs.filter((pack) => {
     const categoryEn = pack.category?.en || '';
     const categoryAr = pack.category?.ar || '';
@@ -351,6 +351,9 @@ console.log(packs)
               </CardContent>
             </Card>
           </div>
+
+          <div className="border-t border-white/10 my-6"></div>
+
           <div className="flex items-end justify-end gap-3 m-3">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
@@ -386,44 +389,44 @@ console.log(packs)
                 </div>
               ) : (
                 <div className="relative overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full border-collapse">
                     <thead className="sticky top-0 bg-gray-900 border-gray-800 z-10">
                       <tr className="border-b border-white/10">
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Category</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Session Options</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Features (EN)</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Features (AR)</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Category</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Session Options</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Features (EN)</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Features (AR)</th>
                         <th className="h-10 px-4 text-right text-sm font-medium text-white/60">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredData.length === 0 ? (
                         <tr>
-                          <td colSpan="5" className="p-4 text-center text-white">
+                          <td colSpan="5" className="p-4 text-center text-white border-b border-white/10">
                             No packs found
                           </td>
                         </tr>
                       ) : (
                         filteredData.map((pack) => (
                           <tr key={pack._id} className="border-b border-white/10 hover:bg-white/5">
-                            <td className="p-4 text-sm font-medium text-white">
+                            <td className="p-4 text-sm font-medium text-white border-r border-white/10">
                               {pack.category?.[locale]}
                             </td>
-                            <td className="p-4 text-sm text-white">
+                            <td className="p-4 text-sm text-white border-r border-white/10">
                               {pack.sessions.map((session, idx) => (
                                 <div key={idx} className="mb-1">
                                   {session.sessionCount} sessions - ${session.price} ({session.expirationDays} days)
                                 </div>
                               ))}
                             </td>
-                            <td className="p-4 text-sm text-white">
+                            <td className="p-4 text-sm text-white border-r border-white/10">
                               <ul className="list-disc pl-4">
                                 {pack.features?.en?.map((feature, idx) => (
                                   <li key={idx}>{feature}</li>
                                 ))}
                               </ul>
                             </td>
-                            <td className="p-4 text-sm text-white">
+                            <td className="p-4 text-sm text-white border-r border-white/10">
                               <ul className="list-disc pl-4">
                                 {pack.features?.ar?.map((feature, idx) => (
                                   <li key={idx}>{feature}</li>
@@ -495,30 +498,61 @@ console.log(packs)
           </DialogHeader>
           <form onSubmit={handleAddPack}>
             <div className="grid gap-4 py-2">
+              {/* Start Price */}
+              <div>
+                <Label htmlFor="startPrice">Start Price</Label>
+                <Input
+                  id="startPrice"
+                  type="number"
+                  value={formData.startPrice}
+                  onChange={(e) => setFormData({...formData, startPrice: Number(e.target.value)})}
+                  className="bg-[#121212] border-white/10 mt-1"
+                  min="0"
+                  required
+                />
+              </div>
+
               {/* Category Selection */}
               <div>
-                <Label htmlFor="category">Category</Label>
-                <Select 
-                  value={formData.category.en} 
-                  onValueChange={(value) => {
-                    setFormData({
-                      ...formData, 
-                      category: {
-                        en: value,
-                        ar: getArabicCategory(value)
-                      }
-                    })
-                  }}
-                >
-                  <SelectTrigger className="bg-[#121212] border-white/10 mt-1">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1F1F1F] border-white/10">
-                    <SelectItem value="Pack Single">Pack Single</SelectItem>
-                    <SelectItem value="Body Package">Body Package</SelectItem>
-                    <SelectItem value="Pack Nutrition">Pack Nutrition</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Category</Label>
+                <div className="grid grid-cols-2 gap-4 mt-1">
+                  <div>
+                    <Label className="text-xs" htmlFor="category-en">English</Label>
+                    <Input
+                      id="category-en"
+                      type="text"
+                      value={formData.category.en}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        category: {
+                          ...formData.category,
+                          en: e.target.value
+                        }
+                      })}
+                      className="bg-[#121212] border-white/10"
+                      placeholder="Enter category in English"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs" htmlFor="category-ar">Arabic</Label>
+                    <Input
+                      id="category-ar"
+                      type="text"
+                      value={formData.category.ar}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        category: {
+                          ...formData.category,
+                          ar: e.target.value
+                        }
+                      })}
+                      className="bg-[#121212] border-white/10"
+                      placeholder="أدخل الفئة بالعربية"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
               
               {/* Session Options */}
@@ -676,7 +710,7 @@ console.log(packs)
               <Button type="button" variant="ghost" onClick={() => setShowAddForm(false)}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-white text-black hover:bg-gray-100">
+              <Button type="submit" className="bg-white text-black">
                 Add Pack
               </Button>
             </DialogFooter>
@@ -697,28 +731,45 @@ console.log(packs)
             <div className="grid gap-4 py-2">
               {/* Category Selection */}
               <div>
-                <Label htmlFor="edit-category">Category</Label>
-                <Select 
-                  value={formData.category?.en || "Pack Single"} 
-                  onValueChange={(value) => {
-                    setFormData({
-                      ...formData, 
-                      category: {
-                        en: value,
-                        ar: getArabicCategory(value)
-                      }
-                    })
-                  }}
-                >
-                  <SelectTrigger className="bg-[#121212] border-white/10 mt-1">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1F1F1F] border-white/10">
-                    <SelectItem value="Pack Single">Pack Single</SelectItem>
-                    <SelectItem value="Body Package">Body Package</SelectItem>
-                    <SelectItem value="Pack Nutrition">Pack Nutrition</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Category</Label>
+                <div className="grid grid-cols-2 gap-4 mt-1">
+                  <div>
+                    <Label className="text-xs" htmlFor="category-en">English</Label>
+                    <Input
+                      id="category-en"
+                      type="text"
+                      value={formData.category.en}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        category: {
+                          ...formData.category,
+                          en: e.target.value
+                        }
+                      })}
+                      className="bg-[#121212] border-white/10"
+                      placeholder="Enter category in English"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs" htmlFor="category-ar">Arabic</Label>
+                    <Input
+                      id="category-ar"
+                      type="text"
+                      value={formData.category.ar}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        category: {
+                          ...formData.category,
+                          ar: e.target.value
+                        }
+                      })}
+                      className="bg-[#121212] border-white/10"
+                      placeholder="أدخل الفئة بالعربية"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
               
               {/* Session Options */}
@@ -876,7 +927,7 @@ console.log(packs)
           <Button type="button" variant="ghost" onClick={() => setShowEditForm(false)}>
             Cancel
           </Button>
-          <Button type="submit" className="bg-white text-black hover:bg-gray-100">
+          <Button type="submit" className="bg-white text-black">
             Update Pack
           </Button>
         </DialogFooter>

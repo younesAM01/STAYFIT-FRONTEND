@@ -253,7 +253,6 @@
   "CheckoutPage": {
     "checkout": "Checkout",
     "yourInformation": "Your Information",
-    "yourSelectedPackage": "Your Selected Package",
     "firstName": "First Name",
     "lastName": "Last Name",
     "email": "Email",
@@ -299,5 +298,10 @@
     "answer3": "To find coaches who specialize in specific areas like cardio or boxing, you can use the search functionality on our coaches page. You can search by coach name or by the area of expertise.",
     "question4": "What fitness levels are accommodated in your various training sessions?",
     "answer4": "Our training sessions accommodate all fitness levels, from beginners to advanced athletes. Each coach session like in , cardio, boxing, swimming, and kids' sessions offers tiered programming designed to match your current abilities while providing appropriate challenges for growth. Our coaches will assess your fitness level during your first session and tailor the training accordingly. As you progress, your coach will adjust the intensity and complexity of exercises to ensure you continue to improve and reach your fitness goals safely and effectively."
+  },
+  "Hero": {
+    "title": "Unlock Your Potential",
+    "description": "Join expert coaching designed to elevate your skills and transform your life. Your first session is completely FREE — start your journey today!",
+    "button": "Start Training Now"
   }
 }

@@ -277,43 +277,22 @@ export default function ReviewsPage() {
         state === "collapsed" ? "ml-40" : "ml-18"
       }`}>
         <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-white">Reviews</h2>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
-                <Input 
-                  type="search" 
-                  placeholder="Search reviews..." 
-                  className="w-[200px] pl-8 bg-white border-0 text-black placeholder:text-black"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Button 
-                variant="outline" 
-                className="bg-white text-black hover:bg-gray-100"
-                onClick={() => setShowAddForm(true)}
-              >
-                Add New
-              </Button>
-            </div>
-          </div>
+          <h2 className="text-3xl font-bold text-white mb-6">Reviews</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <Card className="bg-[#121212] border-0">
+            <Card className="bg-gray-900 border-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Total Reviews</CardTitle>
-                <Package className="h-4 w-4 text-white" />
+                <CardTitle className="text-sm font-medium text-white mt-3">Total Reviews</CardTitle>
+                <Package className="h-4 w-4 text-[#B4E90E] " />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-white">{reviews.length}</div>
               </CardContent>
             </Card>
-            <Card className="bg-[#121212] border-0">
+            <Card className="bg-gray-900 border-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Average Rating</CardTitle>
-                <Star className="h-4 w-4 text-white" />
+                <CardTitle className="text-sm font-medium text-white mt-3 ">Average Rating</CardTitle>
+                <Star className="h-4 w-4 text-[#B4E90E] " />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-white">
@@ -323,10 +302,10 @@ export default function ReviewsPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-[#121212] border-0">
+            <Card className="bg-gray-900 border-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Latest Review</CardTitle>
-                <CalendarDays className="h-4 w-4 text-white" />
+                <CardTitle className="text-sm font-medium text-white mt-3">Latest Review</CardTitle>
+                <CalendarDays className="h-4 w-4 text-[#B4E90E] " />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-white">
@@ -334,6 +313,26 @@ export default function ReviewsPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="flex items-end justify-end mb-6 gap-3">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
+              <Input 
+                type="search" 
+                placeholder="Search reviews..." 
+                className="w-[200px] pl-8 bg-gray-300 border-0 text-black placeholder:text-black"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Button 
+              variant="outline" 
+              className="bg-[#B4E90E] text-black hover:bg-[#B4E90E] cursor-pointer"
+              onClick={() => setShowAddForm(true)}
+            >
+              Add New
+            </Button>
           </div>
 
           <div className="mb-4 flex justify-end">
@@ -345,9 +344,9 @@ export default function ReviewsPage() {
             </Tabs>
           </div>
 
-          <Card className="bg-[#121212] border-0">
+          <Card className="bg-gray-900 border-0">
             <CardHeader>
-              <CardTitle className="text-white">Available Reviews</CardTitle>
+              <CardTitle className="text-white mt-3">Available Reviews</CardTitle>
               <CardDescription className="text-white/60">Manage all reviews and their details</CardDescription>
             </CardHeader>
             <CardContent>
@@ -361,28 +360,28 @@ export default function ReviewsPage() {
                 </div>
               ) : (
                 <div className="relative overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="sticky top-0 bg-[#121212] z-10">
+                  <table className="w-full border-collapse">
+                    <thead className="sticky top-0 bg-gray-900 z-10">
                       <tr className="border-b border-white/10">
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Image</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Name</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Trainer</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Quote</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Rating</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Image</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Name</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Trainer</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Quote</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Rating</th>
                         <th className="h-10 px-4 text-right text-sm font-medium text-white/60">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredData.length === 0 ? (
                         <tr>
-                          <td colSpan="6" className="p-4 text-center text-white">
+                          <td colSpan="6" className="p-4 text-center text-white border-b border-white/10">
                             No reviews found
                           </td>
                         </tr>
                       ) : (
                         filteredData.map((review) => (
                           <tr key={review._id} className="border-b border-white/10 hover:bg-white/5">
-                            <td className="p-4 text-sm">
+                            <td className="p-4 text-sm border-r border-white/10">
                               <img 
                                 src={review.image} 
                                 alt={review.name?.[activeLanguage] || 'Review Image'}
@@ -394,16 +393,16 @@ export default function ReviewsPage() {
                                 key={review.image}
                               />
                             </td>
-                            <td className="p-4 text-sm font-medium text-white">
+                            <td className="p-4 text-sm font-medium text-white border-r border-white/10">
                               {review.name?.[activeLanguage] || review.name?.en || review.name?.ar || "—"}
                             </td>
-                            <td className="p-4 text-sm text-white">
+                            <td className="p-4 text-sm text-white border-r border-white/10">
                               {review.trainerName?.[activeLanguage] || review.trainerName?.en || review.trainerName?.ar || "—"}
                             </td>
-                            <td className="p-4 text-sm text-white">
+                            <td className="p-4 text-sm text-white border-r border-white/10">
                               {review.quote?.[activeLanguage] || review.quote?.en || review.quote?.ar || "—"}
                             </td>
-                            <td className="p-4 text-sm text-white">
+                            <td className="p-4 text-sm text-white border-r border-white/10">
                               {review.rating || "—"}
                             </td>
                             <td className="p-4 text-right">

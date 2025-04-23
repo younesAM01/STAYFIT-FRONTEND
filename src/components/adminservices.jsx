@@ -261,52 +261,29 @@ export default function ServicesPage() {
         state === "collapsed" ? "ml-40" : "ml-18"
       }`}>
               <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-white">Services</h2>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
-                <Input 
-                  type="search" 
-                  placeholder="Search services..." 
-                  className="w-[200px] pl-8 bg-white border-0 text-black placeholder:text-black"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Button 
-                variant="outline" 
-                className="bg-white text-black hover:bg-gray-100"
-                onClick={() => setShowAddForm(true)}
-              >
-                Add New
-              </Button>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <Card className="bg-[#121212] border-0">
+            <Card className="bg-gray-900 border-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Total Services</CardTitle>
-                <Package className="h-4 w-4 text-white" />
+                <CardTitle className="text-sm font-medium text-white mt-2 ">Total Services</CardTitle>
+                <Package className="h-4 w-4 text-[#B4E90E]" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-white">{services.length}</div>
               </CardContent>
             </Card>
-            <Card className="bg-[#121212] border-0">
+            <Card className="bg-gray-900 border-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Active Services</CardTitle>
-                <CheckCircle className="h-4 w-4 text-white" />
+                <CardTitle className="text-sm font-medium text-white mt-2 ">Active Services</CardTitle>
+                <CheckCircle className="h-4 w-4 text-[#B4E90E]" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-white">{services.length}</div>
               </CardContent>
             </Card>
-            <Card className="bg-[#121212] border-0">
+            <Card className="bg-gray-900 border-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Latest Services</CardTitle>
-                <CalendarDays className="h-4 w-4 text-white" />
+                <CardTitle className="text-sm font-medium text-white mt-2">Latest Services</CardTitle>
+                <CalendarDays className="h-4 w-4 text-[#B4E90E]" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-white">
@@ -314,6 +291,26 @@ export default function ServicesPage() {
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="flex items-end justify-end mb-6 gap-3 ">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
+              <Input 
+                type="search" 
+                placeholder="Search services..." 
+                className="w-[200px] pl-8 bg-gray-300 border-0 text-black placeholder:text-black"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Button 
+              variant="outline" 
+              className="bg-[#B4E90E] text-black hover:bg-[#B4E90E] cursor-pointer"
+              onClick={() => setShowAddForm(true)}
+            >
+              Add New
+            </Button>
           </div>
 
           <div className="mb-4 flex justify-end">
@@ -325,9 +322,9 @@ export default function ServicesPage() {
             </Tabs>
           </div>
 
-          <Card className="bg-[#121212] border-0">
+          <Card className="bg-gray-900 border-0">
             <CardHeader>
-              <CardTitle className="text-white">Available Services</CardTitle>
+              <CardTitle className="text-white mt-3">Available Services</CardTitle>
               <CardDescription className="text-white/60">Manage all services and their details</CardDescription>
             </CardHeader>
             <CardContent>
@@ -341,9 +338,9 @@ export default function ServicesPage() {
         </div>
               ) : (
                 <div className="relative overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="sticky top-0 bg-[#121212] z-10">
-                      <tr className="border-b border-white/10">
+                  <table className="w-full border-collapse">
+                    <thead className="sticky top-0 bg-gray-900 z-10">
+                      <tr className="border-b-2 border-white/20">
                         <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Image</th>
                         <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Title</th>
                         <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Description</th>
@@ -354,14 +351,14 @@ export default function ServicesPage() {
                     <tbody>
                       {filteredData.length === 0 ? (
                         <tr>
-                          <td colSpan="5" className="p-4 text-center text-white">
+                          <td colSpan="5" className="p-4 text-center text-white border-b border-white/10">
                             No services found
                         </td>
                         </tr>
                       ) : (
                         filteredData.map((service) => (
                           <tr key={service._id} className="border-b border-white/10 hover:bg-white/5">
-                            <td className="p-4 text-sm">
+                            <td className="p-4 text-sm border-r border-white/10">
                               <img 
                                 src={service.image} 
                                 alt={service.title?.[activeLanguage] || 'Service Image'}
@@ -373,13 +370,13 @@ export default function ServicesPage() {
                                 key={service.image}
                               />
                         </td>
-                            <td className="p-4 text-sm font-medium text-white">
+                            <td className="p-4 text-sm font-medium text-white border-r border-white/10">
                               {service.title?.[activeLanguage] || "—"}
                         </td>
-                            <td className="p-4 text-sm text-white">
+                            <td className="p-4 text-sm text-white border-r border-white/10">
                               {service.description?.[activeLanguage] || "—"}
                         </td>
-                            <td className="p-4 text-sm text-white">
+                            <td className="p-4 text-sm text-white border-r border-white/10">
                               {new Date(service.createdAt).toLocaleDateString()}
                         </td>
                             <td className="p-4 text-right">

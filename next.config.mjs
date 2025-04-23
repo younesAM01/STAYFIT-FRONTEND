@@ -10,4 +10,3 @@ const nextConfig = {
 
 const withNextIntl = createNextIntlPlugin();
 export default withNextIntl(withVideos(nextConfig));
-
