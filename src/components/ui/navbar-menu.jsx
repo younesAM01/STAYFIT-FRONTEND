@@ -231,7 +231,8 @@ export const DesktopMenu = ({ setActive, children }) => {
       className="hidden lg:flex fixed top-4 left-1/2 transform -translate-x-1/2 w-[90%] items-center px-8 py-2 bg-gradient-to-r from-[#0d111a] via-[#0d111a] to-[#b4e90e]/10 border border-[#b4e90e]/[0.1] rounded-full shadow-lg backdrop-blur-md z-50"
     >
       <Link href={`/${locale}`}>
-      <Image src={logo} alt="STAY FiT" width={130} height={40} /></Link>
+        <Image src={logo} alt="STAY FiT" width={130} height={40} />
+      </Link>
       <div className="flex justify-center space-x-8 mx-auto">{children}</div>
       <LocaleDropdown />
 
@@ -255,14 +256,6 @@ export const DesktopMenu = ({ setActive, children }) => {
       )}
     </nav>
   );
-};
-
-export const CoachItem = ({ title, description, href, src }) => {
-  // ... [CoachItem implementation remains unchanged]
-};
-
-export const MobileCoachItem = ({ title, description, href, src }) => {
-  // ... [MobileCoachItem implementation remains unchanged]
 };
 
 const Navbar = () => {
@@ -352,32 +345,6 @@ const Navbar = () => {
           isMobile={isMobile}
           disableHover={true}
         >
-          <div className="grid grid-cols-2 gap-4 p-2 z-10000">
-            <CoachItem
-              title="Ahmed Sobhi"
-              description="Yoga specialist with 8+ years experience"
-              href="/coaches/sarah"
-              src="https://i.pinimg.com/474x/a2/fb/13/a2fb13560cae8b99da7ab04497737746.jpg"
-            />
-            <CoachItem
-              title="Anass Beniss"
-              description="Strength & conditioning expert"
-              href="/coaches/mark"
-              src="https://i.pinimg.com/474x/88/d1/1a/88d11a3428462b2e143d8c4a28af7a60.jpg"
-            />
-            <CoachItem
-              title="Layla Mahmoud"
-              description="Nutrition and fitness coach"
-              href="/coaches/layla"
-              src="https://i.pinimg.com/736x/79/3a/b1/793ab11603c2f931ae82bad4f5e3219c.jpg"
-            />
-            <CoachItem
-              title="Ahmed Hassan"
-              description="Functional training specialist"
-              href="/coaches/ahmed"
-              src="https://i.pinimg.com/474x/f0/f4/88/f0f4889240793a25e5b7c4fa2fbfb37b.jpg"
-            />
-          </div>
         </MenuItem>
         <MenuItem
           setActive={setActive}
