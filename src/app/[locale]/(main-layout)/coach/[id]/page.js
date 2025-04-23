@@ -29,6 +29,7 @@ export default function CoachProfile() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const t = useTranslations("aboutme");
 
   const params = useParams();
@@ -48,6 +49,58 @@ export default function CoachProfile() {
 
         const data = await response.json();
         setCoachData(data);
+
+        // Check if user is missing profile information
+        const isIncompleteProfile =
+          !data ||
+          !data.profilePic ||
+          !data.aboutContent?.paragraphs?.[locale]?.length ||
+          !data.specialties?.length ||
+          !data.certifications?.length;
+
+        setIsFirstTimeUser(isIncompleteProfile);
+
+        // If it's a first-time user with incomplete profile, open the edit modal
+        if (isIncompleteProfile) {
+          const defaultData = {
+            ...data,
+            firstName: data?.firstName || "",
+            lastName: data?.lastName || "",
+            phoneNumber: data?.phoneNumber || "",
+            age: data?.age || "",
+            profilePic: data?.profilePic || "",
+            title: {
+              en: data?.title?.en || "",
+              ar: data?.title?.ar || "",
+            },
+            aboutContent: {
+              paragraphs: {
+                en: data?.aboutContent?.paragraphs?.en || [""],
+                ar: data?.aboutContent?.paragraphs?.ar || [""],
+              },
+              languages: data?.aboutContent?.languages || [
+                { code: "", name: "" },
+              ],
+            },
+            specialties: data?.specialties || [
+              {
+                title: { en: "", ar: "" },
+                description: { en: "", ar: "" },
+              },
+            ],
+            certifications: data?.certifications || [
+              {
+                title: { en: "", ar: "" },
+                org: "",
+              },
+            ],
+          };
+
+          setEditFormData(defaultData);
+          setImagePreview(data?.profilePic || null);
+          setIsEditModalOpen(true);
+        }
+
         setError(null);
       } catch (err) {
         console.error("Error fetching coach data:", err);
@@ -60,30 +113,36 @@ export default function CoachProfile() {
     if (coachId) {
       fetchCoachData();
     }
-  }, [coachId]);
+  }, [coachId, locale]);
 
   const openEditModal = () => {
-    // Clone coach data to avoid direct mutation
-    setEditFormData({
-      ...coachData,
-      aboutContent: {
-        ...coachData.aboutContent,
-        paragraphs: {
-          ...coachData.aboutContent.paragraphs,
+    // If editFormData is already set (for first-time users), use that
+    if (!editFormData) {
+      // Clone coach data to avoid direct mutation
+      setEditFormData({
+        ...coachData,
+        aboutContent: {
+          ...coachData?.aboutContent,
+          paragraphs: {
+            ...coachData?.aboutContent?.paragraphs,
+          },
+          languages: [...(coachData?.aboutContent?.languages || [])],
         },
-        languages: [...coachData.aboutContent.languages],
-      },
-      specialties: [...coachData.specialties],
-      certifications: [...coachData.certifications],
-    });
-    setImagePreview(coachData?.profilePic);
+        specialties: [...(coachData?.specialties || [])],
+        certifications: [...(coachData?.certifications || [])],
+      });
+      setImagePreview(coachData?.profilePic);
+    }
     setIsEditModalOpen(true);
   };
 
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setSelectedImage(null);
-    setImagePreview(null);
+    // Only clear image preview if we're not keeping form data for a first-time user
+    if (!isFirstTimeUser) {
+      setImagePreview(null);
+    }
   };
 
   const handleInputChange = (e) => {
@@ -378,13 +437,48 @@ export default function CoachProfile() {
 
   const saveChanges = async () => {
     try {
-      console.log(editFormData);
+      // Ensure we have valid data structures before saving
+      const dataToSave = {
+        ...editFormData,
+        // Ensure we have paragraphs for both languages
+        aboutContent: {
+          ...editFormData.aboutContent,
+          paragraphs: {
+            en: editFormData.aboutContent?.paragraphs?.en || [""],
+            ar: editFormData.aboutContent?.paragraphs?.ar || [""],
+          },
+          // Ensure we have at least one language
+          languages: editFormData.aboutContent?.languages?.length
+            ? editFormData.aboutContent.languages
+            : [{ code: "", name: "" }],
+        },
+        // Ensure we have at least one specialty
+        specialties: editFormData.specialties?.length
+          ? editFormData.specialties
+          : [
+              {
+                title: { en: "", ar: "" },
+                description: { en: "", ar: "" },
+              },
+            ],
+        // Ensure we have at least one certification
+        certifications: editFormData.certifications?.length
+          ? editFormData.certifications
+          : [
+              {
+                title: { en: "", ar: "" },
+                org: "",
+              },
+            ],
+      };
+
+      console.log("Data being saved:", dataToSave);
       const res = await fetch(`/api/users?supabaseId=${mongoUser.supabaseId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify(dataToSave),
       });
 
       if (!res.ok) {
@@ -395,6 +489,11 @@ export default function CoachProfile() {
       const updatedData = await res.json();
       console.log("Server response:", updatedData);
       setCoachData(updatedData);
+
+      // Reset first-time user flag if this was their first update
+      if (isFirstTimeUser) {
+        setIsFirstTimeUser(false);
+      }
     } catch (err) {
       console.error("Error saving coach data:", err);
     } finally {
@@ -413,7 +512,7 @@ export default function CoachProfile() {
     );
   }
 
-  if (!coachData) {
+  if (!coachData && !isFirstTimeUser) {
     return (
       <div className="min-h-screen bg-[#0d111a] text-white flex items-center justify-center">
         <div className="text-center">
@@ -422,6 +521,12 @@ export default function CoachProfile() {
       </div>
     );
   }
+
+  // Render placeholder message if data is empty and not yet editing
+  const hasNoData =
+    !coachData?.aboutContent?.paragraphs?.[locale]?.length &&
+    !coachData?.specialties?.length &&
+    !coachData?.certifications?.length;
 
   return (
     <div className="min-h-screen bg-[#0d111a] text-white">
@@ -448,7 +553,7 @@ export default function CoachProfile() {
                   coachData?.profilePic ||
                   "/placeholder.svg?height=1080&width=1920"
                 }
-                alt={`Coach ${coachData?.firstName} ${coachData?.lastName}`}
+                alt={`Coach ${coachData?.firstName || "Profile"} ${coachData?.lastName || ""}`}
                 width={320}
                 height={320}
                 className="object-cover w-full h-full"
@@ -466,7 +571,7 @@ export default function CoachProfile() {
                   {locale === "ar" ? (
                     <>
                       <span className="text-[#B4E90E]">
-                        {coachData?.firstName} {coachData?.lastName}
+                        {coachData?.firstName || ""} {coachData?.lastName || ""}
                       </span>{" "}
                       {t("coach")}
                     </>
@@ -474,7 +579,7 @@ export default function CoachProfile() {
                     <>
                       {t("coach")}{" "}
                       <span className="text-[#B4E90E]">
-                        {coachData?.firstName} {coachData?.lastName}
+                        {coachData?.firstName || ""} {coachData?.lastName || ""}
                       </span>
                     </>
                   )}
@@ -493,7 +598,7 @@ export default function CoachProfile() {
                 transition={{ delay: 0.2 }}
                 className={`text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 mt-2 sm:mt-3 ${locale === "ar" ? "text-center" : ""}`}
               >
-                {locale === "en" ? coachData?.title.en : coachData?.title.ar}
+                {locale === "en" ? coachData?.title?.en : coachData?.title?.ar}
               </motion.p>
             </div>
           </div>
@@ -544,150 +649,171 @@ export default function CoachProfile() {
 
       {/* Content Section */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {activeTab === "about" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl mx-auto"
-          >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex items-center justify-center">
-              <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] mr-3 sm:mr-4"></span>
-              {t("sections.about.title")}
-              <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] ml-3 sm:mr-4"></span>
-            </h2>
-            {coachData?.aboutContent?.paragraphs[locale].map(
-              (paragraph, index) => (
-                <motion.p
-                  key={index}
+        {hasNoData && !isEditModalOpen ? (
+          <div className="max-w-3xl mx-auto text-center py-12">
+            <div className="bg-[#0a0e15] rounded-lg border border-[#161c2a] p-8 mb-8">
+              <h2 className="text-2xl font-bold mb-4">{t("welcome")}</h2>
+              <p className="text-gray-300 mb-6">
+                Your coach profile is empty. Click the edit button to add your
+                information.
+              </p>
+              <button
+                onClick={openEditModal}
+                className="px-6 py-3 bg-[#B4E90E] text-[#0d111a] rounded-lg font-medium hover:bg-[#9bc80c] inline-flex items-center gap-2"
+              >
+                <Edit size={18} />
+                Complete Your Profile
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {activeTab === "about" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="max-w-3xl mx-auto"
+              >
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex items-center justify-center">
+                  <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] mr-3 sm:mr-4"></span>
+                  {t("sections.about.title")}
+                  <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] ml-3 sm:mr-4"></span>
+                </h2>
+                {coachData?.aboutContent?.paragraphs[locale]?.map(
+                  (paragraph, index) => (
+                    <motion.p
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2 * (index + 1) }}
+                      className="text-base sm:text-lg leading-relaxed mb-6 sm:mb-8 text-center text-gray-300"
+                    >
+                      {paragraph}
+                    </motion.p>
+                  )
+                )}
+
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 * (index + 1) }}
-                  className="text-base sm:text-lg leading-relaxed mb-6 sm:mb-8 text-center text-gray-300"
+                  transition={{ delay: 0.4 }}
+                  className="mt-8 sm:mt-12"
                 >
-                  {paragraph}
-                </motion.p>
-              )
+                  <h3 className="text-xl sm:text-2xl font-bold mb-6 flex items-center justify-center">
+                    <Languages className="text-[#B4E90E] mr-3" />
+                    Languages
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                    {coachData?.aboutContent?.languages?.map((lang, index) => (
+                      <motion.div
+                        key={index}
+                        whileHover={{ scale: 1.05 }}
+                        className="bg-[#0a0e15] p-4 sm:p-6 rounded-lg border border-[#161c2a]"
+                      >
+                        <div className="text-center">
+                          <div className="text-4xl sm:text-5xl font-bold mb-2">
+                            {lang.code}
+                          </div>
+                          <div className="text-sm sm:text-base text-gray-400">
+                            {lang.name}
+                          </div>
+                          <div className="mt-4 h-1 bg-[#161c2a] rounded-full overflow-hidden">
+                            <div className="h-full bg-[#B4E90E] w-full"></div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              </motion.div>
             )}
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mt-8 sm:mt-12"
-            >
-              <h3 className="text-xl sm:text-2xl font-bold mb-6 flex items-center justify-center">
-                <Languages className="text-[#B4E90E] mr-3" />
-                Languages
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                {coachData?.aboutContent?.languages.map((lang, index) => (
-                  <motion.div
-                    key={index}
-                    whileHover={{ scale: 1.05 }}
-                    className="bg-[#0a0e15] p-4 sm:p-6 rounded-lg border border-[#161c2a]"
-                  >
-                    <div className="text-center">
-                      <div className="text-4xl sm:text-5xl font-bold mb-2">
-                        {lang.code}
+            {activeTab === "specialties" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="max-w-3xl mx-auto"
+              >
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center justify-center">
+                  <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] mr-3 sm:mr-4"></span>
+                  {t("sections.specialties.title")}
+                  <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] ml-3 sm:mr-4"></span>
+                </h2>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                  {coachData?.specialties?.map((specialty, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-[#0a0e15] p-4 sm:p-6 rounded-lg border border-[#161c2a] hover:border-[#B4E90E] transition-colors group"
+                    >
+                      <div className="flex items-start gap-3 sm:gap-4">
+                        <div className="p-2 sm:p-3 bg-[#161c2a] rounded-lg group-hover:bg-[#B4E90E] group-hover:text-[#0d111a] transition-colors">
+                          <Dumbbell size={20} className="sm:w-6 sm:h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">
+                            {locale === "en"
+                              ? specialty.title?.en
+                              : specialty.title?.ar}
+                          </h3>
+                          <p className="text-sm sm:text-base text-gray-400">
+                            {locale === "en"
+                              ? specialty.description?.en
+                              : specialty.description?.ar}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-sm sm:text-base text-gray-400">
-                        {lang.name}
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "certifications" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="max-w-3xl mx-auto"
+              >
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center justify-center">
+                  <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] mr-3 sm:mr-4"></span>
+                  {t("sections.certifications.title")}
+                  <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] ml-3 sm:mr-4"></span>
+                </h2>
+
+                <div className="space-y-3 sm:space-y-4">
+                  {coachData?.certifications?.map((cert, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-[#0a0e15] p-4 sm:p-6 rounded-lg border border-[#161c2a] hover:border-[#B4E90E] transition-colors"
+                    >
+                      <div className="flex items-center gap-3 sm:gap-4">
+                        <Medal className="text-[#B4E90E] flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6" />
+                        <div>
+                          <h3 className="text-sm sm:text-base font-bold">
+                            {locale === "en" ? cert.title?.en : cert.title?.ar}
+                          </h3>
+                          {cert.org && (
+                            <p className="text-xs sm:text-sm text-gray-400">
+                              {cert.org}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <div className="mt-4 h-1 bg-[#161c2a] rounded-full overflow-hidden">
-                        <div className="h-full bg-[#B4E90E] w-full"></div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-
-        {activeTab === "specialties" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl mx-auto"
-          >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center justify-center">
-              <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] mr-3 sm:mr-4"></span>
-              {t("sections.specialties.title")}
-              <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] ml-3 sm:mr-4"></span>
-            </h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-              {coachData?.specialties?.map((specialty, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-[#0a0e15] p-4 sm:p-6 rounded-lg border border-[#161c2a] hover:border-[#B4E90E] transition-colors group"
-                >
-                  <div className="flex items-start gap-3 sm:gap-4">
-                    <div className="p-2 sm:p-3 bg-[#161c2a] rounded-lg group-hover:bg-[#B4E90E] group-hover:text-[#0d111a] transition-colors">
-                      <Dumbbell size={20} className="sm:w-6 sm:h-6" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">
-                        {locale === "en"
-                          ? specialty.title.en
-                          : specialty.title.ar}
-                      </h3>
-                      <p className="text-sm sm:text-base text-gray-400">
-                        {locale === "en"
-                          ? specialty.description.en
-                          : specialty.description.ar}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {activeTab === "certifications" && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-3xl mx-auto"
-          >
-            <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 flex items-center justify-center">
-              <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] mr-3 sm:mr-4"></span>
-              {t("sections.certifications.title")}
-              <span className="w-6 sm:w-8 h-1 bg-[#B4E90E] ml-3 sm:mr-4"></span>
-            </h2>
-
-            <div className="space-y-3 sm:space-y-4">
-              {coachData?.certifications?.map((cert, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02 }}
-                  className="bg-[#0a0e15] p-4 sm:p-6 rounded-lg border border-[#161c2a] hover:border-[#B4E90E] transition-colors"
-                >
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <Medal className="text-[#B4E90E] flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6" />
-                    <div>
-                      <h3 className="text-sm sm:text-base font-bold">
-                        {locale === "en" ? cert.title.en : cert.title.ar}
-                      </h3>
-                      {cert.org && (
-                        <p className="text-xs sm:text-sm text-gray-400">
-                          {cert.org}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </>
         )}
       </div>
 
@@ -726,7 +852,11 @@ export default function CoachProfile() {
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
           <div className="bg-[#0a0e15] rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-[#0a0e15] p-4 border-b border-[#161c2a] flex justify-between items-center z-10">
-              <h2 className="text-xl font-bold">Edit Coach Profile</h2>
+              <h2 className="text-xl font-bold">
+                {isFirstTimeUser
+                  ? "Complete Your Profile"
+                  : "Edit Coach Profile"}
+              </h2>
               <button
                 onClick={closeEditModal}
                 className="p-2 hover:bg-[#161c2a] rounded-full"

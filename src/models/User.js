@@ -90,6 +90,7 @@ const UserSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+
   aboutContent: { type: AboutSchema, required: false },
   specialties: [{ type: SpecialtySchema, required: false }],
   certifications: [{ type: CertificationSchema, required: false }],
@@ -101,6 +102,12 @@ const UserSchema = new mongoose.Schema({
     ar: { type: String },
     en: { type: String }
   },
+
+  coachActive:{
+    type: Boolean,
+    default: false
+  },
+  // Client-specific fields
   available: {
     en: {
       type: String,
@@ -113,6 +120,7 @@ const UserSchema = new mongoose.Schema({
       required: false
     }
   },
+
   weight: {
     type: Number
   },

@@ -41,7 +41,10 @@ export default function BookingSection({
           throw new Error("Failed to fetch coaches");
         }
         const data = await response.json();
-        setCoaches(data);
+        const activeCoaches = data.filter(
+          (coach) => coach.coachActive === true
+        );
+        setCoaches(activeCoaches);
       } catch (error) {
         console.error(error);
       }
@@ -66,8 +69,8 @@ export default function BookingSection({
   const handleDateTimeSelect = (date, time, location, refreshSessions) => {
     setSelectedDate(date);
     setSelectedTime(time);
-    setSessionLocation(location); // Set the session location
-    setRefreshSessionsFunction(() => refreshSessions); // Store the refresh function
+    setSessionLocation(location);
+    setRefreshSessionsFunction(() => refreshSessions);
     setStep("confirmation");
   };
 
@@ -80,22 +83,26 @@ export default function BookingSection({
     try {
       setIsSubmitting(true);
 
-      // Format the date for the API
-      const formattedDate =
-        selectedDate.toISOString().split("T")[0] + "T00:00:00.000Z";
+      // Format the date for the API - preserving the selected date
+      const formattedDate = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        0,
+        0,
+        0
+      ).toISOString();
 
-      // Create session data object
       const sessionData = {
-        client: clientId, // Using the fixed client ID from your example
+        client: clientId,
         coach: selectedCoachId,
-        pack: clientPack.pack._id, // Using the fixed pack ID from your example
+        pack: clientPack.pack._id,
         sessionDate: formattedDate,
         sessionTime: selectedTime,
         location: sessionLocation,
         status: "scheduled",
       };
 
-      // Make API call to create new session
       const response = await fetch("http://localhost:3000/api/session", {
         method: "POST",
         headers: {
@@ -136,10 +143,8 @@ export default function BookingSection({
       }
 
       // alert("Session booked successfully!")
-      toast.success("Session booked successfully!")
+      toast.success("Session booked successfully!");
 
-
-      // Reset the form
       setActiveTab("membership");
       setSelectedCoachId(null);
       setSelectedCoach(null);
@@ -190,7 +195,13 @@ export default function BookingSection({
           </TabsList>
 
           <TabsContent value="coach" className="mt-6">
-            <CoachSelection onSelect={handleCoachSelect} />
+            {coaches.length > 0 ? (
+              <CoachSelection onSelect={handleCoachSelect} />
+            ) : (
+              <div className="text-center text-white p-4">
+                <p>{t("noCoachesAvailable")}</p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="calendar" className="mt-6">
