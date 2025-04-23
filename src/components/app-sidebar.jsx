@@ -103,8 +103,7 @@ export function AppSidebar({ ...props }) {
         packsItem,
         reviewsItem,
         servicesItem,
-        sessionsItem,
-        calendarItem
+        sessionsItem
       ]
     }
 

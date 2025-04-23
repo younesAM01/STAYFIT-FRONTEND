@@ -122,7 +122,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-6 p-6 bg-[#0d111a] text-white min-h-screen">
+    <div className="space-y-6 p-6 text-white min-h-screen">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight text-white">Dashboard</h2>
       </div>
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
 
         {/* Stats Cards */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-[#161b26] border-gray-800">
+          <Card className="bg-[#161b26] border-gray-800 p-2">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-gray-300">Client Packs</CardTitle>
               <Package className="h-4 w-4 text-[#B4E90E]" />
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-[#161b26] border-gray-800">
+          <Card className="bg-[#161b26] border-gray-800 p-2">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-gray-300">Reviews</CardTitle>
               <Star className="h-4 w-4 text-[#B4E90E]" />
@@ -162,7 +162,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-[#161b26] border-gray-800">
+          <Card className="bg-[#161b26] border-gray-800 p-2">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-gray-300">Clients</CardTitle>
               <Users className="h-4 w-4 text-[#B4E90E]" />
@@ -177,7 +177,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-[#161b26] border-gray-800">
+          <Card className="bg-[#161b26] border-gray-800 p-2">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-gray-300">Sessions</CardTitle>
               <Clock className="h-4 w-4 text-[#B4E90E]" />
@@ -195,7 +195,7 @@ export default function AdminDashboard() {
 
         {/* Charts Section */}
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="bg-[#161b26] border-gray-800">
+          <Card className="bg-[#161b26] border-gray-800 p-2">
             <CardHeader>
               <CardTitle className="text-[#B4E90E]">Session Overview</CardTitle>
               <CardDescription className="text-gray-400">Activity across all services</CardDescription>
@@ -231,7 +231,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-[#161b26] border-gray-800">
+          <Card className="bg-[#161b26] border-gray-800 p-2">
             <CardHeader>
               <CardTitle className="text-[#B4E90E]">Performance Analytics</CardTitle>
               <CardDescription className="text-gray-400">Key metrics distribution</CardDescription>
@@ -290,7 +290,7 @@ export default function AdminDashboard() {
 
         {/* Performance Metrics */}
         <div className="grid gap-6 md:grid-cols-2">
-          <Card className="bg-[#161b26] border-gray-800">
+          <Card className="bg-[#161b26] border-gray-800 p-2">
             <CardHeader>
               <CardTitle className="text-[#B4E90E]">Available Services</CardTitle>
               <CardDescription className="text-gray-400">Our current service offerings</CardDescription>
@@ -308,7 +308,7 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-[#161b26] border-gray-800">
+          <Card className="bg-[#161b26] border-gray-800 p-2">
             <CardHeader>
               <CardTitle className="text-[#B4E90E]">Active Sessions</CardTitle>
               <CardDescription className="text-gray-400">Currently scheduled sessions</CardDescription>
