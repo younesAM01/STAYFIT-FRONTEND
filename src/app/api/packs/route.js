@@ -30,6 +30,7 @@ export async function GET(request) {
       { error: "Failed to fetch packs" },
       { status: 500 }
     );
+
   }
 }
 
@@ -130,5 +131,6 @@ export async function PUT(request) {
       { error: "Failed to update pack", details: error.message },
       { status: 500 }
     );
+
   }
 }
