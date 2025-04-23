@@ -98,7 +98,6 @@ export default function PacksPage() {
         },
         body: JSON.stringify(packData)
       })
-console.log(response)
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.message || 'Failed to add pack')

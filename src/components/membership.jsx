@@ -9,6 +9,7 @@ import {
   X,
   AlertCircle,
   ChevronRight,
+  Info,
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { useLocale, useTranslations } from "next-intl";
@@ -22,6 +23,8 @@ const Membership = ({ setActiveTab }) => {
   const [hasActiveMemberships, setHasActiveMemberships] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [sessionToCancel, setSessionToCancel] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [showErrorModal, setShowErrorModal] = useState(false);
   const t = useTranslations("MembershipPage");
   const locale = useLocale();
 
@@ -80,18 +83,27 @@ const Membership = ({ setActiveTab }) => {
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
       const upcomingAndScheduledSessions = Array.isArray(data)
-        ? data.filter((session) => {
-            if (
-              !session ||
-              typeof session !== "object" ||
-              (session.status !== "scheduled" && session.status !== "confirmed")
-            ) {
-              return false;
-            }
+        ? data
+            .filter((session) => {
+              if (
+                !session ||
+                typeof session !== "object" ||
+                (session.status !== "scheduled" &&
+                  session.status !== "confirmed")
+              ) {
+                return false;
+              }
 
-            let sessionDateObj;
-            try {
-              if (session.sessionDate) {
+              // Ensure we have valid sessionDate and sessionTime
+              if (!session.sessionDate || !session.sessionTime) {
+                console.warn(
+                  `Missing date/time info for session ${session._id}`
+                );
+                return false;
+              }
+
+              let sessionDateObj;
+              try {
                 sessionDateObj = new Date(session.sessionDate);
                 if (isNaN(sessionDateObj.getTime())) {
                   console.warn(
@@ -99,32 +111,310 @@ const Membership = ({ setActiveTab }) => {
                   );
                   return false;
                 }
-              } else {
-                console.warn(`Missing sessionDate for session ${session._id}`);
+              } catch (e) {
+                console.error(
+                  `Error parsing sessionDate ${session.sessionDate} for session ${session._id}:`,
+                  e
+                );
                 return false;
               }
-            } catch (e) {
-              console.error(
-                `Error parsing sessionDate ${session.sessionDate} for session ${session._id}:`,
-                e
-              );
-              return false;
-            }
 
-            const sessionStartOfDay = new Date(
-              sessionDateObj.getFullYear(),
-              sessionDateObj.getMonth(),
-              sessionDateObj.getDate()
-            );
-            return sessionStartOfDay >= today;
-          })
+              const sessionStartOfDay = new Date(
+                sessionDateObj.getFullYear(),
+                sessionDateObj.getMonth(),
+                sessionDateObj.getDate()
+              );
+              return sessionStartOfDay >= today;
+            })
+            .sort((a, b) => {
+              // Sort by date and time
+              const dateA = new Date(a.sessionDate);
+              const dateB = new Date(b.sessionDate);
+
+              if (dateA.getTime() !== dateB.getTime()) {
+                return dateA - dateB;
+              }
+
+              // If same date, sort by time
+              return a.sessionTime.localeCompare(b.sessionTime);
+            })
         : [];
+
       setUpcomingSessions(upcomingAndScheduledSessions);
     } catch (error) {
       console.error("Error fetching upcoming sessions:", error);
       setUpcomingSessions([]);
     } finally {
       setSessionLoading(false);
+    }
+  };
+
+  // Helper function to normalize time string for better parsing
+  const normalizeTimeString = (timeStr) => {
+    if (!timeStr) return null;
+
+    // Convert to uppercase for consistency
+    timeStr = timeStr.toUpperCase().trim();
+
+    // Handle cases where time is just a number (hour only)
+    if (/^\d+$/.test(timeStr)) {
+      return `${timeStr}:00`;
+    }
+
+    // If it already has AM/PM designation
+    if (timeStr.includes("AM") || timeStr.includes("PM")) {
+      // Make sure there's a space before AM/PM
+      return timeStr.replace(/(AM|PM)$/i, " $1").replace(/\s+/g, " ");
+    }
+
+    // Assume 24-hour format if no AM/PM
+    return timeStr;
+  };
+
+  // Helper function to format time for display
+  const formatTime = (timeStr) => {
+    if (!timeStr) return "";
+
+    try {
+      // Handle simple hour-only format
+      if (/^\d+$/.test(timeStr)) {
+        const hour = parseInt(timeStr, 10);
+        if (isNaN(hour)) return timeStr;
+
+        const period = hour >= 12 ? "PM" : "AM";
+        const hour12 = hour % 12 || 12;
+
+        return `${hour12}:00 ${period}`;
+      }
+
+      // Normalize the time first
+      const normalizedTime = normalizeTimeString(timeStr);
+
+      // If it already has AM/PM, just ensure proper formatting
+      if (normalizedTime.includes("AM") || normalizedTime.includes("PM")) {
+        // Already in 12-hour format
+        return normalizedTime;
+      }
+
+      // Convert 24-hour to 12-hour format for display
+      const [hourStr, minuteStr] = normalizedTime.split(":");
+      const hour = parseInt(hourStr, 10);
+
+      if (isNaN(hour)) return timeStr; // Return original if parsing fails
+
+      const period = hour >= 12 ? "PM" : "AM";
+      const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+
+      return `${hour12}:${minuteStr || "00"} ${period}`;
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return timeStr; // Return original on error
+    }
+  };
+
+  // Function to check if session is at least 12 hours from now
+  const isSessionCancellable = (sessionDate, sessionTime) => {
+    try {
+      if (!sessionDate || !sessionTime) return false;
+
+      // Normalize time string for better parsing
+      const normalizedTime = normalizeTimeString(sessionTime);
+      if (!normalizedTime) return false;
+
+
+      // Create a date object by combining date and time
+      const sessionDateTime = new Date(sessionDate);
+
+      // Handle different time formats (both 12h and 24h)
+      let hours, minutes;
+
+      if (normalizedTime.includes("AM") || normalizedTime.includes("PM")) {
+        // Handle 12-hour format (e.g., "9:00 AM")
+        const parts = normalizedTime.split(" ");
+        const timePart = parts[0];
+        const period = parts.length > 1 ? parts[1] : null;
+
+        if (!timePart || !period) {
+          console.log(
+            `Invalid time format: ${normalizedTime} from original ${sessionTime}`
+          );
+          return false;
+        }
+
+        const timePieces = timePart.split(":");
+
+        // Handle hour-only formats
+        if (timePieces.length === 1) {
+          hours = parseInt(timePieces[0], 10);
+          minutes = 0;
+        } else if (timePieces.length >= 2) {
+          hours = parseInt(timePieces[0], 10);
+          minutes = parseInt(timePieces[1], 10);
+        } else {
+          console.log(
+            `Invalid time part format: ${timePart} from ${sessionTime}`
+          );
+          return false;
+        }
+
+        if (isNaN(hours) || isNaN(minutes)) {
+          console.log(
+            `Invalid hours or minutes: hours=${hours}, minutes=${minutes} from ${sessionTime}`
+          );
+          return false;
+        }
+
+        // Convert to 24-hour format
+        if (period === "PM" && hours < 12) {
+          hours += 12;
+        } else if (period === "AM" && hours === 12) {
+          hours = 0;
+        }
+      } else {
+        // Handle 24-hour format (e.g., "09:00" or "14:30")
+        const parts = normalizedTime.split(":");
+
+        if (parts.length === 1) {
+          hours = parseInt(parts[0], 10);
+          minutes = 0;
+        } else if (parts.length >= 2) {
+          hours = parseInt(parts[0], 10);
+          minutes = parseInt(parts[1], 10);
+        } else {
+          console.log(
+            `Invalid 24-hour time format: ${normalizedTime} from ${sessionTime}`
+          );
+          return false;
+        }
+
+        if (isNaN(hours) || isNaN(minutes)) {
+          console.log(
+            `Invalid hours or minutes in 24-hour format: hours=${hours}, minutes=${minutes} from ${sessionTime}`
+          );
+          return false;
+        }
+      }
+
+      // Set the time part of the date
+      sessionDateTime.setHours(hours, minutes, 0, 0);
+
+      // Get current time
+      const now = new Date();
+
+      // Calculate time difference in hours
+      const timeDifferenceInHours = (sessionDateTime - now) / (1000 * 60 * 60);
+     
+
+      // Session can be cancelled if it's at least 12 hours away
+      return timeDifferenceInHours >= 12;
+    } catch (error) {
+      console.error(
+        "Error calculating cancellation eligibility:",
+        error,
+        "for time:",
+        sessionTime
+      );
+      return false; // If there's an error, don't allow cancellation to be safe
+    }
+  };
+
+  const handleCancelButtonClick = (session) => {
+    try {
+      // Check if session has required data
+      if (!session.sessionDate || !session.sessionTime) {
+        console.error("Missing session data:", {
+          id: session._id,
+          date: session.sessionDate,
+          time: session.sessionTime,
+        });
+
+        setErrorMessage(
+          t(
+            "invalidSessionData",
+            "Session data is incomplete. Please contact support."
+          )
+        );
+        setShowErrorModal(true);
+        return;
+      }
+
+      // Check if session can be cancelled (at least 12 hours before)
+      if (!isSessionCancellable(session.sessionDate, session.sessionTime)) {
+        const sessionDateTime = new Date(session.sessionDate);
+
+        // Parse time more carefully
+        let hours = 0,
+          minutes = 0;
+        const timeStr = session.sessionTime;
+
+        // Handle hour-only format
+        if (/^\d+$/.test(timeStr)) {
+          hours = parseInt(timeStr, 10);
+          minutes = 0;
+        }
+        // Handle hour:minute format
+        else if (timeStr.includes(":")) {
+          const [hourStr, minuteStr] = timeStr.split(":");
+          hours = parseInt(hourStr, 10);
+          minutes = parseInt(minuteStr, 10);
+        }
+        // Handle hour AM/PM format
+        else if (timeStr.includes("AM") || timeStr.includes("PM")) {
+          const parts = timeStr.split(/\s+/);
+          const timePart = parts[0];
+          const period = parts[1];
+
+          if (timePart) {
+            hours = parseInt(timePart, 10);
+
+            if (period && period.toUpperCase() === "PM" && hours < 12) {
+              hours += 12;
+            } else if (
+              period &&
+              period.toUpperCase() === "AM" &&
+              hours === 12
+            ) {
+              hours = 0;
+            }
+          }
+        }
+
+        if (!isNaN(hours) && !isNaN(minutes)) {
+          sessionDateTime.setHours(hours, minutes, 0, 0);
+        }
+
+        const now = new Date();
+        const hoursUntilSession = Math.max(
+          0,
+          (sessionDateTime - now) / (1000 * 60 * 60)
+        ).toFixed(1);
+
+        console.log(
+          `Session cancellation rejected: Only ${hoursUntilSession} hours until session starts`
+        );
+
+        setErrorMessage(
+          t(
+            "cannotCancelSession12Hours",
+            `Sessions must be cancelled at least 12 hours in advance. This session is in ${hoursUntilSession} hours, which is too close to the start time.`
+          )
+        );
+        setShowErrorModal(true);
+        return;
+      }
+
+      // If cancellable, show confirmation modal
+      setSessionToCancel(session);
+      setCancelModalOpen(true);
+    } catch (error) {
+      console.error("Error in handleCancelButtonClick:", error);
+      setErrorMessage(
+        t(
+          "generalError",
+          "An error occurred while processing your request. Please try again."
+        )
+      );
+      setShowErrorModal(true);
     }
   };
 
@@ -155,7 +445,8 @@ const Membership = ({ setActiveTab }) => {
       setSessionToCancel(null);
     } catch (error) {
       console.error("Error cancelling session:", error);
-      alert("Failed to cancel session. Please try again.");
+      setErrorMessage(t("failedCancelSession"));
+      setShowErrorModal(true);
     }
   };
 
@@ -272,7 +563,7 @@ const Membership = ({ setActiveTab }) => {
             );
           })}
 
-          {/* Upcoming Sessions Section */}
+          {/* Upcoming Sessions Section - with improved time display */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -290,20 +581,30 @@ const Membership = ({ setActiveTab }) => {
               <div className="space-y-4">
                 {upcomingSessions.map((session, idx) => {
                   const { date } = formatDateTime(session.sessionDate);
+                  const formattedTime = formatTime(session.sessionTime);
+                  const isCancellable = isSessionCancellable(
+                    session.sessionDate,
+                    session.sessionTime
+                  );
+
                   return (
                     <div
                       key={session._id || idx}
                       className="bg-[#0d111a] p-4 sm:p-6 rounded-lg border border-[#161c2a] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                     >
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
+                        <div className="flex flex-wrap items-center gap-3 mb-2">
                           <div className="p-2 bg-[#161c2a] rounded-full">
                             <Calendar size={18} className="text-[#B4E90E]" />
                           </div>
                           <span className="font-semibold">{date}</span>
-                          <span className="font-medium">
-                            {session.sessionTime}
-                          </span>
+                          <span className="font-medium">{formattedTime}</span>
+
+                          {!isCancellable && (
+                            <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-full">
+                              {t("cannotCancel", "Cannot cancel")}
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-3 mt-3">
@@ -318,11 +619,21 @@ const Membership = ({ setActiveTab }) => {
                       </div>
 
                       <button
-                        onClick={() => {
-                          setSessionToCancel(session);
-                          setCancelModalOpen(true);
-                        }}
-                        className="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 self-end sm:self-center"
+                        onClick={() => handleCancelButtonClick(session)}
+                        className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 self-end sm:self-center ${
+                          isCancellable
+                            ? "bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                            : "bg-gray-500/10 text-gray-400 cursor-not-allowed"
+                        }`}
+                        disabled={!isCancellable}
+                        title={
+                          !isCancellable
+                            ? t(
+                                "session12HourRule",
+                                "Sessions can only be cancelled at least 12 hours before start time"
+                              )
+                            : ""
+                        }
                       >
                         <X size={16} />
                         {t("cancelSession")}
@@ -349,6 +660,24 @@ const Membership = ({ setActiveTab }) => {
               </div>
             )}
           </motion.div>
+
+          {/* Information block about cancellation policy */}
+          <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Info size={20} className="text-blue-400 flex-shrink-0 mt-1" />
+              <div>
+                <h4 className="font-medium text-blue-400 mb-1">
+                  {t("cancellationPolicy", "Cancellation Policy")}
+                </h4>
+                <p className="text-sm text-gray-300">
+                  {t(
+                    "cancellationPolicyInfo",
+                    "Sessions must be cancelled at least 12 hours in advance. Late cancellations or no-shows will result in the session being deducted from your package."
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
         </>
       ) : (
         <motion.div
@@ -440,6 +769,35 @@ const Membership = ({ setActiveTab }) => {
               >
                 <X size={16} />
                 {t("cancelSession")}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {showErrorModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#0a0e15] p-6 rounded-lg border border-[#161c2a] max-w-md w-full"
+          >
+            <div className="flex items-center gap-3 mb-4 text-amber-400">
+              <Info size={24} />
+              <h3 className="text-xl font-bold">
+                {t("cannotCancel", "Cannot Cancel Session")}
+              </h3>
+            </div>
+
+            <p className="mb-6">{errorMessage}</p>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowErrorModal(false)}
+                className="py-2 px-4 rounded-lg bg-[#161c2a] hover:bg-[#252d3d] transition-colors"
+              >
+                {t("ok", "OK")}
               </button>
             </div>
           </motion.div>
