@@ -294,7 +294,7 @@ const Navbar = () => {
   const toggleMobileSubmenu = (item) =>
     setMobileSubmenu(mobileSubmenu === item ? null : item);
 
-  // Function to scroll to pricing section with navigation handling
+
   
 
   return (
