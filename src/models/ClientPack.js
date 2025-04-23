@@ -33,6 +33,10 @@ const ClientPackSchema = new mongoose.Schema({
     default: 'pending',
     required: true
   },
+  isActive: {
+    type: Boolean,
+    default: true
+  }
 });
 
 export default mongoose.models.ClientPack || mongoose.model('ClientPack', ClientPackSchema);

@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { useLocale, useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 const Membership = ({ setActiveTab }) => {
   const { mongoUser } = useAuth();
@@ -28,6 +29,28 @@ const Membership = ({ setActiveTab }) => {
   const t = useTranslations("MembershipPage");
   const locale = useLocale();
 
+  // Function to update pack active status when sessions reach 0
+  const updatePackActiveStatus = async (packId) => {
+    try {
+      const response = await fetch(
+        `http://localhost:3000/api/client-pack?id=${packId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ isActive: false }),
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Failed to update pack active status");
+      }
+    } catch (error) {
+      console.error("Error updating pack active status:", error);
+    }
+  };
+
   useEffect(() => {
     if (mongoUser?._id) {
       const fetchMembershipInfo = async () => {
@@ -41,10 +64,21 @@ const Membership = ({ setActiveTab }) => {
           const data = await response.json();
 
           const currentDate = new Date();
+
+          // Check and update membership status if remainingSessions is 0
+          for (const pack of data) {
+            if (pack.remainingSessions === 0 && pack.isActive) {
+              await updatePackActiveStatus(pack._id);
+              pack.isActive = false;
+            }
+          }
+
+          // Filter for active memberships (completed purchase, not expired, and isActive true)
           const activeMemberships = data.filter(
             (pack) =>
               pack.purchaseState === "completed" &&
-              new Date(pack.expirationDate) > currentDate
+              new Date(pack.expirationDate) > currentDate &&
+              pack.isActive === true
           );
 
           setHasActiveMemberships(activeMemberships.length > 0);
@@ -439,6 +473,36 @@ const Membership = ({ setActiveTab }) => {
         prev.filter((session) => session._id !== sessionToCancel._id)
       );
 
+      // Check if this action affects any membership's remaining sessions
+      // This happens if the session belongs to a package and is returned to the client's account
+      if (sessionToCancel.packId) {
+        // Fetch the latest client pack data
+        const packResponse = await fetch(
+          `http://localhost:3000/api/client-pack?id=${sessionToCancel.packId}`
+        );
+
+        if (packResponse.ok) {
+          const packData = await packResponse.json();
+
+          // If cancellation causes sessions to return to 0, update isActive status
+          if (packData.remainingSessions === 0) {
+            await updatePackActiveStatus(sessionToCancel.packId);
+
+            // Update local state to reflect changes
+            setMemberships((prev) =>
+              prev.filter(
+                (membership) => membership._id !== sessionToCancel.packId
+              )
+            );
+
+            // Check if we have any active memberships left
+            if (memberships.length <= 1) {
+              setHasActiveMemberships(false);
+            }
+          }
+        }
+      }
+
       setCancelModalOpen(false);
       setSessionToCancel(null);
     } catch (error) {
@@ -646,15 +710,54 @@ const Membership = ({ setActiveTab }) => {
                   <Calendar size={36} className="text-gray-400" />
                 </div>
                 <p className="text-gray-400">{t("noUpcomingSessions")}</p>
-                <button
-                  className="mt-6 bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-2 px-6 rounded-lg transition-colors inline-flex items-center gap-2"
-                  onClick={() => {
-                    setActiveTab("book");
-                  }}
-                >
-                  <Calendar size={18} />
-                  {t("bookASession")}
-                </button>
+
+                {/* Check if there are active memberships with sessions remaining */}
+                {memberships.some(
+                  (membership) =>
+                    membership.isActive && membership.remainingSessions > 0
+                ) ? (
+                  <button
+                    className="mt-6 bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-2 px-6 rounded-lg transition-colors inline-flex items-center gap-2"
+                    onClick={() => {
+                      // Double check that we have valid packages before navigating
+                      if (
+                        memberships.some(
+                          (m) => m.isActive && m.remainingSessions > 0
+                        )
+                      ) {
+                        setActiveTab("book");
+                      } else {
+                        // If somehow the state is inconsistent, show an error
+                        toast.error(
+                          t(
+                            "noRemainingSessionsError",
+                            "No active sessions available. Please purchase a new package."
+                          )
+                        );
+                      }
+                    }}
+                  >
+                    <Calendar size={18} />
+                    {t("bookASession")}
+                  </button>
+                ) : (
+                  <div className="mt-6">
+                    <p className="text-amber-400 mb-3">
+                      <Info size={18} className="inline mr-2" />
+                      {t(
+                        "noSessionsRemaining",
+                        "No sessions remaining in your active packages"
+                      )}
+                    </p>
+                    <button
+                      className="bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-2 px-6 rounded-lg transition-colors inline-flex items-center gap-2"
+                      onClick={() => (window.location.href = `/${locale}/`)}
+                    >
+                      <ShoppingCart size={18} />
+                      {t("buyAPackage")}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </motion.div>

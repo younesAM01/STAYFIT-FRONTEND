@@ -279,7 +279,8 @@
     "total": "Total :",
     "cancel": "Cancel",
     "completePurchase": "Complete Purchase",
-    "currency": "RS"
+    "currency": "RS",
+    "yourSelectedPackage": "Your Selected Package"
   },
   "FAQ": {
     "faqtitle": "Frequently Asked Questions",
