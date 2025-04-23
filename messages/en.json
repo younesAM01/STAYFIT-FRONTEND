@@ -122,7 +122,8 @@
       "description": "Book a session with our Coaches and start your fitness journey today.",
       "button": "Book a Session"
     },
-    "coach": "Coach"
+    "coach": "Coach",
+    "welcome": "Welcome to Stay Fit"
   },
   "ProfilePage": {
     "title": "Profile Page",
@@ -279,7 +280,8 @@
     "total": "Total :",
     "cancel": "Cancel",
     "completePurchase": "Complete Purchase",
-    "currency": "RS"
+    "currency": "RS",
+    "yourSelectedPackage": "Your Selected Package"
   },
   "FAQ": {
     "faqtitle": "Frequently Asked Questions",

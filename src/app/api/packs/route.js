@@ -7,13 +7,16 @@ export async function GET(request) {
   try {
     await connectMongoDB();
 
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+
+
     if (id) {
       const pack = await Pack.findById(id);
       if (!pack) {
         return NextResponse.json({ error: "Pack not found" }, { status: 404 });
-      
+        return NextResponse.json({ error: "Pack not found" }, { status: 404 });
       }
       return NextResponse.json(pack);
     }

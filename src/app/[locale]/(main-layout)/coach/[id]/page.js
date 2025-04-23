@@ -30,6 +30,7 @@ export default function CoachProfile() {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
   const t = useTranslations("aboutme");
 
   const params = useParams();
@@ -60,8 +61,11 @@ export default function CoachProfile() {
 
         setIsFirstTimeUser(isIncompleteProfile);
 
-        // If it's a first-time user with incomplete profile, open the edit modal
-        if (isIncompleteProfile) {
+        // Check if the logged-in user is viewing their own profile
+        setIsOwnProfile(mongoUser && mongoUser._id === coachId);
+
+        // If it's the owner with incomplete profile, open the edit modal
+        if (isIncompleteProfile && mongoUser && mongoUser._id === coachId) {
           const defaultData = {
             ...data,
             firstName: data?.firstName || "",
@@ -113,7 +117,7 @@ export default function CoachProfile() {
     if (coachId) {
       fetchCoachData();
     }
-  }, [coachId, locale]);
+  }, [coachId, locale, mongoUser]);
 
   const openEditModal = () => {
     // If editFormData is already set (for first-time users), use that
@@ -584,13 +588,15 @@ export default function CoachProfile() {
                     </>
                   )}
                 </motion.h1>
-                <button
-                  onClick={openEditModal}
-                  className="ml-3 p-2 bg-[#161c2a] hover:bg-[#B4E90E] hover:text-[#0d111a] rounded-full transition-colors"
-                  aria-label="Edit coach profile"
-                >
-                  <Edit size={20} />
-                </button>
+                {isOwnProfile && (
+                  <button
+                    onClick={openEditModal}
+                    className="ml-3 p-2 bg-[#161c2a] hover:bg-[#B4E90E] hover:text-[#0d111a] rounded-full transition-colors"
+                    aria-label="Edit coach profile"
+                  >
+                    <Edit size={20} />
+                  </button>
+                )}
               </div>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -649,7 +655,7 @@ export default function CoachProfile() {
 
       {/* Content Section */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {hasNoData && !isEditModalOpen ? (
+        {hasNoData && !isEditModalOpen && isOwnProfile ? (
           <div className="max-w-3xl mx-auto text-center py-12">
             <div className="bg-[#0a0e15] rounded-lg border border-[#161c2a] p-8 mb-8">
               <h2 className="text-2xl font-bold mb-4">{t("welcome")}</h2>

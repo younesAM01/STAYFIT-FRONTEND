@@ -91,6 +91,8 @@ const UserSchema = new mongoose.Schema({
     default: 0
   },
 
+  
+  // Coach-specific fields
   aboutContent: { type: AboutSchema, required: false },
   specialties: [{ type: SpecialtySchema, required: false }],
   certifications: [{ type: CertificationSchema, required: false }],
@@ -102,12 +104,6 @@ const UserSchema = new mongoose.Schema({
     ar: { type: String },
     en: { type: String }
   },
-
-  coachActive:{
-    type: Boolean,
-    default: false
-  },
-  // Client-specific fields
   available: {
     en: {
       type: String,
@@ -119,6 +115,10 @@ const UserSchema = new mongoose.Schema({
       enum: ['متاح للنساء فقط', 'متاح للجميع'],
       required: false
     }
+  },
+  coachActive:{
+    type: Boolean,
+    default: false
   },
 
   weight: {

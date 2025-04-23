@@ -17,6 +17,7 @@ import {
   Target,
   Edit,
   X,
+  ShoppingCart,
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import SessionBooking from "@/components/book-session";
@@ -48,12 +49,14 @@ export default function ClientProfile() {
         }
         const data = await response.json();
 
-        // Filter for completed packs that are not expired
+        // Filter for completed packs that are not expired and are active with remaining sessions
         const currentDate = new Date();
         const activeMemberships = data.filter(
           (pack) =>
             pack.purchaseState === "completed" &&
-            new Date(pack.expirationDate) > currentDate
+            new Date(pack.expirationDate) > currentDate &&
+            pack.isActive === true &&
+            pack.remainingSessions > 0
         );
 
         setClientPack(activeMemberships);
@@ -76,12 +79,14 @@ export default function ClientProfile() {
           }
           const data = await response.json();
 
-          // Filter for completed packs that are not expired
+          // Filter for completed packs that are not expired and are active with remaining sessions
           const currentDate = new Date();
           const activeMemberships = data.filter(
             (pack) =>
               pack.purchaseState === "completed" &&
-              new Date(pack.expirationDate) > currentDate
+              new Date(pack.expirationDate) > currentDate &&
+              pack.isActive === true &&
+              pack.remainingSessions > 0
           );
 
           setClientPack(activeMemberships);
@@ -143,6 +148,14 @@ export default function ClientProfile() {
   useEffect(() => {
     setFormData({ ...clientInfo });
   }, [clientInfo]);
+
+  // Add an effect to handle tab changes when active packages change
+  useEffect(() => {
+    // If user is on the book tab but no longer has active packages, switch to membership tab
+    if (activeTab === "book" && (!clientPack || clientPack.length === 0)) {
+      setActiveTab("membership");
+    }
+  }, [clientPack, activeTab]);
 
   const handleImageUpload = async (file) => {
     try {
@@ -300,7 +313,11 @@ export default function ClientProfile() {
       <ProfileHero clientInfo={clientInfo} />
 
       {/* Navigation Tabs */}
-      <TabNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+      <TabNavigation
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        hasActivePackages={clientPack && clientPack.length > 0}
+      />
 
       {/* Content Section */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -318,13 +335,31 @@ export default function ClientProfile() {
         {activeTab === "book" && (
           <motion.div {...fadeIn} className="mx-auto">
             <div className="bg-[#0a0e15] rounded-lg border border-[#161c2a] text-center">
-              <SessionBooking
-                clientId={mongoUser?._id}
-                packId={packId}
-                setActiveTab={setActiveTab}
-                clientPack={clientPack[0]}
-                refreshClientPack={refreshClientPack}
-              />
+              {clientPack && clientPack.length > 0 ? (
+                <SessionBooking
+                  clientId={mongoUser?._id}
+                  packId={packId}
+                  setActiveTab={setActiveTab}
+                  clientPack={clientPack[0]}
+                  refreshClientPack={refreshClientPack}
+                />
+              ) : (
+                <div className="p-8 flex flex-col items-center justify-center">
+                  <h2 className="text-xl font-bold mb-4 text-white">
+                    {t("noActivePackages")}
+                  </h2>
+                  <p className="text-gray-400 mb-6">
+                    {t("purchasePackageToBook")}
+                  </p>
+                  <button
+                    className="bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
+                    onClick={() => (window.location.href = `/${locale}/`)}
+                  >
+                    <ShoppingCart size={20} />
+                    {t("buyAPackage")}
+                  </button>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -408,13 +443,17 @@ function ProfileHero({ clientInfo }) {
 }
 
 // TabNavigation Component
-function TabNavigation({ activeTab, setActiveTab }) {
+function TabNavigation({ activeTab, setActiveTab, hasActivePackages }) {
   const t = useTranslations("ProfilePage");
   const tabs = [
     { id: "info", label: t("info") },
     { id: "membership", label: t("membership") },
-    { id: "book", label: t("book") },
   ];
+
+  // Only add the book tab if there are active packages with remaining sessions
+  if (hasActivePackages) {
+    tabs.push({ id: "book", label: t("book") });
+  }
 
   return (
     <motion.div

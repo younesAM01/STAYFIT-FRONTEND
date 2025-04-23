@@ -83,6 +83,23 @@ export default function BookingSection({
     try {
       setIsSubmitting(true);
 
+      // Check if client pack is active and has remaining sessions
+      if (!clientPack.isActive) {
+        toast.error(
+          "This package is no longer active. Please purchase a new package."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (clientPack.remainingSessions <= 0) {
+        toast.error(
+          "No remaining sessions in this package. Please purchase a new package."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       // Format the date for the API - preserving the selected date
       const formattedDate = new Date(
         selectedDate.getFullYear(),
@@ -117,6 +134,17 @@ export default function BookingSection({
 
       const result = await response.json();
 
+      // Update remaining sessions in client pack
+      const newRemainingSessionsCount = clientPack.remainingSessions - 1;
+      const updatePackBody = {
+        remainingSessions: newRemainingSessionsCount,
+      };
+
+      // If this will reduce sessions to 0, also set isActive to false
+      if (newRemainingSessionsCount === 0) {
+        updatePackBody.isActive = false;
+      }
+
       const updatePackResponse = await fetch(
         `http://localhost:3000/api/client-pack?id=${clientPack._id}`,
         {
@@ -124,14 +152,14 @@ export default function BookingSection({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            remainingSessions: clientPack.remainingSessions - 1,
-          }),
+          body: JSON.stringify(updatePackBody),
         }
       );
+
       if (!updatePackResponse.ok) {
         throw new Error("Failed to update remaining sessions");
       }
+
       // Refresh client pack data after successful update
       if (refreshClientPack) {
         await refreshClientPack();
@@ -142,7 +170,6 @@ export default function BookingSection({
         refreshSessionsFunction();
       }
 
-      // alert("Session booked successfully!")
       toast.success("Session booked successfully!");
 
       setActiveTab("membership");
@@ -154,7 +181,7 @@ export default function BookingSection({
       setRefreshSessionsFunction(null);
     } catch (error) {
       console.error("Error creating session:", error);
-      alert("Failed to book session. Please try again.");
+      toast.error("Failed to book session. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
