@@ -221,7 +221,6 @@ const Membership = ({ setActiveTab }) => {
       const normalizedTime = normalizeTimeString(sessionTime);
       if (!normalizedTime) return false;
 
-
       // Create a date object by combining date and time
       const sessionDateTime = new Date(sessionDate);
 
@@ -303,7 +302,6 @@ const Membership = ({ setActiveTab }) => {
 
       // Calculate time difference in hours
       const timeDifferenceInHours = (sessionDateTime - now) / (1000 * 60 * 60);
-     
 
       // Session can be cancelled if it's at least 12 hours away
       return timeDifferenceInHours >= 12;
