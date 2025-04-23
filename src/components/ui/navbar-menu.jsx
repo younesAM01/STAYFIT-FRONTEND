@@ -28,6 +28,7 @@ export const MenuItem = ({
   children,
   isMobile,
   onClick,
+  disableHover = false,
 }) => {
   const pathname = usePathname();
   const isActive = pathname === href;
@@ -36,7 +37,7 @@ export const MenuItem = ({
   if (onClick) {
     return (
       <div
-        onMouseEnter={() => !isMobile && setActive(item)}
+        onMouseEnter={() => !isMobile && !disableHover && setActive(item)}
         className="relative z-10 "
       >
         <button
@@ -77,7 +78,7 @@ export const MenuItem = ({
 
   return (
     <div
-      onMouseEnter={() => !isMobile && setActive(item)}
+      onMouseEnter={() => !isMobile && !disableHover && setActive(item)}
       className="relative z-10 "
     >
       <Link href={href} className="cursor-pointer text-[#ffffff] relative">
@@ -348,6 +349,7 @@ const Navbar = () => {
           item={t("our coaches")}
           href={`/${locale}/coaches`}
           isMobile={isMobile}
+          disableHover={true}
         >
           <div className="grid grid-cols-2 gap-4 p-2 z-10000">
             <CoachItem
@@ -448,59 +450,14 @@ const Navbar = () => {
           >
             {t("home")}
           </Link>
-          {/* Mobile Our Coaches with submenu */}
-          <div className="space-y-2">
-            <div
-              className="flex justify-between items-center"
-              onClick={() => toggleMobileSubmenu("coaches")}
-            >
-              <Link
-                href={`/${locale}/coaches`}
-                className="text-lg font-medium text-white hover:text-[#b4e90e]"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsMenuOpen(false);
-                }}
-              >
-                {t("our coaches")}
-              </Link>
-              <button className="text-[#b4e90e] p-1">
-                {mobileSubmenu === "coaches" ? (
-                  <motion.span
-                    animate={{ rotate: 180 }}
-                    transition={{ type: "spring", stiffness: 100 }}
-                    className="text-2xl"
-                  >
-                    ⌄
-                  </motion.span>
-                ) : (
-                  <motion.span
-                    animate={{ rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 100 }}
-                    className="text-2xl"
-                  >
-                    ⌃
-                  </motion.span>
-                )}
-              </button>
-            </div>
-            <div
-              className={`${mobileSubmenu === "coaches" ? "block" : "hidden"}`}
-            >
-              <MobileCoachItem
-                title="Ahmed Sobhi"
-                description="Yoga specialist"
-                href="/coaches/sarah"
-                src="https://i.pinimg.com/474x/a2/fb/13/a2fb13560cae8b99da7ab04497737746.jpg"
-              />
-              <MobileCoachItem
-                title="Anass Beniss"
-                description="Strength & conditioning expert"
-                href="/coaches/mark"
-                src="https://i.pinimg.com/474x/88/d1/1a/88d11a3428462b2e143d8c4a28af7a60.jpg"
-              />
-            </div>
-          </div>
+          {/* Mobile Our Coaches with no dropdown */}
+          <Link
+            href={`/${locale}/coaches`}
+            className="text-lg font-medium text-white hover:text-[#b4e90e]"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            {t("our coaches")}
+          </Link>
 
           <Link
             href={`/${locale}/services`}
