@@ -436,269 +436,274 @@ export default function ServicesPage() {
 
       {/* Add Form Dialog */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Add New Service</DialogTitle>
             <DialogDescription className="text-white/60">
               Create a new service with title, description and image
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAddService}>
-            <div className="grid gap-4 py-4">
-              <Tabs defaultValue="en" className="w-full">
-                <TabsList className="mb-4 bg-[#121212]">
-                  <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:text-black">English</TabsTrigger>
-                  <TabsTrigger value="ar" className="data-[state=active]:bg-white data-[state=active]:text-black">Arabic</TabsTrigger>
-                </TabsList>
-                <TabsContent value="en">
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="title-en">Title (English)</Label>
-                      <Input
-                        id="title-en"
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
+            <form onSubmit={handleAddService}>
+              <div className="grid gap-4 py-4">
+                <Tabs defaultValue="en" className="w-full">
+                  <TabsList className="mb-4 bg-[#121212]">
+                    <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:text-black">English</TabsTrigger>
+                    <TabsTrigger value="ar" className="data-[state=active]:bg-white data-[state=active]:text-black">Arabic</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="en">
+                    <div className="grid gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="title-en">Title (English)</Label>
+                        <Input
+                          id="title-en"
                           value={formData.title.en}
-                        onChange={(e) => setFormData({
-                          ...formData, 
-                          title: {...formData.title, en: e.target.value}
-                        })}
-                        className="bg-[#121212] border-white/10"
-                        required
-                        />
-          </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="description-en">Description (English)</Label>
-                      <Input
-                        id="description-en"
-                          value={formData.description.en}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          description: {...formData.description, en: e.target.value}
-                        })}
-                        className="bg-[#121212] border-white/10"
-                        required
-                        />
-          </div>
-        </div>
-                </TabsContent>
-                <TabsContent value="ar">
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="title-ar">Title (Arabic)</Label>
-                      <Input
-                        id="title-ar"
-                          value={formData.title.ar}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          title: {...formData.title, ar: e.target.value}
-                        })}
-                        className="bg-[#121212] border-white/10"
-                          dir="rtl"
-                        />
-          </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="description-ar">Description (Arabic)</Label>
-                      <Input
-                        id="description-ar"
-                          value={formData.description.ar}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          description: {...formData.description, ar: e.target.value}
-                        })}
-                        className="bg-[#121212] border-white/10"
-                          dir="rtl"
-                        />
-          </div>
-        </div>
-                </TabsContent>
-              </Tabs>
-              <div className="grid gap-2">
-                <Label htmlFor="image">Service Image</Label>
-                <label 
-                  htmlFor="file-upload" 
-                  className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-white/10 border-dashed rounded-md cursor-pointer hover:border-white/20"
-                >
-                        <div className="space-y-1 text-center">
-                          <Upload className="mx-auto h-12 w-12 text-white/60" />
-                          <div className="flex text-sm text-white/60">
-                      <span className="relative font-medium text-white hover:text-white/80">
-                        Upload a file
-                      </span>
-                              <input
-                                id="file-upload"
-                                name="file-upload"
-                                type="file"
-                                className="sr-only"
-                                accept="image/*"
-                                onChange={handleImageChange}
-                        disabled={uploadingImage}
-                              />
-                            <p className="pl-1">or drag and drop</p>
-          </div>
-                          <p className="text-xs text-white/60">PNG, JPG, GIF up to 10MB</p>
-                    {uploadingImage && (
-                      <div className="mt-2 text-sm text-white">Uploading...</div>
-                    )}
-                    {formData.image && (
-                      <div className="mt-2">
-                        <img
-                          src={formData.image}
-                          alt="Preview"
-                          className="mx-auto h-20 w-20 object-cover rounded-md"
+                          onChange={(e) => setFormData({
+                            ...formData, 
+                            title: {...formData.title, en: e.target.value}
+                          })}
+                          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                          required
                         />
                       </div>
-                    )}
-                  </div>
-                </label>
+                      <div className="grid gap-2">
+                        <Label htmlFor="description-en">Description (English)</Label>
+                        <Input
+                          id="description-en"
+                          value={formData.description.en}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            description: {...formData.description, en: e.target.value}
+                          })}
+                          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="ar">
+                    <div className="grid gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="title-ar">Title (Arabic)</Label>
+                        <Input
+                          id="title-ar"
+                          value={formData.title.ar}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            title: {...formData.title, ar: e.target.value}
+                          })}
+                          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                          dir="rtl"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="description-ar">Description (Arabic)</Label>
+                        <Input
+                          id="description-ar"
+                          value={formData.description.ar}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            description: {...formData.description, ar: e.target.value}
+                          })}
+                          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                          dir="rtl"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+                <div className="grid gap-2">
+                  <Label htmlFor="image">Service Image</Label>
+                  <label 
+                    htmlFor="file-upload" 
+                    className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-white/10 border-dashed rounded-md cursor-pointer hover:border-white/20"
+                  >
+                    <div className="space-y-1 text-center">
+                      <Upload className="mx-auto h-12 w-12 text-white/60" />
+                      <div className="flex text-sm text-white/60">
+                        <span className="relative font-medium text-white hover:text-white/80">
+                          Upload a file
+                        </span>
+                        <input
+                          id="file-upload"
+                          name="file-upload"
+                          type="file"
+                          className="sr-only"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          disabled={uploadingImage}
+                        />
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-white/60">PNG, JPG, GIF up to 10MB</p>
+                      {uploadingImage && (
+                        <div className="mt-2 text-sm text-white">Uploading...</div>
+                      )}
+                      {formData.image && (
+                        <div className="mt-2">
+                          <img
+                            src={formData.image}
+                            alt="Preview"
+                            className="mx-auto h-20 w-20 object-cover rounded-md"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              </div>
+              <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+                <Button type="submit" className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors">
+                  Add Service
+                </Button>
+              </DialogFooter>
+            </form>
           </div>
-        </div>
-            <DialogFooter>
-              <Button type="submit" className="bg-white text-black hover:bg-gray-100">
-                Add Service
-              </Button>
-            </DialogFooter>
-          </form>
         </DialogContent>
       </Dialog>
 
       {/* Edit Form Dialog */}
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Edit Service</DialogTitle>
             <DialogDescription className="text-white/60">
               Update the service details
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleUpdateService}>
-            <div className="grid gap-4 py-4">
-              <Tabs defaultValue="en" className="w-full">
-                <TabsList className="mb-4 bg-[#121212]">
-                  <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:text-black">English</TabsTrigger>
-                  <TabsTrigger value="ar" className="data-[state=active]:bg-white data-[state=active]:text-black">Arabic</TabsTrigger>
-                </TabsList>
-                <TabsContent value="en">
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-title-en">Title (English)</Label>
-                      <Input
-                        id="edit-title-en"
-                        value={formData.title.en}
-                        onChange={(e) => setFormData({
-                          ...formData, 
-                          title: {...formData.title, en: e.target.value}
-                        })}
-                        className="bg-[#121212] border-white/10"
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-description-en">Description (English)</Label>
-                      <Input
-                        id="edit-description-en"
-                        value={formData.description.en}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          description: {...formData.description, en: e.target.value}
-                        })}
-                        className="bg-[#121212] border-white/10"
-                        required
-                      />
-      </div>
-                  </div>
-                </TabsContent>
-                <TabsContent value="ar">
-                  <div className="grid gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-title-ar">Title (Arabic)</Label>
-                      <Input
-                        id="edit-title-ar"
-                        value={formData.title.ar}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          title: {...formData.title, ar: e.target.value}
-                        })}
-                        className="bg-[#121212] border-white/10"
-                        dir="rtl"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-description-ar">Description (Arabic)</Label>
-                      <Input
-                        id="edit-description-ar"
-                        value={formData.description.ar}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          description: {...formData.description, ar: e.target.value}
-                        })}
-                        className="bg-[#121212] border-white/10"
-                        dir="rtl"
-                      />
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-image">Service Image</Label>
-                <label 
-                  htmlFor="edit-file-upload" 
-                  className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-white/10 border-dashed rounded-md cursor-pointer hover:border-white/20"
-                >
-                  <div className="space-y-1 text-center">
-                    <Upload className="mx-auto h-12 w-12 text-white/60" />
-                    <div className="flex text-sm text-white/60">
-                      <span className="relative font-medium text-white hover:text-white/80">
-                        Upload a file
-                      </span>
-                      <input
-                        id="edit-file-upload"
-                        name="edit-file-upload"
-                        type="file"
-                        className="sr-only"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        disabled={uploadingImage}
-                      />
-                      <p className="pl-1">or drag and drop</p>
-                    </div>
-                    <p className="text-xs text-white/60">PNG, JPG, GIF up to 10MB</p>
-                    {uploadingImage && (
-                      <div className="mt-2 text-sm text-white">Uploading...</div>
-                    )}
-                    {formData.image && (
-                      <div className="mt-2">
-                        <img
-                          src={formData.image}
-                          alt="Preview"
-                          className="mx-auto h-20 w-20 object-cover rounded-md"
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
+            <form onSubmit={handleUpdateService}>
+              <div className="grid gap-4 py-4">
+                <Tabs defaultValue="en" className="w-full">
+                  <TabsList className="mb-4 bg-[#121212]">
+                    <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:text-black">English</TabsTrigger>
+                    <TabsTrigger value="ar" className="data-[state=active]:bg-white data-[state=active]:text-black">Arabic</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="en">
+                    <div className="grid gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-title-en">Title (English)</Label>
+                        <Input
+                          id="edit-title-en"
+                          value={formData.title.en}
+                          onChange={(e) => setFormData({
+                            ...formData, 
+                            title: {...formData.title, en: e.target.value}
+                          })}
+                          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                          required
                         />
                       </div>
-                    )}
-                  </div>
-                </label>
-                  </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-description-en">Description (English)</Label>
+                        <Input
+                          id="edit-description-en"
+                          value={formData.description.en}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            description: {...formData.description, en: e.target.value}
+                          })}
+                          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="ar">
+                    <div className="grid gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-title-ar">Title (Arabic)</Label>
+                        <Input
+                          id="edit-title-ar"
+                          value={formData.title.ar}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            title: {...formData.title, ar: e.target.value}
+                          })}
+                          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                          dir="rtl"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="edit-description-ar">Description (Arabic)</Label>
+                        <Input
+                          id="edit-description-ar"
+                          value={formData.description.ar}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            description: {...formData.description, ar: e.target.value}
+                          })}
+                          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                          dir="rtl"
+                        />
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-image">Service Image</Label>
+                  <label 
+                    htmlFor="edit-file-upload" 
+                    className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-white/10 border-dashed rounded-md cursor-pointer hover:border-white/20"
+                  >
+                    <div className="space-y-1 text-center">
+                      <Upload className="mx-auto h-12 w-12 text-white/60" />
+                      <div className="flex text-sm text-white/60">
+                        <span className="relative font-medium text-white hover:text-white/80">
+                          Upload a file
+                        </span>
+                        <input
+                          id="edit-file-upload"
+                          name="edit-file-upload"
+                          type="file"
+                          className="sr-only"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          disabled={uploadingImage}
+                        />
+                        <p className="pl-1">or drag and drop</p>
+                      </div>
+                      <p className="text-xs text-white/60">PNG, JPG, GIF up to 10MB</p>
+                      {uploadingImage && (
+                        <div className="mt-2 text-sm text-white">Uploading...</div>
+                      )}
+                      {formData.image && (
+                        <div className="mt-2">
+                          <img
+                            src={formData.image}
+                            alt="Preview"
+                            className="mx-auto h-20 w-20 object-cover rounded-md"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </label>
                 </div>
-            <DialogFooter>
-              <Button type="submit" className="bg-white text-black hover:bg-gray-100">
-                Update Service
-              </Button>
-            </DialogFooter>
-          </form>
+              </div>
+              <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+                <Button type="submit" className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors">
+                  Update Service
+                </Button>
+              </DialogFooter>
+            </form>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Delete Service</DialogTitle>
             <DialogDescription className="text-white/60">
               Are you sure you want to delete this service? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="mt-4 border-t border-white/10 pt-4">
             <Button
               variant="ghost"
               onClick={() => setShowDeleteDialog(false)}
+              className="text-white hover:bg-gray-800"
             >
               Cancel
             </Button>

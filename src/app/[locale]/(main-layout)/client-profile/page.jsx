@@ -18,11 +18,14 @@ import {
   Edit,
   X,
   ShoppingCart,
+  Star,
+  Trash,
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import SessionBooking from "@/components/book-session";
 import MemberShip from "@/components/membership";
 import { useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
 
 export default function ClientProfile() {
   const { mongoUser, isLoading: authLoading } = useAuth();
@@ -332,6 +335,10 @@ export default function ClientProfile() {
           <MemberShip setActiveTab={setActiveTab} />
         )}
 
+        {activeTab === "reviews" && (
+          <Reviews userId={mongoUser?._id} />
+        )}
+
         {activeTab === "book" && (
           <motion.div {...fadeIn} className="mx-auto">
             <div className="bg-[#0a0e15] rounded-lg border border-[#161c2a] text-center">
@@ -448,11 +455,12 @@ function TabNavigation({ activeTab, setActiveTab, hasActivePackages }) {
   const tabs = [
     { id: "info", label: t("info") },
     { id: "membership", label: t("membership") },
+    
   ];
 
   // Only add the book tab if there are active packages with remaining sessions
   if (hasActivePackages) {
-    tabs.push({ id: "book", label: t("book") });
+    tabs.push({ id: "book", label: t("book") },{ id: "reviews", label: t("reviews") });
   }
 
   return (
@@ -860,6 +868,463 @@ function EditProfileModal({
               className="px-4 py-2 bg-[#B4E90E] text-[#0a0e15] font-medium rounded-lg hover:bg-[#a3d00c] transition-colors"
             >
               {t("save")}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
+// Add DeleteConfirmationModal component
+function DeleteConfirmationModal({ isOpen, onClose, onConfirm, t }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm bg-black/40">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-[#0a0e15] max-w-md w-full rounded-xl border border-[#161c2a] p-6"
+      >
+        <div className="text-center">
+          <div className="mb-4 flex justify-center">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+              <Trash className="h-6 w-6 text-red-600" />
+            </div>
+          </div>
+          <h3 className="text-lg font-medium mb-4">{t('confirmDeleteReview')}</h3>
+          <div className="flex justify-center gap-4">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-[#161c2a] text-white rounded-lg hover:bg-[#1f2937] transition-colors"
+            >
+              {t('cancel')}
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              {t('delete')}
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function Reviews({ userId }) {
+  const [reviews, setReviews] = useState([]);
+  const [isAddReviewModalOpen, setIsAddReviewModalOpen] = useState(false);
+  const [isEditReviewModalOpen, setIsEditReviewModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState(null);
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const t = useTranslations("ProfilePage");
+  
+  // Get current locale
+  const locale = useParams().locale || 'en';
+
+  // Fetch user's reviews
+  const fetchUserReviews = useCallback(async () => {
+    if (!userId) return;
+    
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/review`);
+      if (!response.ok) throw new Error('Failed to fetch reviews');
+      const data = await response.json();
+      console.log('Fetched reviews:', data); // Debug log
+      
+      // Filter reviews where the userId matches, handling both populated and unpopulated cases
+      const userReviews = data.data.filter(review => {
+        // Handle both cases: populated (review.userId._id) and unpopulated (review.userId)
+        const reviewUserId = review.userId?._id || review.userId;
+        return reviewUserId === userId;
+      });
+      
+      console.log('Filtered reviews:', userReviews); // Debug log
+      setReviews(userReviews);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+
+  // Initial fetch of reviews
+  useEffect(() => {
+    fetchUserReviews();
+  }, [fetchUserReviews]);
+
+  const handleAddReview = async (reviewData) => {
+    try {
+      const response = await fetch('/api/review', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reviewData),
+      });
+
+      if (!response.ok) throw new Error('Failed to add review');
+      
+      await fetchUserReviews();
+      setIsAddReviewModalOpen(false);
+    } catch (error) {
+      console.error('Error adding review:', error);
+    }
+  };
+
+  const handleUpdateReview = async (reviewId, updatedData) => {
+    try {
+      const response = await fetch(`/api/review?id=${reviewId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!response.ok) throw new Error('Failed to update review');
+      
+      // Fetch only user's reviews after updating
+      await fetchUserReviews();
+      setIsEditReviewModalOpen(false);
+      setSelectedReview(null);
+    } catch (error) {
+      console.error('Error updating review:', error);
+    }
+  };
+
+  const handleDeleteClick = (review) => {
+    setReviewToDelete(review);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!reviewToDelete) return;
+
+    try {
+      const response = await fetch(`/api/review?id=${reviewToDelete._id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) throw new Error('Failed to delete review');
+      
+      // Filter out the deleted review locally
+      setReviews(reviews.filter(review => review._id !== reviewToDelete._id));
+      setIsDeleteModalOpen(false);
+      setReviewToDelete(null);
+    } catch (error) {
+      console.error('Error deleting review:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B4E90E]"></div>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="container mx-auto px-4"
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">{t('myReviews')}</h2>
+        <button
+          onClick={() => setIsAddReviewModalOpen(true)}
+          className="bg-[#B4E90E] text-black px-4 py-2 rounded-lg hover:bg-[#a3d00c] transition-colors"
+        >
+          {t('addReview')}
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B4E90E]"></div>
+        </div>
+      ) : reviews.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-400">{t('noReviews')}</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {reviews.map((review) => (
+            <div
+              key={review._id}
+              className="bg-[#0a0e15] p-6 rounded-lg border border-[#161c2a]"
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                  <Image
+                    src={
+                      (review.coachId?.profilePic || review.coachId?.profilePicture) || 
+                      ''
+                    }
+                    alt={
+                      review.coachId ? 
+                      `${review.coachId.firstName} ${review.coachId.lastName}` : 
+                      'Coach'
+                    }
+                    width={48}
+                    height={48}
+                    className="rounded-full"
+                  />
+                  <div>
+                    <h3 className="font-semibold">
+                      {review.coachId ? 
+                        `${review.coachId.firstName} ${review.coachId.lastName}` : 
+                        (review.trainerName?.[locale] || review.trainerName?.en || 'Coach')
+                      }
+                    </h3>
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, index) => (
+                        <Star
+                          key={index}
+                          className={`w-4 h-4 ${
+                            index < review.rating
+                              ? 'text-[#B4E90E] fill-[#B4E90E]'
+                              : 'text-gray-400'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setSelectedReview(review);
+                      setIsEditReviewModalOpen(true);
+                    }}
+                    className="p-2 hover:bg-[#161c2a] rounded-lg transition-colors"
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={() => handleDeleteClick(review)}
+                    className="p-2 hover:bg-[#161c2a] rounded-lg transition-colors text-red-500"
+                  >
+                    <Trash size={16} />
+                  </button>
+                </div>
+              </div>
+              <p className={`text-gray-300 ${locale === 'ar' ? 'text-right' : ''}`}>
+                {review.quote?.[locale] || review.quote?.en || ''}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add Review Modal */}
+      {isAddReviewModalOpen && (
+        <ReviewModal
+          onClose={() => setIsAddReviewModalOpen(false)}
+          onSubmit={handleAddReview}
+          userId={userId}
+        />
+      )}
+
+      {/* Edit Review Modal */}
+      {isEditReviewModalOpen && selectedReview && (
+        <ReviewModal
+          onClose={() => {
+            setIsEditReviewModalOpen(false);
+            setSelectedReview(null);
+          }}
+          onSubmit={(data) => handleUpdateReview(selectedReview._id, data)}
+          initialData={selectedReview}
+          userId={userId}
+          isEdit
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setReviewToDelete(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        t={t}
+      />
+    </motion.div>
+  );
+}
+
+// ReviewModal component
+function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
+  const [formData, setFormData] = useState({
+    rating: initialData?.rating || 5,
+    quote: {
+      en: initialData?.quote?.en || '',
+      ar: initialData?.quote?.ar || '',
+    },
+    coachId: initialData?.coachId || '',
+  });
+  const [coaches, setCoaches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const t = useTranslations("ProfilePage");
+
+  // Modified coaches fetch to use the correct endpoint
+  useEffect(() => {
+    const fetchCoaches = async () => {
+      try {
+        const response = await fetch('/api/coach');
+        if (!response.ok) throw new Error('Failed to fetch coaches');
+        const data = await response.json();
+        // Filter only active coaches
+        const activeCoaches = data.filter(coach => coach.coachActive === true);
+        setCoaches(activeCoaches);
+      } catch (error) {
+        console.error('Error fetching coaches:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCoaches();
+  }, []);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit({
+      ...formData,
+      userId,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 backdrop-blur-sm bg-black/40">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-[#0a0e15] max-w-md w-full rounded-xl border border-[#161c2a] p-6"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold">
+            {isEdit ? t('editReview') : t('addReview')}
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-[#161c2a] rounded-full transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {!isEdit && (
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                {t('selectCoach')}
+              </label>
+              {loading ? (
+                <div className="flex items-center justify-center p-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#B4E90E]"></div>
+                </div>
+              ) : (
+                <select
+                  value={formData.coachId}
+                  onChange={(e) => setFormData({ ...formData, coachId: e.target.value })}
+                  className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
+                  required
+                >
+                  <option value="">{t('selectCoach')}</option>
+                  {coaches && coaches.map((coach) => (
+                    <option key={coach._id} value={coach._id}>
+                      {`${coach.firstName} ${coach.lastName}`}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">
+              {t('rating')}
+            </label>
+            <div className="flex gap-2">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, rating: star })}
+                  className="focus:outline-none"
+                >
+                  <Star
+                    className={`w-6 h-6 ${
+                      star <= formData.rating
+                        ? 'text-[#B4E90E] fill-[#B4E90E]'
+                        : 'text-gray-400'
+                    }`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">
+              {t('reviewEnglish')}
+            </label>
+            <textarea
+              value={formData.quote.en}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  quote: { ...formData.quote, en: e.target.value },
+                })
+              }
+              className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
+              rows={4}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">
+              {t('reviewArabic')}
+            </label>
+            <textarea
+              value={formData.quote.ar}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  quote: { ...formData.quote, ar: e.target.value },
+                })
+              }
+              className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
+              rows={4}
+              required
+              dir="rtl"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-[#161c2a] text-white rounded-lg hover:bg-[#1f2937] transition-colors"
+            >
+              {t('cancel')}
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-[#B4E90E] text-[#0a0e15] font-medium rounded-lg hover:bg-[#a3d00c] transition-colors"
+            >
+              {isEdit ? t('update') : t('submit')}
             </button>
           </div>
         </form>

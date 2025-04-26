@@ -17,7 +17,6 @@ export default function ReviewsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const { state } = useSidebar()
-  const [showAddForm, setShowAddForm] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [selectedReview, setSelectedReview] = useState(null)
@@ -37,7 +36,9 @@ export default function ReviewsPage() {
     },
     rating: 5,
     image: "",
-    imageFile: null
+    imageFile: null,
+    userId: "",
+    coachId: ""
   })
   const [activeLanguage, setActiveLanguage] = useState("en")
 
@@ -131,49 +132,6 @@ export default function ReviewsPage() {
     } catch (err) {
       console.error('Upload error:', err)
       setError(err.message || 'Failed to upload image. Please try again.')
-    }
-  }
-
-  const handleAddReview = async (e) => {
-    e.preventDefault()
-    try {
-      if (!formData.name.en || !formData.trainerName.en || !formData.quote.en || !formData.image) {
-        throw new Error('Name, trainer name, quote (in English), and image are required')
-      }
-
-      const response = await fetch('/api/review', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          trainerName: formData.trainerName,
-          quote: formData.quote,
-          rating: formData.rating,
-          image: formData.image
-        })
-      })
-
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to add review')
-      }
-      
-      await fetchReviews()
-      setShowAddForm(false)
-      setFormData({
-        name: { en: "", ar: "" },
-        trainerName: { en: "", ar: "" },
-        quote: { en: "", ar: "" },
-        rating: 5,
-        image: "",
-        imageFile: null
-      })
-    } catch (err) {
-      console.error('Error adding review:', err)
-      setError(err.message)
     }
   }
 
@@ -326,13 +284,6 @@ export default function ReviewsPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button 
-              variant="outline" 
-              className="bg-[#B4E90E] text-black hover:bg-[#B4E90E] cursor-pointer"
-              onClick={() => setShowAddForm(true)}
-            >
-              Add New
-            </Button>
           </div>
 
           <div className="mb-4 flex justify-end">
@@ -465,335 +416,180 @@ export default function ReviewsPage() {
         </div>
       </main>
 
-      {/* Add Form Dialog */}
-      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="bg-[#1F1F1F] text-white max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Add New Review</DialogTitle>
-            <DialogDescription className="text-white/60">
-              Create a new review with name, trainer, quote, rating and image
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleAddReview} className="space-y-4">
-            <div className="grid gap-4">
-              <Tabs defaultValue="en" className="w-full">
-                <TabsList className="mb-4 bg-[#121212]">
-                  <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:text-black">English</TabsTrigger>
-                  <TabsTrigger value="ar" className="data-[state=active]:bg-white data-[state=active]:text-black">Arabic</TabsTrigger>
-                </TabsList>
-                <TabsContent value="en" className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name-en">Name (English)</Label>
-                    <Input
-                      id="name-en"
-                      value={formData.name.en}
-                      onChange={(e) => setFormData({
-                        ...formData, 
-                        name: {...formData.name, en: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="trainer-name-en">Trainer Name (English)</Label>
-                    <Input
-                      id="trainer-name-en"
-                      value={formData.trainerName.en}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        trainerName: {...formData.trainerName, en: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="quote-en">Quote (English)</Label>
-                    <Input
-                      id="quote-en"
-                      value={formData.quote.en}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        quote: {...formData.quote, en: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      required
-                    />
-                  </div>
-                </TabsContent>
-                <TabsContent value="ar" className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name-ar">Name (Arabic)</Label>
-                    <Input
-                      id="name-ar"
-                      value={formData.name.ar}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        name: {...formData.name, ar: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      dir="rtl"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="trainer-name-ar">Trainer Name (Arabic)</Label>
-                    <Input
-                      id="trainer-name-ar"
-                      value={formData.trainerName.ar}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        trainerName: {...formData.trainerName, ar: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      dir="rtl"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="quote-ar">Quote (Arabic)</Label>
-                    <Input
-                      id="quote-ar"
-                      value={formData.quote.ar}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        quote: {...formData.quote, ar: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      dir="rtl"
-                    />
-                  </div>
-                </TabsContent>
-              </Tabs>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="rating">Rating</Label>
-                  <Input
-                    id="rating"
-                    type="number"
-                    min="0"
-                    max="5"
-                    value={formData.rating}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      rating: Number(e.target.value)
-                    })}
-                    className="bg-[#121212] border-white/10"
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="image">Review Image</Label>
-                  <div className="flex items-center gap-2">
-                    <label 
-                      htmlFor="file-upload" 
-                      className="flex-1 flex items-center justify-center px-4 py-2 border border-white/10 rounded-md cursor-pointer hover:border-white/20"
-                    >
-                      <Upload className="h-4 w-4 mr-2 text-white/60" />
-                      <span className="text-sm text-white/60">Choose File</span>
-                      <input
-                        id="file-upload"
-                        name="file-upload"
-                        type="file"
-                        className="sr-only"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        disabled={uploadingImage}
-                      />
-                    </label>
-                    {formData.image && (
-                      <img
-                        src={formData.image}
-                        alt="Preview"
-                        className="h-10 w-10 object-cover rounded-full"
-                      />
-                    )}
-                  </div>
-                  {uploadingImage && (
-                    <div className="text-sm text-white/60">Uploading...</div>
-                  )}
-                </div>
-              </div>
-            </div>
-            <DialogFooter className="mt-4">
-              <Button type="submit" className="bg-white text-black hover:bg-gray-100">
-                Add Review
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
       {/* Edit Form Dialog */}
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="bg-[#1F1F1F] text-white max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Edit Review</DialogTitle>
             <DialogDescription className="text-white/60">
               Update the review details
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleUpdateReview} className="space-y-4">
-            <div className="grid gap-4">
-              <Tabs defaultValue="en" className="w-full">
-                <TabsList className="mb-4 bg-[#121212]">
-                  <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:text-black">English</TabsTrigger>
-                  <TabsTrigger value="ar" className="data-[state=active]:bg-white data-[state=active]:text-black">Arabic</TabsTrigger>
-                </TabsList>
-                <TabsContent value="en" className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-name-en">Name (English)</Label>
-                    <Input
-                      id="edit-name-en"
-                      value={formData.name.en}
-                      onChange={(e) => setFormData({
-                        ...formData, 
-                        name: {...formData.name, en: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-trainer-name-en">Trainer Name (English)</Label>
-                    <Input
-                      id="edit-trainer-name-en"
-                      value={formData.trainerName.en}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        trainerName: {...formData.trainerName, en: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-quote-en">Quote (English)</Label>
-                    <Input
-                      id="edit-quote-en"
-                      value={formData.quote.en}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        quote: {...formData.quote, en: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      required
-                    />
-                  </div>
-                </TabsContent>
-                <TabsContent value="ar" className="space-y-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-name-ar">Name (Arabic)</Label>
-                    <Input
-                      id="edit-name-ar"
-                      value={formData.name.ar}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        name: {...formData.name, ar: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      dir="rtl"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-trainer-name-ar">Trainer Name (Arabic)</Label>
-                    <Input
-                      id="edit-trainer-name-ar"
-                      value={formData.trainerName.ar}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        trainerName: {...formData.trainerName, ar: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      dir="rtl"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-quote-ar">Quote (Arabic)</Label>
-                    <Input
-                      id="edit-quote-ar"
-                      value={formData.quote.ar}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        quote: {...formData.quote, ar: e.target.value}
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      dir="rtl"
-                    />
-                  </div>
-                </TabsContent>
-              </Tabs>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-rating">Rating</Label>
-                  <Input
-                    id="edit-rating"
-                    type="number"
-                    min="0"
-                    max="5"
-                    value={formData.rating}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      rating: Number(e.target.value)
-                    })}
-                    className="bg-[#121212] border-white/10"
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-image">Review Image</Label>
-                  <div className="flex items-center gap-2">
-                    <label 
-                      htmlFor="edit-file-upload" 
-                      className="flex-1 flex items-center justify-center px-4 py-2 border border-white/10 rounded-md cursor-pointer hover:border-white/20"
-                    >
-                      <Upload className="h-4 w-4 mr-2 text-white/60" />
-                      <span className="text-sm text-white/60">Choose File</span>
-                      <input
-                        id="edit-file-upload"
-                        name="edit-file-upload"
-                        type="file"
-                        className="sr-only"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        disabled={uploadingImage}
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
+            <form onSubmit={handleUpdateReview} className="space-y-4">
+              <div className="grid gap-4 py-4">
+                <Tabs defaultValue="en" className="w-full">
+                  <TabsList className="mb-4 bg-gray-800">
+                    <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:text-black">English</TabsTrigger>
+                    <TabsTrigger value="ar" className="data-[state=active]:bg-white data-[state=active]:text-black">Arabic</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="en" className="space-y-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-name-en">Name (English)</Label>
+                      <Input
+                        id="edit-name-en"
+                        value={formData.name.en}
+                        onChange={(e) => setFormData({
+                          ...formData, 
+                          name: {...formData.name, en: e.target.value}
+                        })}
+                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                        required
                       />
-                    </label>
-                    {formData.image && (
-                      <img
-                        src={formData.image}
-                        alt="Preview"
-                        className="h-10 w-10 object-cover rounded-full"
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-trainer-name-en">Trainer Name (English)</Label>
+                      <Input
+                        id="edit-trainer-name-en"
+                        value={formData.trainerName.en}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          trainerName: {...formData.trainerName, en: e.target.value}
+                        })}
+                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                        required
                       />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-quote-en">Quote (English)</Label>
+                      <Input
+                        id="edit-quote-en"
+                        value={formData.quote.en}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          quote: {...formData.quote, en: e.target.value}
+                        })}
+                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                        required
+                      />
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="ar" className="space-y-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-name-ar">Name (Arabic)</Label>
+                      <Input
+                        id="edit-name-ar"
+                        value={formData.name.ar}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          name: {...formData.name, ar: e.target.value}
+                        })}
+                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                        dir="rtl"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-trainer-name-ar">Trainer Name (Arabic)</Label>
+                      <Input
+                        id="edit-trainer-name-ar"
+                        value={formData.trainerName.ar}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          trainerName: {...formData.trainerName, ar: e.target.value}
+                        })}
+                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                        dir="rtl"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-quote-ar">Quote (Arabic)</Label>
+                      <Input
+                        id="edit-quote-ar"
+                        value={formData.quote.ar}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          quote: {...formData.quote, ar: e.target.value}
+                        })}
+                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                        dir="rtl"
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-rating">Rating</Label>
+                    <Input
+                      id="edit-rating"
+                      type="number"
+                      min="0"
+                      max="5"
+                      value={formData.rating}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        rating: Number(e.target.value)
+                      })}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-image">Review Image</Label>
+                    <div className="flex items-center gap-2">
+                      <label 
+                        htmlFor="edit-file-upload" 
+                        className="flex-1 flex items-center justify-center px-4 py-2 border border-white/10 rounded-md cursor-pointer hover:border-white/20 bg-gray-800"
+                      >
+                        <Upload className="h-4 w-4 mr-2 text-white/60" />
+                        <span className="text-sm text-white/60">Choose File</span>
+                        <input
+                          id="edit-file-upload"
+                          name="edit-file-upload"
+                          type="file"
+                          className="sr-only"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          disabled={uploadingImage}
+                        />
+                      </label>
+                      {formData.image && (
+                        <img
+                          src={formData.image}
+                          alt="Preview"
+                          className="h-10 w-10 object-cover rounded-full"
+                        />
+                      )}
+                    </div>
+                    {uploadingImage && (
+                      <div className="text-sm text-white/60">Uploading...</div>
                     )}
                   </div>
-                  {uploadingImage && (
-                    <div className="text-sm text-white/60">Uploading...</div>
-                  )}
                 </div>
               </div>
-            </div>
-            <DialogFooter className="mt-4">
-              <Button type="submit" className="bg-white text-black hover:bg-gray-100">
+            </form>
+            <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+              <Button type="submit" onClick={handleUpdateReview} className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors">
                 Update Review
               </Button>
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white">
           <DialogHeader>
             <DialogTitle>Delete Review</DialogTitle>
             <DialogDescription className="text-white/60">
               Are you sure you want to delete this review? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="mt-4 border-t border-white/10 pt-4">
             <Button
               variant="ghost"
               onClick={() => setShowDeleteDialog(false)}
+              className="hover:bg-gray-800"
             >
               Cancel
             </Button>

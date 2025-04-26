@@ -488,474 +488,478 @@ export default function PacksPage() {
 
       {/* Add Form Dialog */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="bg-[#1F1F1F] text-white max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Add New Pack</DialogTitle>
             <DialogDescription className="text-white/60">
               Create a new pack with pricing and features
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAddPack}>
-            <div className="grid gap-4 py-2">
-              {/* Start Price */}
-              <div>
-                <Label htmlFor="startPrice">Start Price</Label>
-                <Input
-                  id="startPrice"
-                  type="number"
-                  value={formData.startPrice}
-                  onChange={(e) => setFormData({...formData, startPrice: Number(e.target.value)})}
-                  className="bg-[#121212] border-white/10 mt-1"
-                  min="0"
-                  required
-                />
-              </div>
-
-              {/* Category Selection */}
-              <div>
-                <Label>Category</Label>
-                <div className="grid grid-cols-2 gap-4 mt-1">
-                  <div>
-                    <Label className="text-xs" htmlFor="category-en">English</Label>
-                    <Input
-                      id="category-en"
-                      type="text"
-                      value={formData.category.en}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        category: {
-                          ...formData.category,
-                          en: e.target.value
-                        }
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      placeholder="Enter category in English"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs" htmlFor="category-ar">Arabic</Label>
-                    <Input
-                      id="category-ar"
-                      type="text"
-                      value={formData.category.ar}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        category: {
-                          ...formData.category,
-                          ar: e.target.value
-                        }
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      placeholder="أدخل الفئة بالعربية"
-                      required
-                    />
-                  </div>
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
+            <form onSubmit={handleAddPack} className="space-y-4">
+              <div className="grid gap-4 py-4">
+                {/* Start Price */}
+                <div className="grid gap-2">
+                  <Label htmlFor="startPrice">Start Price</Label>
+                  <Input
+                    id="startPrice"
+                    type="number"
+                    value={formData.startPrice}
+                    onChange={(e) => setFormData({...formData, startPrice: Number(e.target.value)})}
+                    className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                    min="0"
+                    required
+                  />
                 </div>
-              </div>
-              
-              {/* Session Options */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label>Session Options</Label>
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    onClick={addSessionPackage}
-                  >
-                    Add Option
-                  </Button>
+
+                {/* Category Selection */}
+                <div className="grid gap-2">
+                  <Label>Category</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label className="text-xs" htmlFor="category-en">English</Label>
+                      <Input
+                        id="category-en"
+                        type="text"
+                        value={formData.category.en}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          category: {
+                            ...formData.category,
+                            en: e.target.value
+                          }
+                        })}
+                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                        placeholder="Enter category in English"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label className="text-xs" htmlFor="category-ar">Arabic</Label>
+                      <Input
+                        id="category-ar"
+                        type="text"
+                        value={formData.category.ar}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          category: {
+                            ...formData.category,
+                            ar: e.target.value
+                          }
+                        })}
+                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                        placeholder="أدخل الفئة بالعربية"
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
                 
-                {sessionPackages.map((session, index) => (
-                  <div key={index} className="bg-[#121212] p-3 rounded-md mb-2">
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <Label className="text-xs" htmlFor={`price-${index}`}>Price ($)</Label>
-                        <Input
-                          id={`price-${index}`}
-                          type="number"
-                          value={session.price}
-                          onChange={(e) => updateSessionPackage(index, 'price', Number(e.target.value))}
-                          className="bg-[#1A1A1A] border-white/10 h-8 mt-1"
-                          min="0"
-                          required
-                        />
+                {/* Session Options */}
+                <div className="grid gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Session Options</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      size="sm"
+                      className="h-8  text-black   hover:text-black transition-colors"
+                      onClick={addSessionPackage}
+                    >
+                      Add Option
+                    </Button>
+                  </div>
+                  
+                  {sessionPackages.map((session, index) => (
+                    <div key={index} className="bg-gray-800 p-3 rounded-md">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="grid gap-2">
+                          <Label className="text-xs" htmlFor={`price-${index}`}>Price ($)</Label>
+                          <Input
+                            id={`price-${index}`}
+                            type="number"
+                            value={session.price}
+                            onChange={(e) => updateSessionPackage(index, 'price', Number(e.target.value))}
+                            className="bg-gray-700 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E] h-8"
+                            min="0"
+                            required
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label className="text-xs" htmlFor={`sessions-${index}`}>Sessions</Label>
+                          <Input
+                            id={`sessions-${index}`}
+                            type="number"
+                            value={session.sessionCount}
+                            onChange={(e) => updateSessionPackage(index, 'sessionCount', Number(e.target.value))}
+                            className="bg-gray-700 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E] h-8"
+                            min="1"
+                            required
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label className="text-xs" htmlFor={`expiration-${index}`}>Expires (days)</Label>
+                          <Input
+                            id={`expiration-${index}`}
+                            type="number"
+                            value={session.expirationDays}
+                            onChange={(e) => updateSessionPackage(index, 'expirationDays', Number(e.target.value))}
+                            className="bg-gray-700 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E] h-8"
+                            min="1"
+                            required
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <Label className="text-xs" htmlFor={`sessions-${index}`}>Sessions</Label>
-                        <Input
-                          id={`sessions-${index}`}
-                          type="number"
-                          value={session.sessionCount}
-                          onChange={(e) => updateSessionPackage(index, 'sessionCount', Number(e.target.value))}
-                          className="bg-[#1A1A1A] border-white/10 h-8 mt-1"
-                          min="1"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs" htmlFor={`expiration-${index}`}>Expires (days)</Label>
-                        <Input
-                          id={`expiration-${index}`}
-                          type="number"
-                          value={session.expirationDays}
-                          onChange={(e) => updateSessionPackage(index, 'expirationDays', Number(e.target.value))}
-                          className="bg-[#1A1A1A] border-white/10 h-8 mt-1"
-                          min="1"
-                          required
-                        />
-                      </div>
+                      {sessionPackages.length > 1 && (
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-red-500 hover:bg-red-500/10 mt-1 h-6 px-2 py-0 hover:text-red-400"
+                          onClick={() => removeSessionPackage(index)}
+                        >
+                          Remove
+                        </Button>
+                      )}
                     </div>
-                    {sessionPackages.length > 1 && (
+                  ))}
+                </div>
+                
+                {/* Features Section */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* English Features */}
+                  <div className="grid gap-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Features (English)</Label>
                       <Button 
                         type="button" 
-                        variant="ghost" 
+                        variant="outline"
                         size="sm"
-                        className="text-red-500 hover:bg-red-500/10 mt-1 h-6 px-2 py-0"
-                        onClick={() => removeSessionPackage(index)}
+                        className="h-8  text-black  hover:text-black "
+                        onClick={addEnFeature}
                       >
-                        Remove
+                        Add
                       </Button>
-                    )}
+                    </div>
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                      {enFeatures.map((feature, index) => (
+                        <div key={index} className="flex items-center gap-1">
+                          <Input
+                            value={feature}
+                            onChange={(e) => updateEnFeature(index, e.target.value)}
+                            className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E] h-8"
+                            placeholder="Enter feature"
+                            required
+                          />
+                          {enFeatures.length > 1 && (
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              className="text-red-500 hover:bg-red-500/10 h-8 w-8 p-0 hover:text-red-400"
+                              onClick={() => removeEnFeature(index)}
+                            >
+                              ✕
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-              
-              {/* Features Section */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* English Features */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label>Features (English)</Label>
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      size="sm"
-                      className="h-8"
-                      onClick={addEnFeature}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                  <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                    {enFeatures.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-1">
-                        <Input
-                          value={feature}
-                          onChange={(e) => updateEnFeature(index, e.target.value)}
-                          className="bg-[#121212] border-white/10 h-8"
-                          placeholder="Enter feature"
-                          required
-                        />
-                        {enFeatures.length > 1 && (
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            className="text-red-500 hover:bg-red-500/10 h-8 w-8 p-0"
-                            onClick={() => removeEnFeature(index)}
-                          >
-                            ✕
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Arabic Features */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <Label>Features (Arabic)</Label>
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      size="sm"
-                      className="h-8"
-                      onClick={addArFeature}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                  <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                    {arFeatures.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-1">
-                        <Input
-                          value={feature}
-                          onChange={(e) => updateArFeature(index, e.target.value)}
-                          className="bg-[#121212] border-white/10 h-8"
-                          placeholder="ادخل الميزة"
-                          required
-                        />
-                        {arFeatures.length > 1 && (
-                          <Button 
-                            type="button" 
-                            variant="ghost" 
-                            className="text-red-500 hover:bg-red-500/10 h-8 w-8 p-0"
-                            onClick={() => removeArFeature(index)}
-                          >
-                            ✕
-                          </Button>
-                        )}
-                      </div>
-                    ))}
+                  
+                  {/* Arabic Features */}
+                  <div className="grid gap-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Features (Arabic)</Label>
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-black   hover:text-black transition-colors"
+                        onClick={addArFeature}
+                      >
+                        Add
+                      </Button>
+                    </div>
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                      {arFeatures.map((feature, index) => (
+                        <div key={index} className="flex items-center gap-1">
+                          <Input
+                            value={feature}
+                            onChange={(e) => updateArFeature(index, e.target.value)}
+                            className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E] h-8"
+                            placeholder="ادخل الميزة"
+                            required
+                          />
+                          {arFeatures.length > 1 && (
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              className="text-red-500 hover:bg-red-500/10 h-8 w-8 p-0 hover:text-red-400"
+                              onClick={() => removeArFeature(index)}
+                            >
+                              ✕
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <DialogFooter className="mt-4">
-              <Button type="button" variant="ghost" onClick={() => setShowAddForm(false)}>
+            </form>
+            <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+              <Button type="button" variant="ghost" onClick={() => setShowAddForm(false)} className="text-white hover:text-[#B4E90E] transition-colors">
                 Cancel
               </Button>
-              <Button type="submit" className="bg-white text-black">
+              <Button type="submit" className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors" onClick={handleAddPack}>
                 Add Pack
               </Button>
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Edit Form Dialog */}
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="bg-[#1F1F1F] text-white max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Edit Pack</DialogTitle>
             <DialogDescription className="text-white/60">
               Update the pack details
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleUpdatePack}>
-            <div className="grid gap-4 py-2">
-              {/* Category Selection */}
-              <div>
-                <Label>Category</Label>
-                <div className="grid grid-cols-2 gap-4 mt-1">
-                  <div>
-                    <Label className="text-xs" htmlFor="category-en">English</Label>
-                    <Input
-                      id="category-en"
-                      type="text"
-                      value={formData.category.en}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        category: {
-                          ...formData.category,
-                          en: e.target.value
-                        }
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      placeholder="Enter category in English"
-                      required
-                    />
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
+            <form onSubmit={handleUpdatePack} className="space-y-4">
+              <div className="grid gap-4 py-4">
+                {/* Category Selection */}
+                <div className="grid gap-2">
+                  <Label>Category</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label className="text-xs" htmlFor="category-en">English</Label>
+                      <Input
+                        id="category-en"
+                        type="text"
+                        value={formData.category.en}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          category: {
+                            ...formData.category,
+                            en: e.target.value
+                          }
+                        })}
+                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                        placeholder="Enter category in English"
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label className="text-xs" htmlFor="category-ar">Arabic</Label>
+                      <Input
+                        id="category-ar"
+                        type="text"
+                        value={formData.category.ar}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          category: {
+                            ...formData.category,
+                            ar: e.target.value
+                          }
+                        })}
+                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                        placeholder="أدخل الفئة بالعربية"
+                        required
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs" htmlFor="category-ar">Arabic</Label>
-                    <Input
-                      id="category-ar"
-                      type="text"
-                      value={formData.category.ar}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        category: {
-                          ...formData.category,
-                          ar: e.target.value
-                        }
-                      })}
-                      className="bg-[#121212] border-white/10"
-                      placeholder="أدخل الفئة بالعربية"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Session Options */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label>Session Options</Label>
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    size="sm"
-                    className="h-8"
-                    onClick={addSessionPackage}
-                  >
-                    Add Option
-                  </Button>
                 </div>
                 
-                {sessionPackages.map((session, index) => (
-                  <div key={index} className="bg-[#121212] p-3 rounded-md mb-2">
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <Label className="text-xs" htmlFor={`edit-price-${index}`}>Price ($)</Label>
-                        <Input
-                          id={`edit-price-${index}`}
-                          type="number"
-                          value={session.price}
-                          onChange={(e) => updateSessionPackage(index, 'price', Number(e.target.value))}
-                          className="bg-[#1A1A1A] border-white/10 h-8 mt-1"
-                          min="0"
-                          required
-                        />
+                {/* Session Options */}
+                <div className="grid gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Session Options</Label>
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      size="sm"
+                      className="h-8  text-black  hover:text-black transition-colors"
+                      onClick={addSessionPackage}
+                    >
+                      Add Option
+                    </Button>
+                  </div>
+                  
+                  {sessionPackages.map((session, index) => (
+                    <div key={index} className="bg-gray-800 p-3 rounded-md">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="grid gap-2">
+                          <Label className="text-xs" htmlFor={`edit-price-${index}`}>Price ($)</Label>
+                          <Input
+                            id={`edit-price-${index}`}
+                            type="number"
+                            value={session.price}
+                            onChange={(e) => updateSessionPackage(index, 'price', Number(e.target.value))}
+                            className="bg-gray-700 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E] h-8"
+                            min="0"
+                            required
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label className="text-xs" htmlFor={`edit-sessions-${index}`}>Sessions</Label>
+                          <Input
+                            id={`edit-sessions-${index}`}
+                            type="number"
+                            value={session.sessionCount}
+                            onChange={(e) => updateSessionPackage(index, 'sessionCount', Number(e.target.value))}
+                            className="bg-gray-700 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E] h-8"
+                            min="1"
+                            required
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label className="text-xs" htmlFor={`edit-expiration-${index}`}>Expires (days)</Label>
+                          <Input
+                            id={`edit-expiration-${index}`}
+                            type="number"
+                            value={session.expirationDays}
+                            onChange={(e) => updateSessionPackage(index, 'expirationDays', Number(e.target.value))}
+                            className="bg-gray-700 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E] h-8"
+                            min="1"
+                            required
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <Label className="text-xs" htmlFor={`edit-sessions-${index}`}>Sessions</Label>
-                        <Input
-                          id={`edit-sessions-${index}`}
-                          type="number"
-                          value={session.sessionCount}
-                          onChange={(e) => updateSessionPackage(index, 'sessionCount', Number(e.target.value))}
-                          className="bg-[#1A1A1A] border-white/10 h-8 mt-1"
-                          min="1"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-xs" htmlFor={`edit-expiration-${index}`}>Expires (days)</Label>
-                        <Input
-                          id={`edit-expiration-${index}`}
-                          type="number"
-                          value={session.expirationDays}
-                          onChange={(e) => updateSessionPackage(index, 'expirationDays', Number(e.target.value))}
-                          className="bg-[#1A1A1A] border-white/10 h-8 mt-1"
-                          min="1"
-                          required
-                        />
-                      </div>
+                      {sessionPackages.length > 1 && (
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-red-500 hover:bg-red-500/10 mt-1 h-6 px-2 py-0 hover:text-red-400"
+                          onClick={() => removeSessionPackage(index)}
+                        >
+                          Remove
+                        </Button>
+                      )}
                     </div>
-                    {sessionPackages.length > 1 && (
+                  ))}
+                </div>
+                
+                {/* Features Section */}
+                <div className="grid grid-cols-2 gap-4">
+                  {/* English Features */}
+                  <div className="grid gap-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Features (English)</Label>
                       <Button 
                         type="button" 
-                        variant="ghost" 
+                        variant="outline"
                         size="sm"
-                        className="text-red-500 hover:bg-red-500/10 mt-1 h-6 px-2 py-0"
-                        onClick={() => removeSessionPackage(index)}
+                        className="h-8  text-black  hover:text-black transition-colors"
+                        onClick={addEnFeature}
                       >
-                        Remove
+                        Add
                       </Button>
-                    )}
+                    </div>
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                      {enFeatures.map((feature, index) => (
+                        <div key={index} className="flex items-center gap-1">
+                          <Input
+                            value={feature}
+                            onChange={(e) => updateEnFeature(index, e.target.value)}
+                            className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E] h-8"
+                            placeholder="Enter feature"
+                            required
+                          />
+                          {enFeatures.length > 1 && (
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              className="text-red-500 hover:bg-red-500/10 h-8 w-8 p-0 hover:text-red-400"
+                              onClick={() => removeEnFeature(index)}
+                            >
+                              ✕
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
-              </div>
-              
-              {/* Features Section */}
-              <div className="grid grid-cols-2 gap-4">
-                {/* English Features */}
-                <div>
-                <div className="flex items-center justify-between mb-2">
-                <Label>Features (English)</Label>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  size="sm"
-                  className="h-8"
-                  onClick={addEnFeature}
-                >
-                  Add
-                </Button>
-              </div>
-              <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                {enFeatures.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-1">
-                    <Input
-                      value={feature}
-                      onChange={(e) => updateEnFeature(index, e.target.value)}
-                      className="bg-[#121212] border-white/10 h-8"
-                      placeholder="Enter feature"
-                      required
-                    />
-                    {enFeatures.length > 1 && (
+                  
+                  {/* Arabic Features */}
+                  <div className="grid gap-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Features (Arabic)</Label>
                       <Button 
                         type="button" 
-                        variant="ghost" 
-                        className="text-red-500 hover:bg-red-500/10 h-8 w-8 p-0"
-                        onClick={() => removeEnFeature(index)}
+                        variant="outline"
+                        size="sm"
+                        className="h-8  text-black  hover:text-black transition-colors"
+                        onClick={addArFeature}
                       >
-                        ✕
+                        Add
                       </Button>
-                    )}
+                    </div>
+                    <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                      {arFeatures.map((feature, index) => (
+                        <div key={index} className="flex items-center gap-1">
+                          <Input
+                            value={feature}
+                            onChange={(e) => updateArFeature(index, e.target.value)}
+                            className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E] h-8"
+                            placeholder="ادخل الميزة"
+                            required
+                          />
+                          {arFeatures.length > 1 && (
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              className="text-red-500 hover:bg-red-500/10 h-8 w-8 p-0 hover:text-red-400"
+                              onClick={() => removeArFeature(index)}
+                            >
+                              ✕
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-            
-            {/* Arabic Features */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label>Features (Arabic)</Label>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  size="sm"
-                  className="h-8"
-                  onClick={addArFeature}
-                >
-                  Add
-                </Button>
-              </div>
-              <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
-                {arFeatures.map((feature, index) => (
-                  <div key={index} className="flex items-center gap-1">
-                    <Input
-                      value={feature}
-                      onChange={(e) => updateArFeature(index, e.target.value)}
-                      className="bg-[#121212] border-white/10 h-8"
-                      placeholder="ادخل الميزة"
-                      required
-                    />
-                    {arFeatures.length > 1 && (
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        className="text-red-500 hover:bg-red-500/10 h-8 w-8 p-0"
-                        onClick={() => removeArFeature(index)}
-                      >
-                        ✕
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            </form>
+            <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+              <Button type="button" variant="ghost" onClick={() => setShowEditForm(false)} className="text-white hover:text-[#B4E90E] transition-colors">
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors" onClick={handleUpdatePack}>
+                Update Pack
+              </Button>
+            </DialogFooter>
           </div>
-        </div>
-        <DialogFooter className="mt-4">
-          <Button type="button" variant="ghost" onClick={() => setShowEditForm(false)}>
-            Cancel
-          </Button>
-          <Button type="submit" className="bg-white text-black">
-            Update Pack
-          </Button>
-        </DialogFooter>
-      </form>
-    </DialogContent>
-  </Dialog>
+        </DialogContent>
+      </Dialog>
 
-  {/* Delete Confirmation Dialog */}
-  <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-    <DialogContent className="bg-[#1F1F1F] text-white">
-      <DialogHeader>
-        <DialogTitle>Delete Pack</DialogTitle>
-        <DialogDescription className="text-white/60">
-          Are you sure you want to delete this pack? This action cannot be undone.
-        </DialogDescription>
-      </DialogHeader>
-      <DialogFooter className="mt-4">
-        <Button type="button" variant="ghost" onClick={() => setShowDeleteDialog(false)}>
-          Cancel
-        </Button>
-        <Button 
-          type="button" 
-          className="bg-red-500 hover:bg-red-600"
-          onClick={handleDeletePack}
-        >
-          Delete
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-</div>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="bg-gray-900 text-white">
+          <DialogHeader>
+            <DialogTitle>Delete Pack</DialogTitle>
+            <DialogDescription className="text-white/60">
+              Are you sure you want to delete this pack? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+            <Button type="button" variant="ghost" onClick={() => setShowDeleteDialog(false)} className="text-white hover:text-[#B4E90E] transition-colors">
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              className="bg-red-500 hover:bg-red-600 text-white transition-colors"
+              onClick={handleDeletePack}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   )}

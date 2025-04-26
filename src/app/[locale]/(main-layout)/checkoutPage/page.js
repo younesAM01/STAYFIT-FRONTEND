@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Apple, CreditCard, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -19,6 +19,10 @@ export default function CheckoutPage() {
   const [clientPack, setClientPack] = useState(null);
   const [packDetails, setPackDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [isEditingCoupon, setIsEditingCoupon] = useState(true);
   const {
     user,
     mongoUser,
@@ -141,6 +145,10 @@ export default function CheckoutPage() {
     setTimeout(async () => {
       try {
         if (selectedPack && selectedPack._id) {
+          const finalPrice = appliedCoupon 
+            ? Number((selectedPack.packPrice * (1 - (appliedCoupon.percentage || 0) / 100)).toFixed(2))
+            : selectedPack.packPrice;
+
           const response = await fetch(
             `/api/client-pack?id=${selectedPack._id}`,
             {
@@ -148,7 +156,11 @@ export default function CheckoutPage() {
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ purchaseState: "completed" }),
+              body: JSON.stringify({ 
+                purchaseState: "completed",
+                coupon: appliedCoupon?._id,
+                totalPrice: finalPrice
+              }),
             }
           );
 
@@ -166,9 +178,161 @@ export default function CheckoutPage() {
     }, 2000); // Simulate a 2-second payment processing time
   };
 
+  // Debug useEffect to track state changes
+  useEffect(() => {
+    console.log('Coupon State Changed:', {
+      couponCode,
+      appliedCoupon,
+      isEditingCoupon
+    });
+  }, [couponCode, appliedCoupon, isEditingCoupon]);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError(t('pleaseEnterCoupon'));
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setCouponError("");
+      // Clear previous coupon
+      setAppliedCoupon(null);
+      
+      // Add random value and timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const random = Math.random();
+      
+      // First, get all coupons
+      const response = await fetch(
+        `/api/coupon?t=${timestamp}&r=${random}`,
+        {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const result = await response.json();
+      console.log('All Coupons Response:', result); // Debug log
+
+      if (result.success && result.data) {
+        // Find the coupon with matching name (case insensitive)
+        const coupons = Array.isArray(result.data) ? result.data : [result.data];
+        const matchingCoupon = coupons.find(
+          c => c.name && c.name.toLowerCase() === couponCode.trim().toLowerCase()
+        );
+
+        console.log('Found Coupon:', matchingCoupon); // Debug log
+
+        if (!matchingCoupon) {
+          console.log('No matching coupon found'); // Debug log
+          setCouponError(t('invalidCoupon'));
+          setAppliedCoupon(null);
+          setIsEditingCoupon(true);
+          return;
+        }
+
+        if (matchingCoupon.status === 'expired') {
+          setCouponError(t('couponExpired'));
+          setAppliedCoupon(null);
+          setIsEditingCoupon(true);
+        } else {
+          // Ensure percentage is a number and create new coupon data
+          const percentage = Number(matchingCoupon.percentage);
+          if (isNaN(percentage)) {
+            console.error('Invalid percentage value:', matchingCoupon.percentage);
+            setCouponError(t('errorApplyingCoupon'));
+            return;
+          }
+
+          const newCouponData = {
+            _id: matchingCoupon._id,
+            code: couponCode.trim(),
+            percentage: percentage,
+            timestamp: new Date().getTime()
+          };
+
+          console.log('Setting new coupon with percentage:', percentage); // Debug log
+          setAppliedCoupon(newCouponData);
+          setCouponCode(""); // Clear input
+          setCouponError("");
+          setIsEditingCoupon(false);
+
+          // Debug log for price calculation
+          if (selectedPack?.packPrice) {
+            const discount = (selectedPack.packPrice * percentage) / 100;
+            console.log('Price calculation preview:', {
+              originalPrice: selectedPack.packPrice,
+              percentage: percentage,
+              discount: discount,
+              finalPrice: selectedPack.packPrice - discount
+            });
+          }
+        }
+      } else {
+        console.log('Invalid API response:', result); // Debug log
+        setCouponError(t('invalidCoupon'));
+        setAppliedCoupon(null);
+        setIsEditingCoupon(true);
+      }
+    } catch (error) {
+      console.error('Error applying coupon:', error);
+      setCouponError(t('errorApplyingCoupon'));
+      setAppliedCoupon(null);
+      setIsEditingCoupon(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelCoupon = () => {
+    console.log('Cancelling coupon'); // Debug log
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+    setIsEditingCoupon(true);
+  };
+
+  // Memoize the final price calculation with more detailed logging
+  const finalPrice = useMemo(() => {
+    console.log('Recalculating final price with:', {
+      packPrice: selectedPack?.packPrice,
+      coupon: appliedCoupon
+    });
+
+    if (!selectedPack?.packPrice) return selectedPack?.packPrice;
+    
+    if (appliedCoupon?.percentage) {
+      const discount = (selectedPack.packPrice * appliedCoupon.percentage) / 100;
+      const discountedPrice = selectedPack.packPrice - discount;
+      console.log('Final price calculation:', {
+        originalPrice: selectedPack.packPrice,
+        percentage: appliedCoupon.percentage,
+        discount: discount,
+        finalPrice: discountedPrice
+      });
+      return discountedPrice.toFixed(2);
+    }
+    
+    return selectedPack.packPrice;
+  }, [selectedPack?.packPrice, appliedCoupon]);
+
   if (!selectedPack || !packDetails) {
     return <div>Loading...</div>; // Display loading if clientPack or packDetails is not available
   }
+
+  const handleUpdateCoupon = () => {
+    setIsEditingCoupon(true);
+    setCouponError("");
+  };
 
   return (
     <div className="min-h-screen text-white md:mt-16 lg:mt-22 p-2 md:p-6">
@@ -425,6 +589,48 @@ export default function CheckoutPage() {
                     <span className={locale === 'ar' ? 'order-2' : ''}>{t('packPrice')}</span>
                     <span className={locale === 'ar' ? 'order-1' : ''}>{selectedPack?.packPrice} RS</span>
                   </div>
+
+                  {/* Coupon Input */}
+                  <div className="mt-4">
+                    {isEditingCoupon ? (
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder={t('enterCouponCode')}
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          className="bg-[#0d111a] text-white border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
+                        />
+                        <Button
+                          onClick={handleApplyCoupon}
+                          disabled={isLoading}
+                          className="bg-[#B4E90E] hover:bg-[#a3d00d] text-[#0d111a] font-bold whitespace-nowrap"
+                        >
+                          {t('apply')}
+                        </Button>
+                      </div>
+                    ) : appliedCoupon && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 bg-[#0d111a] text-white px-3 py-2 rounded-md border border-[#2a2f3d]">
+                          <span className="font-medium">{appliedCoupon.code}</span>
+                          <span className="text-[#B4E90E] ml-2">(-{appliedCoupon.percentage}%)</span>
+                        </div>
+                        <Button
+                          onClick={handleCancelCoupon}
+                          className="bg-red-500 hover:bg-red-600 text-white"
+                        >
+                          {t('cancel')}
+                        </Button>
+                      </div>
+                    )}
+                    {couponError && (
+                      <p className="text-red-500 text-sm mt-1">{couponError}</p>
+                    )}
+                    {appliedCoupon && !isEditingCoupon && (
+                      <p className="text-[#B4E90E] text-sm mt-1">
+                        {t('couponApplied')} ({appliedCoupon.percentage}% {t('off')})
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <Separator className="my-4 bg-[#2a2f3d]" />
@@ -432,7 +638,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-gray-300 font-bold">
                   <span className={locale === 'ar' ? 'order-2' : ''}>{t('total')}</span>
                   <span className={locale === 'ar' ? 'order-1' : ''}>
-                    {selectedPack?.packPrice} RS
+                    {finalPrice} {t('currency')}
                   </span>
                 </div>
               </Card>

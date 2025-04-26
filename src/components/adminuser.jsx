@@ -70,8 +70,7 @@ export default function UsersPage() {
     goals: [],
     diseases: [],
     // Coach specific fields
-    rating: 0,
-    reviews: 0,
+    coachActive: false,
     specialties: [],
     certifications: [],
     aboutContent: {
@@ -212,8 +211,7 @@ export default function UsersPage() {
       height: user.height || "",
       goals: user.goals || [],
       diseases: user.diseases || [],
-      rating: user.rating || 0,
-      reviews: user.reviews || 0,
+      coachActive: user.coachActive || false,
       specialties: user.specialties || [],
       certifications: user.certifications || [],
       aboutContent: user.aboutContent || { paragraphs: [], languages: [] },
@@ -443,10 +441,7 @@ export default function UsersPage() {
                         {roleFilter === "coach" && (
                           <>
                             <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                              Rating
-                            </th>
-                            <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                              Reviews
+                              Active Status
                             </th>
                             <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
                               Specialties
@@ -534,10 +529,11 @@ export default function UsersPage() {
                             {roleFilter === "coach" && (
                               <>
                                 <td className="p-4 text-sm text-white border-r border-white/10">
-                                  {user.rating || "—"}
-                                </td>
-                                <td className="p-4 text-sm text-white border-r border-white/10">
-                                  {user.reviews || "—"}
+                                  {user.coachActive ? (
+                                    <span className="text-green-500">Active</span>
+                                  ) : (
+                                    <span className="text-red-500">Inactive</span>
+                                  )}
                                 </td>
                                 <td className="p-4 text-sm text-white border-r border-white/10">
                                   {user.specialties?.length > 0
@@ -771,37 +767,25 @@ export default function UsersPage() {
                 {/* Coach Specific Fields */}
                 {formData.role === "coach" && (
                   <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="edit-rating">Rating</Label>
-                        <Input
-                          id="edit-rating"
-                          type="number"
-                          min="0"
-                          max="5"
-                          step="0.1"
-                          value={formData.rating}
-                          onChange={(e) =>
-                            setFormData({ ...formData, rating: e.target.value })
-                          }
-                          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="edit-reviews">Reviews Count</Label>
-                        <Input
-                          id="edit-reviews"
-                          type="number"
-                          value={formData.reviews}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              reviews: e.target.value,
-                            })
-                          }
-                          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                        />
-                      </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-active">Active Status</Label>
+                      <Select
+                        value={formData.coachActive ? "active" : "inactive"}
+                        onValueChange={(value) =>
+                          setFormData({
+                            ...formData,
+                            coachActive: value === "active",
+                          })
+                        }
+                      >
+                        <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent className="border-white/10">
+                          <SelectItem value="active">Active</SelectItem>
+                          <SelectItem value="inactive">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="edit-specialties">

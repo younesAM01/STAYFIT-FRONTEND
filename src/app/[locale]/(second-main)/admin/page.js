@@ -2,41 +2,57 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bar, BarChart, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
-import { Clock, Package, Star, Briefcase, ArrowUpRight, Users } from "lucide-react"
+import { Clock, Package, Star, Briefcase, ArrowUpRight, Users, Ticket } from "lucide-react"
 import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { format } from 'date-fns'
 
 export default function AdminDashboard() {
   const [monthlyData, setMonthlyData] = useState([])
   const [performanceData, setPerformanceData] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [services, setServices] = useState([])
-  const [activeSessions, setActiveSessions] = useState([])
-  const [packs, setPacks] = useState([])
+  const [coupons, setCoupons] = useState([])
+  const [newCoupon, setNewCoupon] = useState({ name: '', percentage: '', expiryDate: '' })
+  const [editingCoupon, setEditingCoupon] = useState(null)
+
+  // Helper function to safely format dates
+  const formatExpiryDate = (dateString) => {
+    try {
+      if (!dateString) return 'No expiry date';
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid date';
+      return format(date, 'PP');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return 'Invalid date';
+    }
+  }
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true)
         // Fetch all necessary data in parallel
-        const [usersResponse, packsResponse, sessionsResponse, reviewsResponse, servicesResponse] = await Promise.all([
+        const [usersResponse, packsResponse, sessionsResponse, reviewsResponse, couponsResponse] = await Promise.all([
           fetch('/api/users'),
           fetch('/api/packs'),
           fetch('/api/session'),
           fetch('/api/review'),
-          fetch('/api/services')
+          fetch('/api/coupon')
         ])
 
-        if (!usersResponse.ok || !packsResponse.ok || !sessionsResponse.ok || !reviewsResponse.ok || !servicesResponse.ok) {
+        if (!usersResponse.ok || !packsResponse.ok || !sessionsResponse.ok || !reviewsResponse.ok || !couponsResponse.ok) {
           throw new Error('Failed to fetch dashboard data')
         }
 
-        const [usersData, packsData, sessionsData, reviewsData, servicesData] = await Promise.all([
+        const [usersData, packsData, sessionsData, reviewsData, couponsData] = await Promise.all([
           usersResponse.json(),
           packsResponse.json(),
           sessionsResponse.json(),
           reviewsResponse.json(),
-          servicesResponse.json()
+          couponsResponse.json()
         ])
 
         // Process users data
@@ -56,13 +72,8 @@ export default function AdminDashboard() {
           }
         })
 
-        // Get active sessions (scheduled)
-        const activeSessions = sessions.filter(session => {
-          return session.status === 'scheduled'
-        })
-
-        // Process packs data
-        setPacks(packsData)
+        // Process coupons data
+        setCoupons(couponsData.data || [])
 
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         const processedMonthlyData = months.map((month, index) => ({
@@ -70,11 +81,8 @@ export default function AdminDashboard() {
           sessions: monthlySessions[index]
         }))
 
-        // Process reviews data (response with data property)
+        // Process reviews data
         const reviews = reviewsData.data || []
-
-        // Process services data
-        const services = servicesData.data || []
 
         // Process performance data
         const processedPerformanceData = [
@@ -86,8 +94,6 @@ export default function AdminDashboard() {
 
         setMonthlyData(processedMonthlyData)
         setPerformanceData(processedPerformanceData)
-        setServices(services)
-        setActiveSessions(activeSessions)
       } catch (err) {
         setError(err.message)
         console.error('Error fetching dashboard data:', err)
@@ -99,10 +105,63 @@ export default function AdminDashboard() {
     fetchDashboardData()
   }, [])
 
-  // Helper function to get pack category
-  const getPackCategory = (packId) => {
-    const pack = packs.find(p => p._id === packId)
-    return pack ? pack.category?.en || 'Unknown Category' : 'Unknown Category'
+  const handleAddCoupon = async () => {
+    try {
+      const response = await fetch('/api/coupon', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newCoupon.name,
+          percentage: parseInt(newCoupon.percentage),
+          expiryDate: newCoupon.expiryDate,
+          status: 'active'
+        }),
+      })
+
+      if (!response.ok) throw new Error('Failed to add coupon')
+
+      const result = await response.json()
+      setCoupons([...coupons, result.coupon])
+      setNewCoupon({ name: '', percentage: '', expiryDate: '' })
+    } catch (error) {
+      console.error('Error adding coupon:', error)
+    }
+  }
+
+  const handleUpdateCoupon = async (couponId) => {
+    try {
+      const response = await fetch(`/api/coupon?id=${couponId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editingCoupon),
+      })
+
+      if (!response.ok) throw new Error('Failed to update coupon')
+
+      const result = await response.json()
+      setCoupons(coupons.map(c => c._id === couponId ? result.coupon : c))
+      setEditingCoupon(null)
+    } catch (error) {
+      console.error('Error updating coupon:', error)
+    }
+  }
+
+  const handleDeleteCoupon = async (couponId) => {
+    try {
+      const response = await fetch(`/api/coupon?id=${couponId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) throw new Error('Failed to delete coupon')
+
+      setCoupons(coupons.filter(c => c._id !== couponId))
+    } catch (error) {
+      console.error('Error deleting coupon:', error)
+    }
   }
 
   if (isLoading) {
@@ -292,43 +351,122 @@ export default function AdminDashboard() {
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="bg-[#161b26] border-gray-800 p-2">
             <CardHeader>
-              <CardTitle className="text-[#B4E90E]">Available Services</CardTitle>
-              <CardDescription className="text-gray-400">Our current service offerings</CardDescription>
+              <CardTitle className="text-[#B4E90E]">Add New Coupon</CardTitle>
+              <CardDescription className="text-gray-400">Create a new discount coupon</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {services.map((service, i) => (
-                  <div key={i} className="flex items-center">
-                    <div className="w-8 text-center text-gray-400">{i + 1}.</div>
-                    <div className="flex-1 text-white">{service.title?.en || 'Unnamed Service'}</div>
-                    <div className="font-medium text-[#B4E90E]">Active</div>
-                  </div>
-                ))}
+                <div>
+                  <Input
+                    placeholder="Coupon Name"
+                    value={newCoupon.name}
+                    onChange={(e) => setNewCoupon({ ...newCoupon, name: e.target.value })}
+                    className="bg-[#1c2333] border-gray-700 text-white"
+                  />
+                </div>
+                <div>
+                  <Input
+                    type="number"
+                    placeholder="Discount Percentage"
+                    value={newCoupon.percentage}
+                    onChange={(e) => setNewCoupon({ ...newCoupon, percentage: e.target.value })}
+                    className="bg-[#1c2333] border-gray-700 text-white"
+                  />
+                </div>
+                <div>
+                  <Input
+                    type="date"
+                    value={newCoupon.expiryDate}
+                    onChange={(e) => setNewCoupon({ ...newCoupon, expiryDate: e.target.value })}
+                    className="bg-[#1c2333] border-gray-700 text-white"
+                  />
+                </div>
+                <Button
+                  onClick={handleAddCoupon}
+                  className="w-full bg-[#B4E90E] text-black hover:bg-[#9ed00c]"
+                >
+                  Add Coupon
+                </Button>
               </div>
             </CardContent>
           </Card>
 
           <Card className="bg-[#161b26] border-gray-800 p-2">
             <CardHeader>
-              <CardTitle className="text-[#B4E90E]">Active Sessions</CardTitle>
-              <CardDescription className="text-gray-400">Currently scheduled sessions</CardDescription>
+              <CardTitle className="text-[#B4E90E]">Active Coupons</CardTitle>
+              <CardDescription className="text-gray-400">Manage existing coupons</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {activeSessions.length > 0 ? (
-                  activeSessions.map((session, i) => (
-                    <div key={i} className="flex flex-col space-y-1 pb-3 border-b border-gray-800 last:border-0">
-                      <div className="flex justify-between">
-                        <span className="font-medium text-white">{getPackCategory(session.pack)} Session</span>
-                        <span className="text-sm text-[#B4E90E]">Scheduled</span>
-                      </div>
-                      <span className="text-sm text-gray-400">
-                        {new Date(session.sessionDate).toLocaleDateString()} • {session.sessionTime} • {session.location}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-gray-400 text-center py-4">No scheduled sessions at the moment</div>
+                {coupons.map((coupon) => (
+                  <div key={coupon._id} className="flex flex-col space-y-2 pb-3 border-b border-gray-800 last:border-0">
+                    {editingCoupon && editingCoupon._id === coupon._id ? (
+                      <>
+                        <Input
+                          value={editingCoupon.name}
+                          onChange={(e) => setEditingCoupon({ ...editingCoupon, name: e.target.value })}
+                          className="bg-[#1c2333] border-gray-700 text-white"
+                        />
+                        <Input
+                          type="number"
+                          value={editingCoupon.percentage}
+                          onChange={(e) => setEditingCoupon({ ...editingCoupon, percentage: e.target.value })}
+                          className="bg-[#1c2333] border-gray-700 text-white"
+                        />
+                        <Input
+                          type="date"
+                          value={editingCoupon.expiryDate}
+                          onChange={(e) => setEditingCoupon({ ...editingCoupon, expiryDate: e.target.value })}
+                          className="bg-[#1c2333] border-gray-700 text-white"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleUpdateCoupon(coupon._id)}
+                            className="flex-1 bg-[#B4E90E] text-black hover:bg-[#9ed00c]"
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            onClick={() => setEditingCoupon(null)}
+                            className="flex-1 bg-gray-600 hover:bg-gray-700"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-white">{coupon.name}</span>
+                          <span className="text-sm text-[#B4E90E]">{coupon.percentage}% OFF</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-400">
+                            Expires: {formatExpiryDate(coupon.expiryDate)}
+                          </span>
+                          <div className="space-x-2">
+                            <Button
+                              onClick={() => setEditingCoupon(coupon)}
+                              className="bg-blue-600 hover:bg-blue-700"
+                              size="sm"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              onClick={() => handleDeleteCoupon(coupon._id)}
+                              className="bg-red-600 hover:bg-red-700"
+                              size="sm"
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+                {coupons.length === 0 && (
+                  <div className="text-gray-400 text-center py-4">No active coupons</div>
                 )}
               </div>
             </CardContent>

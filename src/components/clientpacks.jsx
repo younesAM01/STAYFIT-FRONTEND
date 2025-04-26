@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSidebar } from "@/components/ui/sidebar"
 import { useLocale } from "next-intl"
 import { useAuth } from "@/context/authContext"
+import { Checkbox } from "@/components/ui/checkbox"
 
 
 export default function ClientPacksPage() {
@@ -31,6 +32,7 @@ export default function ClientPacksPage() {
     client: "",
     pack: "",
     packPrice: 0,
+    totalPrice: 0,
     expirationDate: "",
     remainingSessions: 0,
     purchaseState: "pending"
@@ -59,6 +61,7 @@ export default function ClientPacksPage() {
   const fetchClientName = async (clientId) => {
     try {
       if (!clientId) {
+        console.error('No client ID provided');
         return 'N/A';
       }
 
@@ -67,26 +70,30 @@ export default function ClientPacksPage() {
         return clientsCache[clientId];
       }
 
-      const response = await fetch(`/api/users?id=${clientId}`);
+      // Ensure we're using a string ID
+      const cleanClientId = String(clientId).replace(/['"]/g, '');
+      
+      // Debug log
+      console.log('Fetching client with ID:', cleanClientId);
+
+      const response = await fetch(`/api/users?id=${cleanClientId}`);
       
       if (!response.ok) {
-        if (response.status === 404) {
-          return 'N/A';
-        }
+        console.error('Failed to fetch client:', cleanClientId, 'Status:', response.status);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Error details:', errorData);
         return 'N/A';
       }
       
       const data = await response.json();
       
       if (!data || !data.firstName || !data.lastName) {
-        return 'N/A';
-      }
-      
-      if (data.role !== 'client') {
+        console.error('Invalid client data received:', data);
         return 'N/A';
       }
       
       const fullName = `${data.firstName} ${data.lastName}`;
+      
       // Cache the result
       setClientsCache(prev => ({
         ...prev,
@@ -95,6 +102,7 @@ export default function ClientPacksPage() {
       
       return fullName;
     } catch (err) {
+      console.error('Error fetching client name:', err, 'for ID:', clientId);
       return 'N/A';
     }
   };
@@ -113,49 +121,56 @@ export default function ClientPacksPage() {
       const packsWithNames = await Promise.all(
         data.map(async (pack) => {
           try {
+            // Ensure we have a valid client ID
+            if (!pack.client) {
+              console.error('Pack has no client ID:', pack);
+              return {
+                ...pack,
+                clientName: 'N/A',
+                pack: pack.pack
+              };
+            }
+
+            // Get client name
             const clientName = await fetchClientName(pack.client);
-            const today = new Date();
-            const expirationDate = new Date(pack.expirationDate);
-
-            // If pack is expired and still pending, update it to completed
-            if (expirationDate <= today && pack.purchaseState === 'pending') {
-              try {
-                const updateResponse = await fetch(`/api/client-pack?id=${pack._id}`, {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    ...pack,
-                    purchaseState: 'completed'
-                  })
-                });
-
-                if (!updateResponse.ok) {
-                  console.error('Failed to update expired pack status');
-                }
-              } catch (updateErr) {
-                console.error('Error updating expired pack:', updateErr);
+            
+            // Get pack details
+            const packId = typeof pack.pack === 'object' ? pack.pack._id : pack.pack;
+            let packDetails = null;
+            
+            if (packId) {
+              const packResponse = await fetch(`/api/packs?id=${packId}`);
+              if (packResponse.ok) {
+                packDetails = await packResponse.json();
+              } else {
+                console.error('Failed to fetch pack details for ID:', packId);
               }
             }
+
+            const today = new Date();
+            const expirationDate = new Date(pack.expirationDate);
 
             return {
               ...pack,
               clientName,
-              // Update the purchaseState in the UI if it's expired
+              pack: packDetails || pack.pack,
               purchaseState: expirationDate <= today ? 'completed' : pack.purchaseState
             };
           } catch (err) {
+            console.error('Error processing pack:', err, 'Pack data:', pack);
             return {
               ...pack,
-              clientName: 'N/A'
+              clientName: 'N/A',
+              pack: pack.pack
             };
           }
         })
       );
       
+      console.log('Fetched packs with client names:', packsWithNames);
       setClientPacks(packsWithNames);
     } catch (err) {
+      console.error('Error in fetchClientPacks:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -202,8 +217,13 @@ export default function ClientPacksPage() {
   };
 
   const getPackDisplayInfo = (pack) => {
-    if (!pack) return 'N/A'
-    return `${pack.category?.[locale]} - ${pack.sessions[0]?.sessionCount || 0} sessions`
+    if (!pack) return 'N/A';
+    // Handle both populated and unpopulated pack objects
+    if (typeof pack === 'object') {
+      return `${pack.category?.[locale]} - ${pack.sessions?.[0]?.sessionCount || 0} sessions`;
+    }
+    // If we just have the ID, return a simpler display
+    return `Pack ID: ${pack}`;
   }
 
   const getPendingCount = () => {
@@ -221,38 +241,28 @@ export default function ClientPacksPage() {
         throw new Error('Client and Package are required');
       }
 
-      if (!mongoUser?._id) {
-        throw new Error('User not authenticated');
-      }
-
-      // Calculate expiration date based on the selected pack's expirationDays
-      const selectedPack = packs.find(p => p._id === formData.pack);
-      const expirationDays = selectedPack?.sessions[0]?.expirationDays || 30;
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + expirationDays);
-
       const packData = {
         client: formData.client,
         pack: formData.pack,
         packPrice: formData.packPrice,
+        totalPrice: formData.totalPrice || formData.packPrice,
         remainingSessions: formData.remainingSessions,
         purchaseState: formData.purchaseState,
-        expirationDate: expirationDate.toISOString(),
+        expirationDate: new Date(formData.expirationDate).toISOString(),
         purchaseDate: new Date().toISOString()
       };
 
-      // Close the form immediately
       setShowAddForm(false);
       setFormData({
         client: "",
         pack: "",
         packPrice: 0,
+        totalPrice: 0,
         expirationDate: "",
         remainingSessions: 0,
         purchaseState: "pending"
       });
 
-      // Make the API call after closing the form
       const response = await fetch('/api/client-pack', {
         method: 'POST',
         headers: {
@@ -267,7 +277,6 @@ export default function ClientPacksPage() {
         throw new Error(data.message || 'Failed to add new pack');
       }
       
-      // Refresh the data after successful addition
       await fetchClientPacks();
     } catch (err) {
       console.error('Error adding new pack:', err);
@@ -347,14 +356,15 @@ export default function ClientPacksPage() {
     return clientPacks.filter((pack) => {
       const searchFields = [
         pack.clientName?.toLowerCase() || '',
-        pack.pack?.category?.[locale].toLowerCase() || '',
+        getPackDisplayInfo(pack.pack)?.toLowerCase() || '',
         String(pack.packPrice).toLowerCase(),
+        String(pack.totalPrice || pack.packPrice).toLowerCase(),
         pack.purchaseState?.toLowerCase() || '',
       ];
       const query = searchQuery.toLowerCase();
       return searchFields.some((field) => field.includes(query));
     });
-  }, [clientPacks, searchQuery, locale]);
+  }, [clientPacks, searchQuery]);
 
   if (error) {
     return (
@@ -415,9 +425,7 @@ export default function ClientPacksPage() {
               <Button 
                 variant="outline" 
                 className="bg-[#B4E90E] text-black hover:bg-[#A0D50C] cursor-pointer"
-                onClick={() => {
-                  setShowAddForm(true)
-                }}
+                onClick={() => setShowAddForm(true)}
               >
                 Add New
               </Button>
@@ -427,7 +435,9 @@ export default function ClientPacksPage() {
           <Card className="bg-gray-900 border-0">
             <CardHeader>
               <CardTitle className="text-white">Active Client Packages</CardTitle>
-              <CardDescription className="text-white/60">Manage all client packages and subscriptions</CardDescription>
+              <CardDescription className="text-white/60">
+                Manage all client packages and subscriptions
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -441,9 +451,11 @@ export default function ClientPacksPage() {
                       <tr className="border-b border-white/20">
                         <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/20">Client</th>
                         <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/20">Package</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/20">Price</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/20">Package Price</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/20">Total Price</th>
                         <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/20">Sessions Left</th>
                         <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/20">Status</th>
+                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/20">Purchase Date</th>
                         <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/20">Expiration</th>
                         <th className="h-10 px-4 text-right text-sm font-medium text-white/60">Actions</th>
                       </tr>
@@ -461,6 +473,9 @@ export default function ClientPacksPage() {
                             ${pack.packPrice}
                           </td>
                           <td className="p-4 text-sm text-white border-r border-white/20">
+                            ${pack.totalPrice || pack.packPrice}
+                          </td>
+                          <td className="p-4 text-sm text-white border-r border-white/20">
                             {pack.remainingSessions}
                           </td>
                           <td className="p-4 text-sm text-white border-r border-white/20">
@@ -471,6 +486,9 @@ export default function ClientPacksPage() {
                             }`}>
                               {pack.purchaseState}
                             </span>
+                          </td>
+                          <td className="p-4 text-sm text-white border-r border-white/20">
+                            {new Date(pack.purchaseDate).toLocaleDateString()}
                           </td>
                           <td className="p-4 text-sm text-white border-r border-white/20">
                             {new Date(pack.expirationDate).toLocaleDateString()}
@@ -488,16 +506,18 @@ export default function ClientPacksPage() {
                                 <DropdownMenuItem 
                                   className="text-white"
                                   onClick={() => {
-                                  setSelectedPack(pack)
-                                  setFormData({
-                                    client: pack.client,
-                                    pack: pack.pack?._id || pack.pack,
-                                    packPrice: pack.packPrice,
-                                    expirationDate: new Date(pack.expirationDate).toISOString().split('T')[0],
-                                    remainingSessions: pack.remainingSessions,
-                                    purchaseState: pack.purchaseState
-                                  })
-                                  setShowEditForm(true)
+                                    const packId = typeof pack.pack === 'object' ? pack.pack._id : pack.pack;
+                                    setSelectedPack(pack);
+                                    setFormData({
+                                      client: pack.client,
+                                      pack: packId,
+                                      packPrice: pack.packPrice,
+                                      totalPrice: pack.totalPrice || pack.packPrice,
+                                      expirationDate: new Date(pack.expirationDate).toISOString().split('T')[0],
+                                      remainingSessions: pack.remainingSessions,
+                                      purchaseState: pack.purchaseState
+                                    });
+                                    setShowEditForm(true);
                                   }}
                                 >
                                   Edit package
@@ -505,10 +525,10 @@ export default function ClientPacksPage() {
                                 <DropdownMenuSeparator className="bg-white/10" />
                                 <DropdownMenuItem 
                                   className="text-red-500"
-                                onClick={() => {
-                                  setSelectedPack(pack)
-                                  setShowDeleteDialog(true)
-                                }}
+                                  onClick={() => {
+                                    setSelectedPack(pack);
+                                    setShowDeleteDialog(true);
+                                  }}
                                 >
                                   Delete package
                                 </DropdownMenuItem>
@@ -528,184 +548,255 @@ export default function ClientPacksPage() {
 
       {/* Add Form Dialog */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Add New Client Package</DialogTitle>
             <DialogDescription className="text-white/60">
               Create a new package subscription for a client
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAddNewPack}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="client">Client</Label>
-                <Select
-                  value={formData.client}
-                  onValueChange={(value) => setFormData({...formData, client: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select client" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {clients.length > 0 ? (
-                      clients.map((client) => (
-                        <SelectItem key={client._id} value={client._id}>
-                          {client.fullName}
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
+            <form onSubmit={handleAddNewPack} className="space-y-4">
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="client">Client</Label>
+                  <Select
+                    value={formData.client}
+                    onValueChange={(value) => setFormData({...formData, client: value})}
+                  >
+                    <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                      <SelectValue placeholder="Select client" />
+                    </SelectTrigger>
+                    <SelectContent className="border-white/10">
+                      {clients.length > 0 ? (
+                        clients.map((client) => (
+                          <SelectItem key={client._id} value={client._id}>
+                            {client.fullName}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>
+                          No clients available
                         </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="" disabled>
-                        No clients available
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="pack">Package</Label>
+                  <Select
+                    value={formData.pack}
+                    onValueChange={(value) => {
+                      const selectedPack = packs.find(p => p._id === value);
+                      if (selectedPack) {
+                        const firstSession = selectedPack.sessions[0] || {};
+                        setFormData({
+                          ...formData,
+                          pack: value,
+                          packPrice: firstSession.price || 0,
+                          totalPrice: firstSession.price || 0,
+                          remainingSessions: firstSession.sessionCount || 0
+                        });
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                      <SelectValue placeholder="Select package" />
+                    </SelectTrigger>
+                    <SelectContent className="border-white/10">
+                      {packs.map((pack) => (
+                        <SelectItem key={pack._id} value={pack._id}>
+                          {`${pack.category?.[locale]} - ${pack.sessions[0]?.sessionCount || 0} sessions`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="packPrice">Package Price</Label>
+                    <Input
+                      id="packPrice"
+                      type="number"
+                      value={formData.packPrice}
+                      onChange={(e) => {
+                        const newPackPrice = parseFloat(e.target.value);
+                        setFormData({
+                          ...formData, 
+                          packPrice: newPackPrice,
+                          totalPrice: newPackPrice
+                        });
+                      }}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="totalPrice">Total Price</Label>
+                    <Input
+                      id="totalPrice"
+                      type="number"
+                      value={formData.totalPrice}
+                      onChange={(e) => setFormData({...formData, totalPrice: parseFloat(e.target.value)})}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="remainingSessions">Number of Sessions</Label>
+                    <Input
+                      id="remainingSessions"
+                      type="number"
+                      value={formData.remainingSessions}
+                      onChange={(e) => setFormData({...formData, remainingSessions: parseInt(e.target.value)})}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="expirationDate">Expiration Date</Label>
+                  <Input
+                    id="expirationDate"
+                    type="date"
+                    value={formData.expirationDate ? new Date(formData.expirationDate).toISOString().split('T')[0] : ''}
+                    onChange={(e) => setFormData({...formData, expirationDate: e.target.value})}
+                    className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="purchaseState">Status</Label>
+                  <Select
+                    value={formData.purchaseState}
+                    onValueChange={(value) => setFormData({...formData, purchaseState: value})}
+                  >
+                    <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent className="border-white/10">
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="pack">Package</Label>
-                <Select
-                  value={formData.pack}
-                  onValueChange={(value) => {
-                    const selectedPack = packs.find(p => p._id === value);
-                    if (selectedPack) {
-                      const firstSession = selectedPack.sessions[0] || {};
-                      setFormData({
-                        ...formData,
-                        pack: value,
-                        packPrice: firstSession.price || 0,
-                        remainingSessions: firstSession.sessionCount || 0
-                      });
-                    }
-                  }}
+              <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+                <Button 
+                  onClick={handleAddNewPack} 
+                  className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select package" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {packs.map((pack) => (
-                      <SelectItem key={pack._id} value={pack._id}>
-                        {`${pack.category?.[locale]} - ${pack.sessions[0]?.sessionCount || 0} sessions`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="packPrice">Price</Label>
-                <Input
-                  id="packPrice"
-                  type="number"
-                  value={formData.packPrice}
-                  onChange={(e) => setFormData({...formData, packPrice: parseFloat(e.target.value)})}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="remainingSessions">Number of Sessions</Label>
-                <Input
-                  id="remainingSessions"
-                  type="number"
-                  value={formData.remainingSessions}
-                  onChange={(e) => setFormData({...formData, remainingSessions: parseInt(e.target.value)})}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="purchaseState">Status</Label>
-                <Select
-                  value={formData.purchaseState}
-                  onValueChange={(value) => setFormData({...formData, purchaseState: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="bg-[#B4E90E] text-black hover:bg-[#A0D50C]">
-                Add Package
-              </Button>
-            </DialogFooter>
-          </form>
+                  Add Package
+                </Button>
+              </DialogFooter>
+            </form>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Edit Form Dialog */}
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Edit Client Package</DialogTitle>
             <DialogDescription className="text-white/60">
               Update the package subscription details
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleUpdatePack}>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="packPrice">Price</Label>
-                <Input
-                  id="packPrice"
-                  type="number"
-                  value={formData.packPrice}
-                  onChange={(e) => setFormData({...formData, packPrice: parseFloat(e.target.value)})}
-                  required
-                />
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
+            <form onSubmit={handleUpdatePack} className="space-y-4">
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="packPrice">Package Price</Label>
+                    <Input
+                      id="packPrice"
+                      type="number"
+                      value={formData.packPrice}
+                      onChange={(e) => {
+                        const newPackPrice = parseFloat(e.target.value);
+                        setFormData({
+                          ...formData, 
+                          packPrice: newPackPrice,
+                          totalPrice: newPackPrice
+                        });
+                      }}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="totalPrice">Total Price</Label>
+                    <Input
+                      id="totalPrice"
+                      type="number"
+                      value={formData.totalPrice}
+                      onChange={(e) => setFormData({...formData, totalPrice: parseFloat(e.target.value)})}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="remainingSessions">Remaining Sessions</Label>
+                    <Input
+                      id="remainingSessions"
+                      type="number"
+                      value={formData.remainingSessions}
+                      onChange={(e) => setFormData({...formData, remainingSessions: parseInt(e.target.value)})}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="expirationDate">Expiration Date</Label>
+                  <Input
+                    id="expirationDate"
+                    type="date"
+                    value={formData.expirationDate ? new Date(formData.expirationDate).toISOString().split('T')[0] : ''}
+                    onChange={(e) => setFormData({...formData, expirationDate: e.target.value})}
+                    className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="purchaseState">Status</Label>
+                  <Select
+                    value={formData.purchaseState}
+                    onValueChange={(value) => setFormData({...formData, purchaseState: value})}
+                  >
+                    <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent className="border-white/10">
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="remainingSessions">Remaining Sessions</Label>
-                <Input
-                  id="remainingSessions"
-                  type="number"
-                  value={formData.remainingSessions}
-                  onChange={(e) => setFormData({...formData, remainingSessions: parseInt(e.target.value)})}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="expirationDate">Expiration Date</Label>
-                <Input
-                  id="expirationDate"
-                  type="date"
-                  value={formData.expirationDate ? new Date(formData.expirationDate).toISOString().split('T')[0] : ''}
-                  onChange={(e) => setFormData({...formData, expirationDate: e.target.value})}
-                  required
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="purchaseState">Status</Label>
-                <Select
-                  value={formData.purchaseState}
-                  onValueChange={(value) => setFormData({...formData, purchaseState: value})}
+              <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+                <Button 
+                  onClick={handleUpdatePack} 
+                  className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors"
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="bg-[#B4E90E] text-black hover:bg-[#A0D50C]">
-                Update Package
-              </Button>
-            </DialogFooter>
-          </form>
+                  Update Package
+                </Button>
+              </DialogFooter>
+            </form>
+          </div>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white">
           <DialogHeader>
             <DialogTitle>Delete Package</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -717,13 +808,14 @@ export default function ClientPacksPage() {
               {error}
             </div>
           )}
-          <DialogFooter>
+          <DialogFooter className="mt-4 border-t border-white/10 pt-4">
             <Button
               variant="ghost"
               onClick={() => {
-                setShowDeleteDialog(false)
-                setError(null)
+                setShowDeleteDialog(false);
+                setError(null);
               }}
+              className="text-white hover:bg-gray-800"
             >
               Cancel
             </Button>

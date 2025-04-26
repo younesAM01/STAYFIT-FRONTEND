@@ -533,14 +533,14 @@ export default function CoachProfile() {
     !coachData?.certifications?.length;
 
   return (
-    <div className="min-h-screen bg-[#0d111a] text-white">
+    <div className="min-h-screen text-white">
       {/* Hero Section with Background */}
       <div className="relative h-[40vh] sm:h-[30vh] md:h-[60vh] lg:h-[60vh] overflow-hidden">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1 }}
-          className="absolute inset-0 bg-gradient-to-r from-[#0d111a] via-[#0d111a]/80 to-[#0d111a]/50 z-10"
+          className="absolute inset-0 bg-gradient-to-r from-[#0d111a] via-[#0d111a]/80 to-[#0d111a]/50 "
         ></motion.div>
         <div className="absolute inset-0 bg-[url('/placeholder.svg?height=1080&width=1920')] bg-cover bg-center"></div>
 

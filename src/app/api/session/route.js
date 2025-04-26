@@ -168,7 +168,16 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     await connectMongoDB();
-    const { id } = request.query;
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    
+    if (!id) {
+      return NextResponse.json(
+        { message: "Session ID is required" },
+        { status: 400 }
+      );
+    }
+
     const deletedSession = await Session.findByIdAndDelete(id);
     if (!deletedSession) {
       return NextResponse.json(
@@ -182,7 +191,7 @@ export async function DELETE(request) {
     );
   } catch (error) {
     return NextResponse.json(
-      { message: "Error deleting session", error },
+      { message: "Error deleting session", error: error.message },
       { status: 500 }
     );
   }

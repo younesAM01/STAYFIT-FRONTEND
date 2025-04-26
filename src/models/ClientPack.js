@@ -15,6 +15,15 @@ const ClientPackSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
+  totalPrice: {
+    type: Number,
+    required: false,
+  },
+  coupon: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Coupon', // Reference to the Coupon model
+    required: false
+  },
   purchaseDate: {
     type: Date,
     default: Date.now

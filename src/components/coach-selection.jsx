@@ -110,7 +110,7 @@ export default function CoachSelection({ onSelect }) {
               className="w-full bg-[#B4E90E] text-[#0d111a] hover:bg-[#a3d40c] font-semibold py-5 rounded-md shadow-lg shadow-[#B4E90E]/20 transition-all duration-300 hover:shadow-[#B4E90E]/30"
               onClick={() => onSelect(coach._id)}
             >
-              {t("selectCoach")}
+              {t("chooseCoach")}
             </Button>
           </CardFooter>
         </Card>

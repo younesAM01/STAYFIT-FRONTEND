@@ -313,14 +313,19 @@ export default function SessionsPage() {
         throw new Error(data.message || 'Failed to delete session')
       }
       
-      const data = await response.json()
-      console.log("Session deleted:", data)
-      
-      // Remove the deleted session from state
+      // Remove the deleted session from all relevant states
       setSessions(prevSessions => prevSessions.filter(session => session._id !== selectedSession._id))
       
+      // If the deleted session was being viewed in the calendar, clear it
+      if (selectedCalendarSession?._id === selectedSession._id) {
+        setSelectedCalendarSession(null)
+        setShowSessionInfo(false)
+      }
+      
+      // Close the delete dialog and clear selection
       setShowDeleteDialog(false)
       setSelectedSession(null)
+      setError(null)
     } catch (err) {
       console.error('Error deleting session:', err)
       setError(err.message)
@@ -975,314 +980,326 @@ export default function SessionsPage() {
 
       {/* Edit Form Dialog */}
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Edit Session</DialogTitle>
             <DialogDescription className="text-white/60">
               Update the session details
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleUpdateSession}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
+            <form onSubmit={handleUpdateSession} className="space-y-4">
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-client">Client</Label>
+                    <Select 
+                      value={formData.client} 
+                      onValueChange={(value) => setFormData({...formData, client: value})}
+                    >
+                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                        <SelectValue placeholder="Select client" />
+                      </SelectTrigger>
+                      <SelectContent className="border-white/10">
+                        {clients.map((client) => (
+                          <SelectItem key={client._id} value={client._id}>
+                            {client.firstName} {client.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-coach">Coach</Label>
+                    <Select 
+                      value={formData.coach} 
+                      onValueChange={(value) => setFormData({...formData, coach: value})}
+                    >
+                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                        <SelectValue placeholder="Select coach" />
+                      </SelectTrigger>
+                      <SelectContent className="border-white/10">
+                        {coaches.map((coach) => (
+                          <SelectItem key={coach._id} value={coach._id}>
+                            {coach.firstName} {coach.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-client">Client</Label>
+                  <Label htmlFor="edit-pack">Pack</Label>
                   <Select 
-                    value={formData.client} 
-                    onValueChange={(value) => setFormData({...formData, client: value})}
+                    value={formData.pack} 
+                    onValueChange={(value) => setFormData({...formData, pack: value})}
                   >
-                    <SelectTrigger className="bg-[#121212] border-white/10">
-                      <SelectValue placeholder="Select client" />
+                    <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                      <SelectValue placeholder="Select pack" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#1F1F1F] border-white/10">
-                      {clients.map((client) => (
-                        <SelectItem key={client._id} value={client._id}>
-                          {client.firstName} {client.lastName} 
+                    <SelectContent className="border-white/10">
+                      {packs.map((pack) => (
+                        <SelectItem key={pack._id} value={pack._id}>
+                          {pack.name || pack.category?.[locale]}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-coach">Coach</Label>
-                  <Select 
-                    value={formData.coach} 
-                    onValueChange={(value) => setFormData({...formData, coach: value})}
-                  >
-                    <SelectTrigger className="bg-[#121212] border-white/10">
-                      <SelectValue placeholder="Select coach" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1F1F1F] border-white/10">
-                      {coaches.map((coach) => (
-                        <SelectItem key={coach._id} value={coach._id}>
-                          {coach.firstName} {coach.lastName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-sessionDate">Date</Label>
+                    <Input
+                      id="edit-sessionDate"
+                      type="date"
+                      value={formData.sessionDate}
+                      onChange={(e) => setFormData({...formData, sessionDate: e.target.value})}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-sessionTime">Time</Label>
+                    <Input
+                      id="edit-sessionTime"
+                      type="time"
+                      value={formData.sessionTime}
+                      onChange={(e) => setFormData({...formData, sessionTime: e.target.value})}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-pack">Pack</Label>
-                <Select 
-                  value={formData.pack} 
-                  onValueChange={(value) => setFormData({...formData, pack: value})}
-                >
-                  <SelectTrigger className="bg-[#121212] border-white/10">
-                    <SelectValue placeholder="Select pack" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1F1F1F] border-white/10">
-                    {packs.map((pack) => (
-                      <SelectItem key={pack._id} value={pack._id}>
-                        {pack.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-sessionDate">Date</Label>
+                  <Label htmlFor="edit-location">Location</Label>
                   <Input
-                    id="edit-sessionDate"
-                    type="date"
-                    value={formData.sessionDate}
-                    onChange={(e) => setFormData({...formData, sessionDate: e.target.value})}
-                    className="bg-[#121212] border-white/10"
+                    id="edit-location"
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                    placeholder="Gym A, Room 2 or Online (Zoom)"
                     required
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-sessionTime">Time</Label>
-                  <Input
-                    id="edit-sessionTime"
-                    type="time"
-                    value={formData.sessionTime}
-                    onChange={(e) => setFormData({...formData, sessionTime: e.target.value})}
-                    className="bg-[#121212] border-white/10"
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-duration">Duration (minutes)</Label>
+                    <Input
+                      id="edit-duration"
+                      type="number"
+                      value={formData.duration}
+                      onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value)})}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      min="15"
+                      step="15"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-status">Status</Label>
+                    <Select 
+                      value={formData.status} 
+                      onValueChange={(value) => setFormData({...formData, status: value})}
+                    >
+                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent className="border-white/10">
+                        <SelectItem value="scheduled">Scheduled</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="canceled">Canceled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-location">Location</Label>
-                <Input
-                  id="edit-location"
-                  value={formData.location}
-                  onChange={(e) => setFormData({...formData, location: e.target.value})}
-                  className="bg-[#121212] border-white/10"
-                  placeholder="Gym A, Room 2 or Online (Zoom)"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-duration">Duration (minutes)</Label>
-                  <Input
-                    id="edit-duration"
-                    type="number"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value)})}
-                    className="bg-[#121212] border-white/10"
-                    min="15"
-                    step="15"
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-status">Status</Label>
-                  <Select 
-                    value={formData.status} 
-                    onValueChange={(value) => setFormData({...formData, status: value})}
-                  >
-                    <SelectTrigger className="bg-[#121212] border-white/10">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1F1F1F] border-white/10">
-                      <SelectItem value="scheduled">Scheduled</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="canceled">Canceled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="bg-white text-black hover:bg-gray-100">
+            </form>
+            <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+              <Button 
+                onClick={handleUpdateSession}
+                className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors"
+              >
                 Update Session
               </Button>
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Delete Session</DialogTitle>
             <DialogDescription className="text-white/60">
               Are you sure you want to delete this session? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setShowDeleteDialog(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteSession}
-              className="bg-red-500 hover:bg-red-600"
-            >
-              Delete
-            </Button>
-          </DialogFooter>
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
+            <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+              <Button
+                variant="ghost"
+                onClick={() => setShowDeleteDialog(false)}
+                className="hover:bg-gray-800 text-white"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleDeleteSession}
+                className="bg-red-500 hover:bg-red-600 text-white transition-colors"
+              >
+                Delete Session
+              </Button>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Add Form Dialog */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Add New Session</DialogTitle>
             <DialogDescription className="text-white/60">
               Schedule a new training session
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAddSession}>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
+            <form onSubmit={handleAddSession} className="space-y-4">
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="client">Client</Label>
+                    <Select 
+                      value={formData.client} 
+                      onValueChange={(value) => setFormData({...formData, client: value})}
+                    >
+                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                        <SelectValue placeholder="Select client" />
+                      </SelectTrigger>
+                      <SelectContent className="border-white/10">
+                        {clients.map((client) => (
+                          <SelectItem key={client._id} value={client._id}>
+                            {client.firstName} {client.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="coach">Coach</Label>
+                    <Select 
+                      value={formData.coach} 
+                      onValueChange={(value) => setFormData({...formData, coach: value})}
+                    >
+                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                        <SelectValue placeholder="Select coach" />
+                      </SelectTrigger>
+                      <SelectContent className="border-white/10">
+                        {coaches.map((coach) => (
+                          <SelectItem key={coach._id} value={coach._id}>
+                            {coach.firstName} {coach.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="client">Client</Label>
+                  <Label htmlFor="pack">Pack</Label>
                   <Select 
-                    value={formData.client} 
-                    onValueChange={(value) => setFormData({...formData, client: value})}
+                    value={formData.pack} 
+                    onValueChange={(value) => setFormData({...formData, pack: value})}
                   >
-                    <SelectTrigger className="bg-[#121212] border-white/10">
-                      <SelectValue placeholder="Select client" />
+                    <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                      <SelectValue placeholder="Select pack" />
                     </SelectTrigger>
-                    <SelectContent className="bg-[#1F1F1F] border-white/10">
-                      {clients.map((client) => (
-                        <SelectItem key={client._id} value={client._id}>
-                          {client.firstName} {client.lastName}
+                    <SelectContent className="border-white/10">
+                      {packs.map((pack) => (
+                        <SelectItem key={pack._id} value={pack._id}>
+                          {pack.name || pack.category?.[locale]}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="coach">Coach</Label>
-                  <Select 
-                    value={formData.coach} 
-                    onValueChange={(value) => setFormData({...formData, coach: value})}
-                  >
-                    <SelectTrigger className="bg-[#121212] border-white/10">
-                      <SelectValue placeholder="Select coach" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1F1F1F] border-white/10">
-                      {coaches.map((coach) => (
-                        <SelectItem key={coach._id} value={coach._id}>
-                          {coach.firstName} {coach.lastName} 
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="sessionDate">Date</Label>
+                    <Input
+                      id="sessionDate"
+                      type="date"
+                      value={formData.sessionDate}
+                      onChange={(e) => setFormData({...formData, sessionDate: e.target.value})}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="sessionTime">Time</Label>
+                    <Input
+                      id="sessionTime"
+                      type="time"
+                      value={formData.sessionTime}
+                      onChange={(e) => setFormData({...formData, sessionTime: e.target.value})}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      required
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="pack">Pack</Label>
-                <Select 
-                  value={formData.pack} 
-                  onValueChange={(value) => setFormData({...formData, pack: value})}
-                >
-                  <SelectTrigger className="bg-[#121212] border-white/10">
-                    <SelectValue placeholder="Select pack" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[#1F1F1F] border-white/10">
-                    {packs.map((pack) => (
-                      <SelectItem key={pack._id} value={pack._id}>
-                        {pack.name || pack.category?.[locale]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="sessionDate">Date</Label>
+                  <Label htmlFor="location">Location</Label>
                   <Input
-                    id="sessionDate"
-                    type="date"
-                    value={formData.sessionDate}
-                    onChange={(e) => setFormData({...formData, sessionDate: e.target.value})}
-                    className="bg-[#121212] border-white/10"
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                    placeholder="Gym A, Room 2 or Online (Zoom)"
                     required
                   />
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="sessionTime">Time</Label>
-                  <Input
-                    id="sessionTime"
-                    type="time"
-                    value={formData.sessionTime}
-                    onChange={(e) => setFormData({...formData, sessionTime: e.target.value})}
-                    className="bg-[#121212] border-white/10"
-                    required
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="duration">Duration (minutes)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={formData.duration}
+                      onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value)})}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      min="15"
+                      step="15"
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="status">Status</Label>
+                    <Select 
+                      value={formData.status} 
+                      onValueChange={(value) => setFormData({...formData, status: value})}
+                    >
+                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent className="border-white/10">
+                        <SelectItem value="scheduled">Scheduled</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="canceled">Canceled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="location">Location</Label>
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) => setFormData({...formData, location: e.target.value})}
-                  className="bg-[#121212] border-white/10"
-                  placeholder="Gym A, Room 2 or Online (Zoom)"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="duration">Duration (minutes)</Label>
-                  <Input
-                    id="duration"
-                    type="number"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value)})}
-                    className="bg-[#121212] border-white/10"
-                    min="15"
-                    step="15"
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select 
-                    value={formData.status} 
-                    onValueChange={(value) => setFormData({...formData, status: value})}
-                  >
-                    <SelectTrigger className="bg-[#121212] border-white/10">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#1F1F1F] border-white/10">
-                      <SelectItem value="scheduled">Scheduled</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                      <SelectItem value="canceled">Canceled</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit" className="bg-white text-black hover:bg-gray-100">
+            </form>
+            <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+              <Button 
+                onClick={handleAddSession}
+                className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors"
+              >
                 Add Session
               </Button>
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
