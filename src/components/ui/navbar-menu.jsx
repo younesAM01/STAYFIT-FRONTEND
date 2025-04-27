@@ -9,7 +9,6 @@ import { useTranslations, useLocale } from "next-intl";
 import LocaleDropdown from "../local-dropdown";
 import logo from "@/assets/stayfit11.png";
 import { useAuth } from "@/context/authContext";
-import { useParams } from "next/navigation";
 
 const transition = {
   type: "spring",

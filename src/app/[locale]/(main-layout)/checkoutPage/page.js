@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Apple, CreditCard, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,13 +11,17 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/authContext";
 import { useLocale, useTranslations } from "next-intl";
+import {
+  useGetClientPackByClientIdQuery,
+  useUpdateClientPackMutation,
+} from "@/redux/services/clientpack.service";
+
 export default function CheckoutPage() {
   const t = useTranslations("CheckoutPage");
   const locale = useLocale();
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [clientPack, setClientPack] = useState(null);
   const [packDetails, setPackDetails] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const {
     user,
     mongoUser,
@@ -26,150 +29,62 @@ export default function CheckoutPage() {
     isLoading: authLoading,
   } = useAuth();
   const router = useRouter(); // Initialize router
-  console.log(mongoUser);
+  const id = mongoUser?._id;
+  const {
+    data,
+    isLoading: isQueryLoading,
+    isError,
+    error,
+  } = useGetClientPackByClientIdQuery(id);
+  const [
+    updateClientPack,
+    { isSuccess: isUpdateSuccess, isError: isUpdateError, error: updateError },
+  ] = useUpdateClientPackMutation();
 
-  // Fetch client pack when mongoUser is available
   useEffect(() => {
-    const fetchClientPack = async () => {
-      if (mongoUser && mongoUser._id) {
-        try {
-          setIsLoading(true);
-          const response = await fetch(
-            `/api/client-pack?clientId=${mongoUser._id}`
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            setClientPack(data);
-          } else {
-            console.error("Failed to fetch client pack:", response.status);
-          }
-        } catch (error) {
-          console.error("Error fetching client pack:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchClientPack();
-  }, [mongoUser]);
-
-  // Get the most recent client pack (if there are multiple packs)
-  function getLastClientPack(clientPacks) {
-    if (!Array.isArray(clientPacks) || clientPacks.length === 0) {
-      return null;
+    setClientPack(data?.clientPack);
+    if (data?.clientPack?.length > 0) {
+      const lastPack = [...data.clientPack].sort(
+        (a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate)
+      )[0];
+      setPackDetails(lastPack);
     }
+  }, [data]);
 
-    const sortedClientPacks = clientPacks.sort(
-      (a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate)
-    );
-    return sortedClientPacks[0];
-  }
-
-  // Use the most recent client pack for the session
-  const selectedPack = clientPack ? getLastClientPack(clientPack) : null;
-  console.log(selectedPack);
-
-  // Fetch pack details when selectedPack is available
+  // Add effect to handle successful update
   useEffect(() => {
-    const fetchPackDetails = async () => {
-      if (selectedPack && selectedPack.pack) {
-        try {
-          setIsLoading(true);
-          const response = await fetch(
-            `/api/packs?id=${selectedPack.pack._id}`
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            setPackDetails(data);
-          } else {
-            console.log(response);
-          }
-        } catch (error) {
-          console.error("Error fetching pack details:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchPackDetails();
-  }, [selectedPack]);
-
-  // Calculate days left until expiration
-  const getDaysLeft = (expirationDate) => {
-    if (!expirationDate) return 0;
-
-    const expDate = new Date(expirationDate);
-    const today = new Date();
-    const diffTime = expDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays > 0 ? diffDays : 0;
-  };
+    if (isUpdateSuccess) {
+      router.push("/");
+    }
+    if (isUpdateError) {
+      console.log(updateError);
+    }
+  }, [isUpdateSuccess, isUpdateError, updateError, router]);
 
   const handleCancel = async () => {
-    if (selectedPack && selectedPack._id) {
-      try {
-        const response = await fetch(
-          `/api/client-pack?id=${selectedPack._id}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ purchaseState: "cancelled" }),
-          }
-        );
-
-        if (response.ok) {
-          router.push("/"); // Navigate to home after cancellation
-        } else {
-          console.error("Failed to cancel client pack:", response.status);
-        }
-      } catch (error) {
-        console.error("Error cancelling client pack:", error);
-      }
+    try {
+      await updateClientPack({
+        id: packDetails?._id,
+        purchaseState: "cancelled",
+      });
+    } catch (err) {
+      console.error("Error cancelling purchase:", err);
     }
   };
 
   const handleCompletePurchase = async () => {
-    // Simulate a fake payment process
-    setIsLoading(true);
-    setTimeout(async () => {
-      try {
-        if (selectedPack && selectedPack._id) {
-          const response = await fetch(
-            `/api/client-pack?id=${selectedPack._id}`,
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ purchaseState: "completed" }),
-            }
-          );
-
-          if (response.ok) {
-            router.push(`/${locale}/client-profile`); // Navigate to home after completion
-          } else {
-            console.error("Failed to complete purchase:", response.status);
-          }
-        }
-      } catch (error) {
-        console.error("Error completing purchase:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 2000); // Simulate a 2-second payment processing time
+    try {
+      await updateClientPack({
+        id: packDetails?._id,
+        purchaseState: "completed",
+      });
+    } catch (err) {
+      console.error("Error completing purchase:", err);
+    }
   };
-
-  if (!selectedPack || !packDetails) {
-    return <div>Loading...</div>; // Display loading if clientPack or packDetails is not available
+  if (isQueryLoading) {
+    return <div>Loading...</div>;
   }
-
   return (
     <div className="min-h-screen text-white md:mt-16 lg:mt-22 p-2 md:p-6">
       <div className="container mx-auto py-8 px-4">
@@ -180,11 +95,12 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Client Information - Left Side */}
           <div>
-           
             <Card className="bg-[#161a26] border-[#2a2f3d] p-6 mb-6">
-            <h2 className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
-              {t("yourInformation")}
-            </h2>
+              <h2
+                className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === "ar" ? "text-right" : ""}`}
+              >
+                {t("yourInformation")}
+              </h2>
               <div className="space-y-4">
                 {/* Client's Personal Info Fields */}
                 <div className="grid grid-cols-2 gap-4">
@@ -259,40 +175,59 @@ export default function CheckoutPage() {
             </Card>
 
             {/* Selected Package Information */}
-            
             <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
-            <h2 className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
-              {t("yourSelectedPackage")}
-            </h2>
-              <div className=" p-4 bg-[#0d111a] rounded-lg border border-[#2a2f3d]">
+              <h2
+                className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === "ar" ? "text-right" : ""}`}
+              >
+                {t("yourSelectedPackage")}
+              </h2>
+              <div className="p-4 bg-[#0d111a] rounded-lg border border-[#2a2f3d]">
                 <div className="flex justify-between items-center mb-2">
-                  <span className={`font-medium text-[#B4E90E] ${locale === 'ar' ? 'order-2' : ''}`}>
-                    {packDetails.category?.[locale]}
+                  <span
+                    className={`font-medium text-[#B4E90E] ${locale === "ar" ? "order-2" : ""}`}
+                  >
+                    {packDetails?.pack?.category?.[locale] || "Package Name"}
                   </span>
-                  <div className={`bg-[#B4E90E] text-[#0d111a] px-3 py-1 rounded-full text-sm font-medium ${locale === 'ar' ? 'order-1' : ''}`}>
-                    {selectedPack?.remainingSessions} {t('sessions')}
+                  <div
+                    className={`bg-[#B4E90E] text-[#0d111a] px-3 py-1 rounded-full text-sm font-medium ${locale === "ar" ? "order-1" : ""}`}
+                  >
+                    {packDetails?.remainingSessions || 0} {t("sessions")}
                   </div>
                 </div>
-                <div className={`flex gap-1 text-sm text-gray-300 mb-2 ${locale === 'ar' ? 'flex-row-reverse' : ''}`}>
-                  <span>{t('price')} </span>
-                  <span> {selectedPack?.packPrice}</span> {t('currency')}
+                <div
+                  className={`flex gap-1 text-sm text-gray-300 mb-2 ${locale === "ar" ? "flex-row-reverse" : ""}`}
+                >
+                  <span>{t("price")}</span>
+                  <span>{packDetails?.packPrice || 0}</span> {t("currency")}
                 </div>
-                <div className={`text-sm text-gray-300 ${locale === 'ar' ? 'text-right' : ''}`}>
-                  {t('expiresIn')} {getDaysLeft(selectedPack?.expirationDate)} {t('days')}
+                <div
+                  className={`text-sm text-gray-300 ${locale === "ar" ? "text-right" : ""}`}
+                >
+                  {t("expiresIn")} {packDetails?.daysBeforeExpiring || 0}{" "}
+                  {t("days")}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <h3 className={`text-[#B4E90E] font-medium mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
-                    {t('packageFeatures')}
+                <h3
+                  className={`text-[#B4E90E] font-medium mb-2 ${locale === "ar" ? "text-right" : ""}`}
+                >
+                  {t("packageFeatures")}
                 </h3>
                 <ul className="space-y-2">
-                  {packDetails.features[locale].map((feature, index) => (
-                    <li key={index} className={`flex items-start ${locale === 'ar' ? 'flex-row-reverse' : ''}`}>
-                      <CheckCircle className={`h-5 w-5 text-[#B4E90E] flex-shrink-0 mt-0.5 ${locale === 'ar' ? 'ml-2' : 'mr-2'}`} />
-                      <span className="text-gray-300 text-sm">{feature}</span>
-                    </li>
-                  ))}
+                  {packDetails?.pack?.features?.[locale]?.map(
+                    (feature, index) => (
+                      <li
+                        key={index}
+                        className={`flex items-start ${locale === "ar" ? "flex-row-reverse" : ""}`}
+                      >
+                        <CheckCircle
+                          className={`h-5 w-5 text-[#B4E90E] flex-shrink-0 mt-0.5 ${locale === "ar" ? "ml-2" : "mr-2"}`}
+                        />
+                        <span className="text-gray-300 text-sm">{feature}</span>
+                      </li>
+                    )
+                  )}
                 </ul>
               </div>
             </Card>
@@ -300,10 +235,11 @@ export default function CheckoutPage() {
 
           {/* Payment Information - Right Side */}
           <div>
-           
             <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
-              <h2 className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
-                {t('paymentMethod')}
+              <h2
+                className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === "ar" ? "text-right" : ""}`}
+              >
+                {t("paymentMethod")}
               </h2>
               <RadioGroup
                 value={paymentMethod}
@@ -322,7 +258,7 @@ export default function CheckoutPage() {
                       className="text-gray-300 flex items-center"
                     >
                       <CreditCard className="mr-2 h-4 w-4" />
-                      {t('creditCard')}
+                      {t("creditCard")}
                     </Label>
                   </div>
 
@@ -337,7 +273,7 @@ export default function CheckoutPage() {
                       className="text-gray-300 flex items-center"
                     >
                       <Apple className="mr-2 h-4 w-4" />
-                      {t('applePay')}
+                      {t("applePay")}
                     </Label>
                   </div>
                 </div>
@@ -347,7 +283,7 @@ export default function CheckoutPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="cardName" className="text-gray-300">
-                      {t('nameOnCard')}
+                      {t("nameOnCard")}
                     </Label>
                     <Input
                       id="cardName"
@@ -358,7 +294,7 @@ export default function CheckoutPage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="cardNumber" className="text-gray-300">
-                      {t('cardNumber')}
+                      {t("cardNumber")}
                     </Label>
                     <Input
                       id="cardNumber"
@@ -370,7 +306,7 @@ export default function CheckoutPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="expiry" className="text-gray-300">
-                        {t('expiryDate')}
+                        {t("expiryDate")}
                       </Label>
                       <Input
                         id="expiry"
@@ -394,45 +330,62 @@ export default function CheckoutPage() {
                 <div className="flex justify-center">
                   <Button className="w-full py-6 bg-black hover:bg-gray-900 text-white border border-gray-700 flex items-center justify-center">
                     <Apple className="mr-2 h-5 w-5" />
-                    {t('applePay')}
+                    {t("applePay")}
                   </Button>
                 </div>
               )}
             </Card>
-
             <div className="mt-16">
               <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
-                <h3 className={`text-[#B4E90E] font-medium mb-4 ${locale === 'ar' ? 'text-right' : ''}`}>
-                  {t('orderSummary')}
+                <h3
+                  className={`text-[#B4E90E] font-medium mb-4 ${locale === "ar" ? "text-right" : ""}`}
+                >
+                  {t("orderSummary")}
                 </h3>
 
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-gray-300">
-                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('packName')}</span>
-                    <span className={locale === 'ar' ? 'order-1' : ''}>{packDetails.category?.[locale]}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-300">
-                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('sessions')}</span>
-                    <span className={locale === 'ar' ? 'order-1' : ''}>{selectedPack?.remainingSessions}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-300">
-                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('validity')}</span>
-                    <span className={locale === 'ar' ? 'order-1' : ''}>
-                      {getDaysLeft(selectedPack?.expirationDate)} {t('days')}
+                    <span className={locale === "ar" ? "order-2" : ""}>
+                      {t("packName")}
+                    </span>
+                    <span className={locale === "ar" ? "order-1" : ""}>
+                      {packDetails?.pack?.category?.[locale] || "Premium Pack"}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-300">
-                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('packPrice')}</span>
-                    <span className={locale === 'ar' ? 'order-1' : ''}>{selectedPack?.packPrice} RS</span>
+                    <span className={locale === "ar" ? "order-2" : ""}>
+                      {t("sessions")}
+                    </span>
+                    <span className={locale === "ar" ? "order-1" : ""}>
+                      {packDetails?.remainingSessions || 0}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-gray-300">
+                    <span className={locale === "ar" ? "order-2" : ""}>
+                      {t("validity")}
+                    </span>
+                    <span className={locale === "ar" ? "order-1" : ""}>
+                      {packDetails?.daysBeforeExpiring || 0} {t("days")}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-gray-300">
+                    <span className={locale === "ar" ? "order-2" : ""}>
+                      {t("packPrice")}
+                    </span>
+                    <span className={locale === "ar" ? "order-1" : ""}>
+                      {packDetails?.packPrice || 0} {t("currency")}
+                    </span>
                   </div>
                 </div>
 
                 <Separator className="my-4 bg-[#2a2f3d]" />
 
                 <div className="flex justify-between text-gray-300 font-bold">
-                  <span className={locale === 'ar' ? 'order-2' : ''}>{t('total')}</span>
-                  <span className={locale === 'ar' ? 'order-1' : ''}>
-                    {selectedPack?.packPrice} RS
+                  <span className={locale === "ar" ? "order-2" : ""}>
+                    {t("total")}
+                  </span>
+                  <span className={locale === "ar" ? "order-1" : ""}>
+                    {packDetails?.packPrice || 0} {t("currency")}
                   </span>
                 </div>
               </Card>
@@ -442,13 +395,13 @@ export default function CheckoutPage() {
                   onClick={handleCancel}
                   className="w-1/2 bg-red-500 hover:bg-red-500 text-white font-bold py-3"
                 >
-                  {t('cancel')}
+                  {t("cancel")}
                 </Button>
                 <Button
                   onClick={handleCompletePurchase}
                   className="w-1/2 bg-[#B4E90E] hover:bg-[#a3d00d] text-[#0d111a] font-bold py-3"
                 >
-                  {t('completePurchase')}
+                  {t("completePurchase")}
                 </Button>
               </div>
             </div>

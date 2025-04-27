@@ -76,7 +76,7 @@ export function AuthProvider({ children }) {
         const {
           data: { session },
         } = await supabase.auth.getSession();
-
+        console.log(session);
         if (session?.user) {
           setUser(session.user);
           // Fetch MongoDB user data using Supabase ID
