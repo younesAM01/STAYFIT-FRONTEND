@@ -197,7 +197,24 @@
     "cannotCancel": "لا يمكن إلغاء",
     "session12HourRule": "يجب إلغاء الجلسات قبل ١٢ ساعة على الأقل. في حال الإلغاء المتأخر أو عدم الحضور، سيتم خصم قيمة الجلسة من باقتك.",
     "cancellationPolicy": "سياسة الإلغاء",
-    "cancellationPolicyInfo": "يجب إلغاء الجلسات قبل ١٢ ساعة على الأقل. في حال الإلغاء المتأخر أو عدم الحضور، سيتم خصم قيمة الجلسة من باقتك."
+    "cancellationPolicyInfo": "يجب إلغاء الجلسات قبل ١٢ ساعة على الأقل. في حال الإلغاء المتأخر أو عدم الحضور، سيتم خصم قيمة الجلسة من باقتك.",
+    "finishSession": "إنهاء",
+    "sessionCompleted": "تم إكمال الجلسة بنجاح!",
+    "failedToFinishSession": "فشل في إنهاء الجلسة. يرجى المحاولة مرة أخرى.",
+    "ok": "موافق",
+    "finishedSessions": "الجلسات المنتهية",
+    "noFinishedSessions": "لا توجد جلسات منتهية حتى الآن",
+    "completed": "مكتملة",
+    "coach": "المدرب",
+    "sessionStatus": {
+      "upcoming": "قادمة",
+      "pending": "معلقة",
+      "finished": "منتهية"
+    },
+    "confirmFinishSession": "تأكيد إكمال الجلسة",
+    "confirmFinishSessionMessage": "هل أنت متأكد أنك تريد وضع علامة اكتمال على هذه الجلسة؟",
+    "keepSessionOpen": "إبقاء الجلسة مفتوحة",
+    "confirmFinish": "نعم، أكمل الجلسة"
   },
   "BookingPage": {
     "title": "حجز جلسة",

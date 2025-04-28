@@ -136,17 +136,19 @@ export async function PUT(request) {
     if (
       updatedSession.packId &&
       originalSession &&
-      originalSession.status !== updatedSession.status
+      (originalSession.status !== updatedSession.status ||
+       originalSession.sessionStatus !== updatedSession.sessionStatus)
     ) {
-      // If session was cancelled or completed, we may need to update the pack
+      // If session was cancelled or completed, or finished, we may need to update the pack
       if (
         updatedSession.status === "cancelled" ||
-        updatedSession.status === "completed"
+        updatedSession.status === "completed" ||
+        updatedSession.sessionStatus === "finished"
       ) {
         const clientPack = await ClientPack.findById(updatedSession.packId);
 
         if (clientPack) {
-          // If this was the last session and it's been completed, update isActive
+          // If this was the last session and it's been completed/finished, update isActive
           if (clientPack.remainingSessions === 0) {
             await ClientPack.findByIdAndUpdate(updatedSession.packId, {
               isActive: false,

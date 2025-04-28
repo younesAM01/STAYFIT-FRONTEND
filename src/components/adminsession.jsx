@@ -64,7 +64,69 @@ export default function SessionsPage() {
     };
     
     loadData();
-  }, [])
+  }, []);
+
+  // Separate useEffect for handling automatic pending status
+  useEffect(() => {
+    if (!sessions.length) return;
+
+    const updatePendingSessions = async () => {
+      const now = new Date();
+      const currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes
+
+      sessions.forEach(async (session) => {
+        if (session.sessionStatus === 'upcoming' && session.status === 'scheduled') {
+          const sessionDate = new Date(session.sessionDate);
+          const [hours, minutes] = session.sessionTime.split(':').map(Number);
+          const sessionTimeInMinutes = hours * 60 + minutes;
+          
+          // Check if session is today and time has arrived
+          if (sessionDate.toDateString() === now.toDateString() && 
+              sessionTimeInMinutes <= currentTime) {
+            try {
+              const response = await fetch(`/api/session?id=${session._id}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  sessionStatus: 'pending',
+                  status: 'scheduled'
+                })
+              });
+
+              if (response.ok) {
+                setSessions(prevSessions =>
+                  prevSessions.map(s =>
+                    s._id === session._id
+                      ? { ...s, sessionStatus: 'pending' }
+                      : s
+                  )
+                );
+
+                if (selectedCalendarSession?._id === session._id) {
+                  setSelectedCalendarSession(prev => ({
+                    ...prev,
+                    sessionStatus: 'pending'
+                  }));
+                }
+              }
+            } catch (error) {
+              console.error('Error updating session status:', error);
+            }
+          }
+        }
+      });
+    };
+
+    // Initial check
+    updatePendingSessions();
+
+    // Set up interval to check every minute
+    const intervalId = setInterval(updatePendingSessions, 60000);
+
+    return () => clearInterval(intervalId);
+  }, [sessions, selectedCalendarSession]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -215,6 +277,25 @@ export default function SessionsPage() {
         throw new Error('No session selected for update')
       }
 
+      // Determine the session status based on the new time
+      const now = new Date();
+      const sessionDate = new Date(formData.sessionDate);
+      const [hours, minutes] = formData.sessionTime.split(':').map(Number);
+      const sessionTimeInMinutes = hours * 60 + minutes;
+      const currentTime = now.getHours() * 60 + now.getMinutes();
+      
+      // If session is today, check if it should be pending or upcoming
+      let newSessionStatus = formData.sessionStatus;
+      if (sessionDate.toDateString() === now.toDateString()) {
+        if (sessionTimeInMinutes <= currentTime) {
+          newSessionStatus = 'pending';
+        } else {
+          newSessionStatus = 'upcoming';
+        }
+      } else if (sessionDate > now) {
+        newSessionStatus = 'upcoming';
+      }
+
       // Create an object with only the changed fields
       const changedFields = {}
       Object.keys(formData).forEach(key => {
@@ -222,6 +303,11 @@ export default function SessionsPage() {
           changedFields[key] = formData[key]
         }
       })
+
+      // Add sessionStatus if it needs to be updated
+      if (newSessionStatus !== selectedSession.sessionStatus) {
+        changedFields.sessionStatus = newSessionStatus;
+      }
 
       // If no fields were changed, return early
       if (Object.keys(changedFields).length === 0) {
@@ -236,7 +322,8 @@ export default function SessionsPage() {
         },
         body: JSON.stringify({
           ...changedFields,
-          sessionDate: formData.sessionDate ? new Date(formData.sessionDate).toISOString() : undefined
+          sessionDate: formData.sessionDate ? new Date(formData.sessionDate).toISOString() : undefined,
+          sessionStatus: newSessionStatus // Include the new status
         })
       })
       
@@ -254,8 +341,9 @@ export default function SessionsPage() {
             ? {
                 ...session,
                 ...changedFields,
-                sessionDate: formData.sessionDate, // Ensure the date is updated
-                sessionTime: formData.sessionTime, // Ensure the time is updated
+                sessionDate: formData.sessionDate,
+                sessionTime: formData.sessionTime,
+                sessionStatus: newSessionStatus,
                 client: updatedSession.client || session.client,
                 coach: updatedSession.coach || session.coach,
                 pack: updatedSession.pack || session.pack
@@ -275,15 +363,16 @@ export default function SessionsPage() {
         setSelectedCalendarSession(prev => ({
           ...prev,
           ...changedFields,
-          sessionDate: formData.sessionDate, // Ensure the date is updated
-          sessionTime: formData.sessionTime, // Ensure the time is updated
+          sessionDate: formData.sessionDate,
+          sessionTime: formData.sessionTime,
+          sessionStatus: newSessionStatus,
           client: updatedSession.client || prev.client,
           coach: updatedSession.coach || prev.coach,
           pack: updatedSession.pack || prev.pack
         }))
       }
 
-      // Force a re-render of the calendar by updating the week if the date changed
+      // Force a re-render of the calendar if the date changed
       const updatedDate = new Date(formData.sessionDate)
       const currentWeekStartDate = new Date(currentWeekStart)
       const updatedWeekStart = getWeekStartDate(updatedDate)
@@ -332,16 +421,17 @@ export default function SessionsPage() {
     }
   }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'scheduled':
-        return 'text-blue-500'
-      case 'completed':
-        return 'text-green-500'
-      case 'canceled':
-        return 'text-red-500'
+  const getStatusColor = (status, sessionStatus) => {
+    if (status === 'canceled') return 'text-red-500';
+    switch (sessionStatus) {
+      case 'upcoming':
+        return 'text-blue-500';
+      case 'finished':
+        return 'text-green-500';
+      case 'pending':
+        return 'text-yellow-500';
       default:
-        return 'text-white'
+        return 'text-white';
     }
   }
 
@@ -482,16 +572,17 @@ export default function SessionsPage() {
   }
 
   const getSessionBackgroundColor = (session) => {
-    if (!session) return "hover:bg-[#1a1e2a]"
-    switch (session.status) {
-      case "scheduled":
-        return "bg-blue-400"
-      case "completed":
-        return "bg-green-400"
-      case "cancelled":
-        return "bg-[#3e2a2a]"
+    if (!session) return "hover:bg-[#1a1e2a]";
+    if (session.status === "canceled") return "bg-[#3e2a2a]";
+    switch (session.sessionStatus) {
+      case "upcoming":
+        return "bg-blue-400";
+      case "finished":
+        return "bg-green-400";
+      case "pending":
+        return "bg-yellow-400";
       default:
-        return "bg-[#223039]"
+        return "bg-[#223039]";
     }
   }
 
@@ -675,7 +766,7 @@ export default function SessionsPage() {
                                         className={`w-3 h-3 rounded-full cursor-pointer transition-all hover:ring-2 hover:ring-white ${
                                           session.status === "scheduled" ? "bg-blue-400" :
                                           session.status === "completed" ? "bg-green-400" :
-                                          session.status === "cancelled" ? "bg-[#3e2a2a]" :
+                                          session.status === "canceled" ? "bg-[#3e2a2a]" :
                                           "bg-[#223039]"
                                         }`}
                                         onClick={() => {
@@ -812,7 +903,7 @@ export default function SessionsPage() {
           <td className="p-4 text-sm text-white">
             {session.location}
           </td>
-          <td className={`p-4 text-sm ${getStatusColor(session.status)}`}>
+          <td className={`p-4 text-sm ${getStatusColor(session.status, session.sessionStatus)}`}>
             {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
           </td>
           <td className="p-4 text-right">
@@ -888,13 +979,61 @@ export default function SessionsPage() {
                     {getClientName(selectedCalendarSession.client)}
                   </h3>
                 </div>
-                <div className={`px-3 py-1 rounded-full text-sm ${
-                  selectedCalendarSession.status === "scheduled" ? "bg-blue-900 text-blue-300" :
-                  selectedCalendarSession.status === "completed" ? "bg-green-900 text-green-300" :
-                  selectedCalendarSession.status === "cancelled" ? "bg-red-900 text-red-300" :
-                  "bg-gray-800 text-gray-300"
-                }`}>
-                  {selectedCalendarSession.status.charAt(0).toUpperCase() + selectedCalendarSession.status.slice(1)}
+                <div className="flex items-center gap-2">
+                  <Select 
+                    value={selectedCalendarSession.sessionStatus} 
+                    onValueChange={async (value) => {
+                      try {
+                        const newStatus = value === 'finished' ? 'completed' : 'scheduled';
+                        const response = await fetch(`/api/session?id=${selectedCalendarSession._id}`, {
+                          method: 'PUT',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            sessionStatus: value,
+                            status: newStatus
+                          })
+                        });
+                        
+                        if (!response.ok) {
+                          throw new Error('Failed to update session status');
+                        }
+                        
+                        // Update local state
+                        setSessions(prevSessions => 
+                          prevSessions.map(session => 
+                            session._id === selectedCalendarSession._id 
+                              ? { ...session, sessionStatus: value, status: newStatus }
+                              : session
+                          )
+                        );
+                        setSelectedCalendarSession(prev => ({ ...prev, sessionStatus: value, status: newStatus }));
+                        
+                      } catch (error) {
+                        console.error('Error updating session status:', error);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className={`w-[140px] ${
+                      selectedCalendarSession.sessionStatus === "upcoming" ? "bg-blue-900 text-blue-300" :
+                      selectedCalendarSession.sessionStatus === "finished" ? "bg-green-900 text-green-300" :
+                      selectedCalendarSession.sessionStatus === "pending" ? "bg-yellow-900 text-yellow-300" :
+                      "bg-gray-800 text-gray-300"
+                    }`}>
+                      <SelectValue placeholder="Change status" />
+                    </SelectTrigger>
+                    <SelectContent className="border-white/10">
+                      <SelectItem value="upcoming">Upcoming</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="finished">Finished</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {selectedCalendarSession.status === 'canceled' && (
+                    <div className="px-3 py-1 bg-red-900 text-red-300 rounded-full text-sm">
+                      Canceled
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1106,7 +1245,7 @@ export default function SessionsPage() {
                       </SelectTrigger>
                       <SelectContent className="border-white/10">
                         <SelectItem value="scheduled">Scheduled</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="completed">Finished</SelectItem>
                         <SelectItem value="canceled">Canceled</SelectItem>
                       </SelectContent>
                     </Select>
@@ -1283,7 +1422,7 @@ export default function SessionsPage() {
                       </SelectTrigger>
                       <SelectContent className="border-white/10">
                         <SelectItem value="scheduled">Scheduled</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="completed">Finished</SelectItem>
                         <SelectItem value="canceled">Canceled</SelectItem>
                       </SelectContent>
                     </Select>

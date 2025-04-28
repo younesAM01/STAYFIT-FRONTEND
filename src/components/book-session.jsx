@@ -118,6 +118,7 @@ export default function BookingSection({
         sessionTime: selectedTime,
         location: sessionLocation,
         status: "scheduled",
+        sessionStatus: "upcoming"
       };
 
       const response = await fetch("http://localhost:3000/api/session", {

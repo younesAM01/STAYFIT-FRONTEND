@@ -32,6 +32,11 @@ const SessionSchema = new mongoose.Schema({
     type: Number, // Duration in minutes
     default: 60 // Default duration set to 1 hour (60 minutes)
   },
+  sessionStatus: {
+    type: String,
+    enum: ['finished', 'upcoming', 'pending'],
+    default: 'upcoming'
+  },
   status: {
     type: String,
     enum: ['scheduled', 'completed', 'canceled'],

@@ -10,6 +10,8 @@ import {
   AlertCircle,
   ChevronRight,
   Info,
+  Check,
+  CheckCircle
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { useLocale, useTranslations } from "next-intl";
@@ -19,6 +21,7 @@ const Membership = ({ setActiveTab }) => {
   const { mongoUser } = useAuth();
   const [memberships, setMemberships] = useState([]);
   const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [finishedSessions, setFinishedSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sessionLoading, setSessionLoading] = useState(false);
   const [hasActiveMemberships, setHasActiveMemberships] = useState(false);
@@ -26,6 +29,8 @@ const Membership = ({ setActiveTab }) => {
   const [sessionToCancel, setSessionToCancel] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [finishModalOpen, setFinishModalOpen] = useState(false);
+  const [sessionToFinish, setSessionToFinish] = useState(null);
   const t = useTranslations("MembershipPage");
   const locale = useLocale();
 
@@ -51,6 +56,57 @@ const Membership = ({ setActiveTab }) => {
     }
   };
 
+  // Function to fetch all sessions
+  const fetchSessions = async () => {
+    if (!mongoUser?._id) return;
+
+    setSessionLoading(true);
+    try {
+      const response = await fetch(`/api/session?clientId=${mongoUser._id}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch sessions");
+      }
+      const data = await response.json();
+
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      // Separate sessions into upcoming/pending and finished
+      const { upcoming, finished } = data.reduce((acc, session) => {
+        if (!session || typeof session !== "object") return acc;
+
+        const sessionDate = new Date(session.sessionDate);
+        const sessionStartOfDay = new Date(
+          sessionDate.getFullYear(),
+          sessionDate.getMonth(),
+          sessionDate.getDate()
+        );
+
+        if (session.sessionStatus === "finished" || session.status === "completed") {
+          acc.finished.push(session);
+        } else if (sessionStartOfDay >= today && session.sessionStatus !== "finished") {
+          acc.upcoming.push(session);
+        }
+
+        return acc;
+      }, { upcoming: [], finished: [] });
+
+      // Sort finished sessions by date (most recent first)
+      const sortedFinished = finished.sort((a, b) => 
+        new Date(b.sessionDate) - new Date(a.sessionDate)
+      );
+
+      setUpcomingSessions(upcoming);
+      setFinishedSessions(sortedFinished);
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+      setUpcomingSessions([]);
+      setFinishedSessions([]);
+    } finally {
+      setSessionLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (mongoUser?._id) {
       const fetchMembershipInfo = async () => {
@@ -73,7 +129,7 @@ const Membership = ({ setActiveTab }) => {
             }
           }
 
-          // Filter for active memberships (completed purchase, not expired, and isActive true)
+          // Filter for active memberships
           const activeMemberships = data.filter(
             (pack) =>
               pack.purchaseState === "completed" &&
@@ -86,7 +142,7 @@ const Membership = ({ setActiveTab }) => {
           setLoading(false);
 
           if (activeMemberships.length > 0) {
-            fetchUpcomingSessions();
+            fetchSessions();
           }
         } catch (error) {
           console.error("Error fetching membership info:", error);
@@ -100,86 +156,92 @@ const Membership = ({ setActiveTab }) => {
     }
   }, [mongoUser]);
 
-  const fetchUpcomingSessions = async () => {
-    if (!mongoUser?._id) return;
+  // Effect to handle session updates
+  useEffect(() => {
+    if (mongoUser?._id) {
+      fetchSessions();
+    }
+  }, [mongoUser]);
 
-    setSessionLoading(true);
+  // Function to update session status
+  const updateSessionStatus = async (sessionId, newStatus) => {
     try {
-      const response = await fetch(`/api/session?clientId=${mongoUser._id}`);
+      console.log(`Updating session ${sessionId} to status: ${newStatus}`);
+      const response = await fetch(`/api/session?id=${sessionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionStatus: newStatus
+        })
+      });
+
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch upcoming sessions: ${response.statusText}`
-        );
+        const error = await response.json();
+        console.error('Failed to update session status:', error);
+        throw new Error('Failed to update session status');
       }
-      const data = await response.json();
 
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const updatedSession = await response.json();
+      console.log('Session updated successfully:', updatedSession);
 
-      const upcomingAndScheduledSessions = Array.isArray(data)
-        ? data
-            .filter((session) => {
-              if (
-                !session ||
-                typeof session !== "object" ||
-                (session.status !== "scheduled" &&
-                  session.status !== "confirmed")
-              ) {
-                return false;
-              }
-
-              // Ensure we have valid sessionDate and sessionTime
-              if (!session.sessionDate || !session.sessionTime) {
-                console.warn(
-                  `Missing date/time info for session ${session._id}`
-                );
-                return false;
-              }
-
-              let sessionDateObj;
-              try {
-                sessionDateObj = new Date(session.sessionDate);
-                if (isNaN(sessionDateObj.getTime())) {
-                  console.warn(
-                    `Invalid sessionDate format found: ${session.sessionDate} for session ${session._id}`
-                  );
-                  return false;
-                }
-              } catch (e) {
-                console.error(
-                  `Error parsing sessionDate ${session.sessionDate} for session ${session._id}:`,
-                  e
-                );
-                return false;
-              }
-
-              const sessionStartOfDay = new Date(
-                sessionDateObj.getFullYear(),
-                sessionDateObj.getMonth(),
-                sessionDateObj.getDate()
-              );
-              return sessionStartOfDay >= today;
-            })
-            .sort((a, b) => {
-              // Sort by date and time
-              const dateA = new Date(a.sessionDate);
-              const dateB = new Date(b.sessionDate);
-
-              if (dateA.getTime() !== dateB.getTime()) {
-                return dateA - dateB;
-              }
-
-              // If same date, sort by time
-              return a.sessionTime.localeCompare(b.sessionTime);
-            })
-        : [];
-
-      setUpcomingSessions(upcomingAndScheduledSessions);
+      // Refresh sessions after status update
+      await fetchSessions();
     } catch (error) {
-      console.error("Error fetching upcoming sessions:", error);
-      setUpcomingSessions([]);
-    } finally {
-      setSessionLoading(false);
+      console.error('Error updating session status:', error);
+    }
+  };
+
+  // Modify the handleFinishSession to show confirmation first
+  const handleFinishButtonClick = (session) => {
+    setSessionToFinish(session);
+    setFinishModalOpen(true);
+  };
+
+  // Move the actual finish logic to a new function
+  const confirmFinishSession = async () => {
+    if (!sessionToFinish) return;
+
+    try {
+      await updateSessionStatus(sessionToFinish._id, 'finished');
+      
+      // Also update the session status to completed
+      const response = await fetch(
+        `http://localhost:3000/api/session?id=${sessionToFinish._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ 
+            status: "completed",
+            sessionStatus: "finished"
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to complete session");
+      }
+
+      const updatedSession = await response.json();
+
+      // Remove from upcoming and add to finished sessions
+      setUpcomingSessions((prev) =>
+        prev.filter((s) => s._id !== sessionToFinish._id)
+      );
+      setFinishedSessions((prev) => [updatedSession, ...prev]);
+
+      // Show success notification
+      toast.success(t("sessionCompleted"));
+      
+      // Close the modal
+      setFinishModalOpen(false);
+      setSessionToFinish(null);
+    } catch (error) {
+      console.error("Error finishing session:", error);
+      toast.error(t("failedToFinishSession"));
     }
   };
 
@@ -461,7 +523,10 @@ const Membership = ({ setActiveTab }) => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ status: "cancelled" }),
+          body: JSON.stringify({ 
+            status: "cancelled",
+            sessionStatus: "finished"
+          }),
         }
       );
 
@@ -641,7 +706,7 @@ const Membership = ({ setActiveTab }) => {
               <div className="text-center py-8">{t("loadingSessions")}</div>
             ) : upcomingSessions.length > 0 ? (
               <div className="space-y-4">
-                {upcomingSessions.map((session, idx) => {
+                {upcomingSessions.map((session) => {
                   const { date } = formatDateTime(session.sessionDate);
                   const formattedTime = formatTime(session.sessionTime);
                   const isCancellable = isSessionCancellable(
@@ -649,9 +714,12 @@ const Membership = ({ setActiveTab }) => {
                     session.sessionTime
                   );
 
+                  // Generate a unique key using session properties if _id is not available
+                  const sessionKey = session._id || `${session.sessionDate}-${session.sessionTime}-${session.coach?._id || 'nocoach'}`;
+
                   return (
                     <div
-                      key={session._id || idx}
+                      key={sessionKey}
                       className="bg-[#0d111a] p-4 sm:p-6 rounded-lg border border-[#161c2a] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                     >
                       <div className="flex-1">
@@ -661,6 +729,17 @@ const Membership = ({ setActiveTab }) => {
                           </div>
                           <span className="font-semibold">{date}</span>
                           <span className="font-medium">{formattedTime}</span>
+
+                          {/* Show session status */}
+                          <span className={`text-xs px-2 py-1 rounded-full ${
+                            session.sessionStatus === 'upcoming' 
+                              ? 'bg-blue-400/10 text-blue-400'
+                              : session.sessionStatus === 'pending'
+                                ? 'bg-yellow-400/10 text-yellow-400'
+                                : 'bg-green-400/10 text-green-400'
+                          }`}>
+                            {t(`sessionStatus.${session.sessionStatus}`)}
+                          </span>
 
                           {!isCancellable && (
                             <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-full">
@@ -680,26 +759,40 @@ const Membership = ({ setActiveTab }) => {
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => handleCancelButtonClick(session)}
-                        className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 self-end sm:self-center ${
-                          isCancellable
-                            ? "bg-red-500/10 hover:bg-red-500/20 text-red-400"
-                            : "bg-gray-500/10 text-gray-400 cursor-not-allowed"
-                        }`}
-                        disabled={!isCancellable}
-                        title={
-                          !isCancellable
-                            ? t(
-                                "session12HourRule",
-                                "Sessions can only be cancelled at least 12 hours before start time"
-                              )
-                            : ""
-                        }
-                      >
-                        <X size={16} />
-                        {t("cancelSession")}
-                      </button>
+                      <div className="flex gap-2">
+                        {/* Show Finish button for pending sessions */}
+                        {session.sessionStatus === 'pending' && (
+                          <button
+                            onClick={() => handleFinishButtonClick(session)}
+                            className="px-4 py-2 rounded-lg transition-colors flex items-center gap-2 self-end sm:self-center bg-green-500/10 hover:bg-green-500/20 text-green-400"
+                          >
+                            <Check size={16} />
+                            {t("finishSession")}
+                          </button>
+                        )}
+
+                        {/* Cancel button */}
+                        <button
+                          onClick={() => handleCancelButtonClick(session)}
+                          className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 self-end sm:self-center ${
+                            isCancellable
+                              ? "bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                              : "bg-gray-500/10 text-gray-400 cursor-not-allowed"
+                          }`}
+                          disabled={!isCancellable}
+                          title={
+                            !isCancellable
+                              ? t(
+                                  "session12HourRule",
+                                  "Sessions can only be cancelled at least 12 hours before start time"
+                                )
+                              : ""
+                          }
+                        >
+                          <X size={16} />
+                          {t("cancelSession")}
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -758,6 +851,70 @@ const Membership = ({ setActiveTab }) => {
                     </button>
                   </div>
                 )}
+              </div>
+            )}
+          </motion.div>
+
+          {/* Finished Sessions Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-[#0a0e15] p-6 sm:p-8 rounded-lg border border-[#161c2a] mt-8"
+          >
+            <h3 className="text-xl sm:text-2xl font-bold mb-6 flex items-center">
+              <CheckCircle className="mr-3 text-[#B4E90E]" />
+              {t("finishedSessions", "Finished Sessions")}
+            </h3>
+
+            {sessionLoading ? (
+              <div className="text-center py-8">{t("loadingSessions")}</div>
+            ) : finishedSessions.length > 0 ? (
+              <div className="space-y-4">
+                {finishedSessions.map((session) => {
+                  const { date } = formatDateTime(session.sessionDate);
+                  const formattedTime = formatTime(session.sessionTime);
+
+                  // Generate a unique key using session properties if _id is not available
+                  const sessionKey = session._id || `${session.sessionDate}-${session.sessionTime}-${session.coach?._id || 'nocoach'}-finished`;
+
+                  return (
+                    <div
+                      key={sessionKey}
+                      className="bg-[#0d111a] p-4 sm:p-6 rounded-lg border border-[#161c2a] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    >
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-3 mb-2">
+                          <div className="p-2 bg-[#161c2a] rounded-full">
+                            <Calendar size={18} className="text-[#B4E90E]" />
+                          </div>
+                          <span className="font-semibold">{date}</span>
+                          <span className="font-medium">{formattedTime}</span>
+                          <span className="text-xs px-2 py-1 rounded-full bg-green-400/10 text-green-400">
+                            {t("completed", "Completed")}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 mt-3">
+                          <div className="p-2 bg-[#161c2a] rounded-full">
+                            <User size={18} className="text-[#B4E90E]" />
+                          </div>
+                          <span>
+                            {t("coach", "Coach")}: {session.coach?.firstName}{" "}
+                            {session.coach?.lastName || ""}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-[#0d111a] p-6 rounded-lg border border-[#161c2a] text-center">
+                <div className="flex justify-center mb-4">
+                  <CheckCircle size={36} className="text-gray-400" />
+                </div>
+                <p className="text-gray-400">{t("noFinishedSessions", "No finished sessions yet")}</p>
               </div>
             )}
           </motion.div>
@@ -899,6 +1056,43 @@ const Membership = ({ setActiveTab }) => {
                 className="py-2 px-4 rounded-lg bg-[#161c2a] hover:bg-[#252d3d] transition-colors"
               >
                 {t("ok", "OK")}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Finish Session Confirmation Modal */}
+      {finishModalOpen && sessionToFinish && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#0a0e15] p-6 rounded-lg border border-[#161c2a] max-w-md w-full"
+          >
+            <div className="flex items-center gap-3 mb-4 text-green-400">
+              <CheckCircle size={24} />
+              <h3 className="text-xl font-bold">{t("confirmFinishSession")}</h3>
+            </div>
+
+            <p className="mb-6">{t("confirmFinishSessionMessage")}</p>
+
+            <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
+              <button
+                onClick={() => {
+                  setFinishModalOpen(false);
+                  setSessionToFinish(null);
+                }}
+                className="py-2 px-4 rounded-lg border border-gray-600 hover:bg-gray-800 transition-colors"
+              >
+                {t("keepSessionOpen")}
+              </button>
+              <button
+                onClick={confirmFinishSession}
+                className="py-2 px-4 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors flex items-center justify-center gap-2"
+              >
+                <Check size={16} />
+                {t("confirmFinish")}
               </button>
             </div>
           </motion.div>
