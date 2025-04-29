@@ -1,0 +1,45 @@
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+const BACKEND_URL = process.env.BACKEND_URL
+export const packApi = createApi({
+    reducerPath: 'packApi',
+    baseQuery: fetchBaseQuery({ baseUrl: BACKEND_URL }),
+    endpoints: (builder) => ({
+        getPacks: builder.query({ query: () => '/packs' }),
+        getPackById: builder.query({ 
+            query: (id) => `/packs/${id}`,
+            providesTags: (result, error, id) => [{ type: 'Pack', id }]
+        }),
+        createPack: builder.mutation({
+            query: (pack) => ({
+                url: '/packs',
+                method: 'POST',
+                body: pack
+            }),
+            invalidatesTags: ['Pack']
+        }),
+        updatePack: builder.mutation({
+            query: ({ id, ...pack }) => ({
+                url: `/packs/${id}`,
+                method: 'PUT',
+                body: pack
+            }),
+            invalidatesTags: (result, error, { id }) => [{ type: 'Pack', id }]
+        }),
+        deletePack: builder.mutation({
+            query: (id) => ({
+                url: `/packs/${id}`,
+                method: 'DELETE'
+            }),
+            invalidatesTags: (result, error, id) => [{ type: 'Pack', id }]
+        })
+    }),
+    tagTypes: ['Pack']
+});
+
+export const { 
+    useGetPacksQuery,
+    useGetPackByIdQuery,
+    useCreatePackMutation,
+    useUpdatePackMutation,
+    useDeletePackMutation
+} = packApi;
