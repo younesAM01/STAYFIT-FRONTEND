@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
+import { useGetUserBySupabaseIdQuery } from "@/redux/services/user.service";
 // Create the context
 const AuthContext = createContext(undefined);
 
@@ -17,30 +18,24 @@ const AuthContext = createContext(undefined);
 export function AuthProvider({ children }) {
   const locale = useLocale();
   const [user, setUser] = useState(null);
-  const [mongoUser, setMongoUser] = useState(null); // Add MongoDB user state
+  const [mongoUser, setMongoUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  // Function to fetch MongoDB user data using Supabase ID via the existing GET endpoint
-  const fetchMongoUser = async (supabaseId) => {
-    try {
-      // Use the existing GET endpoint with supabaseId as a query parameter
-      const response = await fetch(
-        `/api/users?supabaseId=${encodeURIComponent(supabaseId)}`
-      );
 
-      if (response.ok) {
-        const userData = await response.json();
-        setMongoUser(userData);
-        return userData;
-      } else {
-        console.error("Failed to fetch MongoDB user data:", response.status);
-        return null;
-      }
-    } catch (error) {
-      console.error("Error fetching MongoDB user:", error);
-      return null;
+  // Only fetch MongoDB user data when we have a valid Supabase ID
+  const {
+    data,
+    isLoading: mongoUserLoading,
+    isSuccess,
+  } = useGetUserBySupabaseIdQuery(user?.id, {
+    skip: !user?.id, // Skip the query if user.id is undefined
+  });
+
+  useEffect(() => {
+    if (isSuccess && data?.user) {
+      setMongoUser(data.user);
     }
-  };
+  }, [data, isSuccess]);
 
   // Function to refresh the session
   const refreshSession = useCallback(async () => {
@@ -49,10 +44,8 @@ export function AuthProvider({ children }) {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      console.log(session);
       if (session?.user) {
-        // Fetch MongoDB user data when we have a valid Supabase user
-        await fetchMongoUser(session.user.id);
+        setUser(session.user);
       } else {
         setUser(null);
         setMongoUser(null);
@@ -68,19 +61,15 @@ export function AuthProvider({ children }) {
 
   // Check for user session on mount
   useEffect(() => {
-    setIsLoading(true); // ✅ Add this line
+    setIsLoading(true);
 
     const getUser = async () => {
       try {
-        // Get current session
         const {
           data: { session },
         } = await supabase.auth.getSession();
-
         if (session?.user) {
           setUser(session.user);
-          // Fetch MongoDB user data using Supabase ID
-          await fetchMongoUser(session.user.id);
         } else {
           setUser(null);
           setMongoUser(null);
@@ -102,11 +91,6 @@ export function AuthProvider({ children }) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user);
-
-        // Fetch MongoDB user data on sign in
-        if (event === "SIGNED_IN") {
-          await fetchMongoUser(session.user.id);
-        }
       } else {
         setUser(null);
         setMongoUser(null);
@@ -151,9 +135,10 @@ export function AuthProvider({ children }) {
       setIsLoading(false);
     }
   };
+
   const value = {
     user,
-    mongoUser, // Add MongoDB user to the context value
+    mongoUser,
     isLoading,
     isAuthenticated: !!user,
     signOut,

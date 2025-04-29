@@ -4,7 +4,6 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
-import { AuthProvider } from "@/context/authContext";
 import { Toaster } from "@/components/ui/sonner"
 
 
@@ -47,13 +46,11 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased subtle-brand-background `}
       >
-        <AuthProvider>
         <NextIntlClientProvider messages={messages}>
              
             {children}
             <Toaster />
         </NextIntlClientProvider>
-        </AuthProvider>
       </body>
     </html>
   );

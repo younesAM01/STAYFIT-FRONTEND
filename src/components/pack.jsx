@@ -13,23 +13,15 @@ const MembershipPlans = () => {
   const t = useTranslations("HomePage");
   const locale = useLocale();
   const router = useRouter();
-  const { user, mongoUser , isAuthenticated, isLoading: authLoading } = useAuth();
+  const { mongoUser, isAuthenticated, isLoading: authLoading } = useAuth();
   const [
     createClientPackMutation,
-    {
-      isLoading: isCreatingClientPack,
-      isSuccess: isClientPackCreated,
-      isError: isClientPackError,
-      error: clientPackError,
-    },
+    { isError: isClientPackError, error: clientPackError },
   ] = useCreateClientPackMutation();
 
   const [packs, setPacks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [selectedSessions, setSelectedSessions] = useState({});
   const [submitting, setSubmitting] = useState(false);
-
   const {
     data,
     isLoading: packsLoading,
@@ -41,7 +33,6 @@ const MembershipPlans = () => {
       setPacks(data?.packs);
     }
   }, [data]);
-  
 
   // Function to handle session selection change
   const handleSessionChange = (packId, sessionId) => {
@@ -90,8 +81,8 @@ const MembershipPlans = () => {
       }
 
       setSubmitting(true);
-      const selectedSession = getSelectedSession(pack);      
-      
+      const selectedSession = getSelectedSession(pack);
+
       // Prepare data according to ClientPack schema with MongoDB ObjectId
       const clientPackData = {
         client: mongoUser._id,
@@ -99,26 +90,19 @@ const MembershipPlans = () => {
         expirationDate: calculateExpirationDate(selectedSession.expirationDays),
         remainingSessions: selectedSession.sessionCount,
         packPrice: selectedSession.price,
-        purchaseState: 'pending',
+        purchaseState: "pending",
         session: {
           sessionCount: selectedSession.sessionCount,
-          expirationDays: selectedSession.expirationDays
-        }
+          expirationDays: selectedSession.expirationDays,
+        },
       };
       console.log(clientPackData);
       // Make API call
-      // const response = await fetch('/api/client-pack', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(clientPackData),
-      // });
+
       const response = await createClientPackMutation(clientPackData);
 
       if (isClientPackError) {
-        
-        throw new Error(clientPackError || 'Failed to create client pack');
+        throw new Error(clientPackError || "Failed to create client pack");
       }
 
       // Redirect to checkout page
@@ -140,7 +124,9 @@ const MembershipPlans = () => {
   if (packsError)
     return (
       <div className="flex justify-center py-16">
-        <div className="text-white">Error: {packsError}</div>
+        <div className="text-white">
+          Error: {packsError?.data?.message || "An error occurred"}
+        </div>
       </div>
     );
 
@@ -154,10 +140,6 @@ const MembershipPlans = () => {
       }}
     >
       <div className="absolute inset-0 bg-opacity-100 z-10"></div>
-      <div className="absolute inset-0 z-0 opacity-20">
-        <div className="absolute left-0 top-0 bottom-0 w-1/3 bg-[url('/api/placeholder/400/600')] bg-cover bg-center"></div>
-        <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-[url('/api/placeholder/400/600')] bg-cover bg-center"></div>
-      </div>
 
       <div className="text-center flex flex-col items-center mb-10 relative z-10">
         <h2 className="text-md md:text-2xl font-bold flex items-center text-center mb-6 text-white">

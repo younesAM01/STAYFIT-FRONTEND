@@ -17,6 +17,10 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 import { useParams } from "next/navigation";
 import { useAuth } from "@/context/authContext";
+import {
+  useGetUserByIdQuery,
+  useUpdateUserMutation,
+} from "@/redux/services/user.service";
 export default function CoachProfile() {
   const locale = useLocale();
   const { mongoUser } = useAuth();
@@ -37,87 +41,83 @@ export default function CoachProfile() {
 
   // Extract the coach ID from the URL parameters
   const coachId = params.id;
+  const {
+    data,
+    isLoading: coachLoading,
+    isSuccess,
+    refetch,
+  } = useGetUserByIdQuery(coachId);
+  console.log(coachId);
+
+  const [
+    updateUser,
+    {
+      isLoading: isUpdating,
+      isSuccess: isUpdateSuccess,
+      error: updateError,
+      isError: isUpdateError,
+    },
+  ] = useUpdateUserMutation();
 
   useEffect(() => {
-    async function fetchCoachData() {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/users?id=${coachId}`);
+    if (isSuccess) {
+      setCoachData(data?.user);
 
-        if (!response.ok) {
-          console.log(`Failed to fetch coach data: ${response.status}`);
-        }
+      // Check if user is missing profile information
+      const isIncompleteProfile =
+        !data?.user ||
+        !data?.user.profilePic ||
+        !data?.user.aboutContent?.paragraphs?.[locale]?.length ||
+        !data?.user.specialties?.length ||
+        !data?.user.certifications?.length;
 
-        const data = await response.json();
-        setCoachData(data);
+      setIsFirstTimeUser(isIncompleteProfile);
 
-        // Check if user is missing profile information
-        const isIncompleteProfile =
-          !data ||
-          !data.profilePic ||
-          !data.aboutContent?.paragraphs?.[locale]?.length ||
-          !data.specialties?.length ||
-          !data.certifications?.length;
+      // Check if the logged-in user is viewing their own profile
+      setIsOwnProfile(mongoUser && mongoUser._id === coachId);
 
-        setIsFirstTimeUser(isIncompleteProfile);
-
-        // Check if the logged-in user is viewing their own profile
-        setIsOwnProfile(mongoUser && mongoUser._id === coachId);
-
-        // If it's the owner with incomplete profile, open the edit modal
-        if (isIncompleteProfile && mongoUser && mongoUser._id === coachId) {
-          const defaultData = {
-            ...data,
-            firstName: data?.firstName || "",
-            lastName: data?.lastName || "",
-            phoneNumber: data?.phoneNumber || "",
-            age: data?.age || "",
-            profilePic: data?.profilePic || "",
-            title: {
-              en: data?.title?.en || "",
-              ar: data?.title?.ar || "",
+      // If it's the owner with incomplete profile, open the edit modal
+      if (isIncompleteProfile && mongoUser && mongoUser._id === coachId) {
+        const defaultData = {
+          ...data?.user,
+          firstName: data?.user?.firstName || "",
+          lastName: data?.user?.lastName || "",
+          phoneNumber: data?.user?.phoneNumber || "",
+          age: data?.user?.age || "",
+          profilePic: data?.profilePic || "",
+          title: {
+            en: data?.user?.title?.en || "",
+            ar: data?.user?.title?.ar || "",
+          },
+          aboutContent: {
+            paragraphs: {
+              en: data?.user?.aboutContent?.paragraphs?.en || [""],
+              ar: data?.user?.aboutContent?.paragraphs?.ar || [""],
             },
-            aboutContent: {
-              paragraphs: {
-                en: data?.aboutContent?.paragraphs?.en || [""],
-                ar: data?.aboutContent?.paragraphs?.ar || [""],
-              },
-              languages: data?.aboutContent?.languages || [
-                { code: "", name: "" },
-              ],
+            languages: data?.user?.aboutContent?.languages || [
+              { code: "", name: "" },
+            ],
+          },
+          specialties: data?.user?.specialties || [
+            {
+              title: { en: "", ar: "" },
+              description: { en: "", ar: "" },
             },
-            specialties: data?.specialties || [
-              {
-                title: { en: "", ar: "" },
-                description: { en: "", ar: "" },
-              },
-            ],
-            certifications: data?.certifications || [
-              {
-                title: { en: "", ar: "" },
-                org: "",
-              },
-            ],
-          };
+          ],
+          certifications: data?.user?.certifications || [
+            {
+              title: { en: "", ar: "" },
+              org: "",
+            },
+          ],
+        };
 
-          setEditFormData(defaultData);
-          setImagePreview(data?.profilePic || null);
-          setIsEditModalOpen(true);
-        }
-
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching coach data:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+        setEditFormData(defaultData);
+        setImagePreview(data?.profilePic || null);
+        setIsEditModalOpen(true);
       }
     }
-
-    if (coachId) {
-      fetchCoachData();
-    }
-  }, [coachId, locale, mongoUser]);
+  }, [coachId, isSuccess, data?.profilePic, data?.user, locale, mongoUser]);
 
   const openEditModal = () => {
     // If editFormData is already set (for first-time users), use that
@@ -476,36 +476,32 @@ export default function CoachProfile() {
             ],
       };
 
-      console.log("Data being saved:", dataToSave);
-      const res = await fetch(`/api/users?supabaseId=${mongoUser.supabaseId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dataToSave),
+      const result = await updateUser({
+        id: coachId,
+        user: dataToSave,
       });
-
-      if (!res.ok) {
-        const error = await res.json();
-        console.error("Update failed:", error);
+      console.log(result);
+      if (isUpdateError) {
+        console.error("Update failed:", updateError);
         return;
       }
-      const updatedData = await res.json();
-      console.log("Server response:", updatedData);
-      setCoachData(updatedData);
+
+      // Close the modal first
+      closeEditModal();
 
       // Reset first-time user flag if this was their first update
       if (isFirstTimeUser) {
         setIsFirstTimeUser(false);
       }
+
+      // Refetch the data to get the latest state from the server
+      await refetch();
     } catch (err) {
       console.error("Error saving coach data:", err);
-    } finally {
-      closeEditModal();
     }
   };
 
-  if (loading) {
+  if (coachLoading) {
     return (
       <div className="min-h-screen bg-[#0d111a] text-white flex items-center justify-center">
         <div className="text-center">
