@@ -15,6 +15,9 @@ export const store = configureStore({
       clientPackApi.middleware,
       userApi.middleware,
       couponApi.middleware,
-      reviewApi.middleware
+      reviewApi.middleware,
+      serviceApi.middleware,
+      sessionApi.middleware
+      
     ),
 });
