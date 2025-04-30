@@ -26,6 +26,8 @@ import SessionBooking from "@/components/book-session";
 import MemberShip from "@/components/membership";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
+import { useGetClientPackByClientIdQuery } from "@/redux/services/clientpack.service";
+import { useUpdateUserMutation } from "@/redux/services/user.service";
 
 export default function ClientProfile() {
   const { mongoUser, isLoading: authLoading } = useAuth();
@@ -36,76 +38,42 @@ export default function ClientProfile() {
   const [clientPack, setClientPack] = useState({});
   const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState(null);
+  const {
+    data,
+    isSuccess,
+    isError,
+    error: clientPackError,
+    refetch,
+  } = useGetClientPackByClientIdQuery(mongoUser?._id, {
+    skip: !mongoUser?._id,
+  });
+  console.log("clientPack", clientPack[0]?._id);
   const profile =
     "https://res.cloudinary.com/dkjx65vc7/image/upload/v1745098188/blank-profile-picture-973460_960_720_oxeuux.webp";
   const t = useTranslations("ProfilePage");
   // Add this function to ClientProfile
-  const refreshClientPack = useCallback(async () => {
-    if (mongoUser?._id) {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `http://localhost:3000/api/client-pack?clientId=${mongoUser._id}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch membership info");
-        }
-        const data = await response.json();
 
-        // Filter for completed packs that are not expired and are active with remaining sessions
-        const currentDate = new Date();
-        const activeMemberships = data.filter(
-          (pack) =>
-            pack.purchaseState === "completed" &&
-            new Date(pack.expirationDate) > currentDate &&
-            pack.isActive === true &&
-            pack.remainingSessions > 0
-        );
-
-        setClientPack(activeMemberships);
-      } catch (error) {
-        console.error("Error refreshing membership info:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-  }, [mongoUser]);
   useEffect(() => {
-    if (mongoUser?._id) {
-      const fetchMembershipInfo = async () => {
-        try {
-          const response = await fetch(
-            `http://localhost:3000/api/client-pack?clientId=${mongoUser._id}`
-          );
-          if (!response.ok) {
-            throw new Error("Failed to fetch membership info");
-          }
-          const data = await response.json();
-
-          // Filter for completed packs that are not expired and are active with remaining sessions
-          const currentDate = new Date();
-          const activeMemberships = data.filter(
-            (pack) =>
-              pack.purchaseState === "completed" &&
-              new Date(pack.expirationDate) > currentDate &&
-              pack.isActive === true &&
-              pack.remainingSessions > 0
-          );
-
-          setClientPack(activeMemberships);
-
-          setLoading(false);
-        } catch (error) {
-          console.error("Error fetching membership info:", error);
-          setLoading(false);
-        }
-      };
-
-      fetchMembershipInfo();
-    } else {
+    if (isSuccess) {
+      setClientPack(data?.clientPack);
       setLoading(false);
     }
-  }, [mongoUser]);
+    if (isError) {
+      setLoading(false);
+      console.log(clientPackError);
+    }
+  }, [isSuccess, isError, clientPackError]);
+  const [
+    updateUser,
+    {
+      isLoading: isUpdating,
+      isSuccess: isUpdateSuccess,
+      data: updateData,
+      error: updateError,
+      isError: isUpdateError,
+    },
+  ] = useUpdateUserMutation();
+
   const [clientInfo, setClientInfo] = useState({
     firstName: "",
     lastName: "",
@@ -122,34 +90,64 @@ export default function ClientProfile() {
     profilePic: null,
   });
 
+  // Effect to update client info when update is successful
+  useEffect(() => {
+    if (isUpdateSuccess && updateData) {
+      setClientInfo((prev) => ({
+        ...prev,
+        ...(updateData.user || updateData),
+      }));
+    }
+  }, [isUpdateSuccess, updateData]);
+
   const [formData, setFormData] = useState({ ...clientInfo });
 
   // Initialize client info when mongoUser is available
   useEffect(() => {
-    console.log(mongoUser);
     if (mongoUser) {
       setClientInfo((prevInfo) => ({
         ...prevInfo,
-        firstName: mongoUser.firstName || "---",
-        lastName: mongoUser.lastName || "---",
-        email: mongoUser.email || "---",
-        phoneNumber: mongoUser.phoneNumber || "---",
-        city: mongoUser.city || "---",
+        firstName: mongoUser.firstName || "",
+        lastName: mongoUser.lastName || "",
+        email: mongoUser.email || "",
+        phoneNumber: mongoUser.phoneNumber || "",
+        city: mongoUser.city || "",
         age: mongoUser.age || "",
         weight: mongoUser.weight || "",
         height: mongoUser.height || "",
         diseases: mongoUser.diseases || [],
         preferredLanguage: mongoUser.preferredLanguage || "العربية",
-        nationality: mongoUser.nationality || "--",
+        nationality: mongoUser.nationality || "",
         goals: mongoUser.goals || [],
-        profilePic: mongoUser.profilePic || null,
+        profilePic: mongoUser.profilePic || "",
       }));
     }
   }, [mongoUser]);
 
   // Update form data when client info changes
   useEffect(() => {
-    setFormData({ ...clientInfo });
+    // Ensure no null values in form data
+    const sanitizedInfo = {};
+    Object.keys(clientInfo).forEach((key) => {
+      if (clientInfo[key] === null) {
+        if (Array.isArray(clientInfo[key])) {
+          sanitizedInfo[key] = [];
+        } else if (
+          typeof clientInfo[key] === "number" ||
+          key === "age" ||
+          key === "weight" ||
+          key === "height"
+        ) {
+          sanitizedInfo[key] = "";
+        } else {
+          sanitizedInfo[key] = "";
+        }
+      } else {
+        sanitizedInfo[key] = clientInfo[key];
+      }
+    });
+
+    setFormData(sanitizedInfo);
   }, [clientInfo]);
 
   // Add an effect to handle tab changes when active packages change
@@ -242,16 +240,13 @@ export default function ClientProfile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Log the current form data for debugging
-    console.log("Submitting form data:", formData);
-
     // Check if any field has changed
     const hasChanges = Object.keys(formData).some(
       (key) => JSON.stringify(formData[key]) !== JSON.stringify(clientInfo[key])
     );
 
-    if (!hasChanges || !mongoUser?.supabaseId) {
-      console.log("No changes detected or no supabaseId found");
+    if (!hasChanges || !mongoUser?._id) {
+      console.log("No changes detected or no user ID found");
       setIsEditModalOpen(false);
       return;
     }
@@ -263,31 +258,10 @@ export default function ClientProfile() {
         // Explicitly include profilePic to ensure it's not lost
         profilePic: formData.profilePic,
       };
-
-      console.log("Sending data to API:", dataToSubmit);
-
-      const res = await fetch(`/api/users?supabaseId=${mongoUser.supabaseId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dataToSubmit),
+      await updateUser({
+        id: mongoUser._id,
+        user: dataToSubmit,
       });
-
-      if (!res.ok) {
-        const error = await res.json();
-        console.error("Update failed:", error);
-        return;
-      }
-
-      const updatedData = await res.json();
-      console.log("Server response:", updatedData);
-
-      // Update the client info with all updated data from server
-      setClientInfo(updatedData);
-
-      // Force a page reload to ensure all data is refreshed
-      window.location.reload();
     } catch (error) {
       console.error("An error occurred while updating:", error);
     } finally {
@@ -335,9 +309,7 @@ export default function ClientProfile() {
           <MemberShip setActiveTab={setActiveTab} />
         )}
 
-        {activeTab === "reviews" && (
-          <Reviews userId={mongoUser?._id} />
-        )}
+        {activeTab === "reviews" && <Reviews userId={mongoUser?._id} />}
 
         {activeTab === "book" && (
           <motion.div {...fadeIn} className="mx-auto">
@@ -348,7 +320,7 @@ export default function ClientProfile() {
                   packId={packId}
                   setActiveTab={setActiveTab}
                   clientPack={clientPack[0]}
-                  refreshClientPack={refreshClientPack}
+                  refreshClientPack={refetch}
                 />
               ) : (
                 <div className="p-8 flex flex-col items-center justify-center">
@@ -455,12 +427,14 @@ function TabNavigation({ activeTab, setActiveTab, hasActivePackages }) {
   const tabs = [
     { id: "info", label: t("info") },
     { id: "membership", label: t("membership") },
-    
   ];
 
   // Only add the book tab if there are active packages with remaining sessions
   if (hasActivePackages) {
-    tabs.push({ id: "book", label: t("book") },{ id: "reviews", label: t("reviews") });
+    tabs.push(
+      { id: "book", label: t("book") },
+      { id: "reviews", label: t("reviews") }
+    );
   }
 
   return (
@@ -893,19 +867,21 @@ function DeleteConfirmationModal({ isOpen, onClose, onConfirm, t }) {
               <Trash className="h-6 w-6 text-red-600" />
             </div>
           </div>
-          <h3 className="text-lg font-medium mb-4">{t('confirmDeleteReview')}</h3>
+          <h3 className="text-lg font-medium mb-4">
+            {t("confirmDeleteReview")}
+          </h3>
           <div className="flex justify-center gap-4">
             <button
               onClick={onClose}
               className="px-4 py-2 bg-[#161c2a] text-white rounded-lg hover:bg-[#1f2937] transition-colors"
             >
-              {t('cancel')}
+              {t("cancel")}
             </button>
             <button
               onClick={onConfirm}
               className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
             >
-              {t('delete')}
+              {t("delete")}
             </button>
           </div>
         </div>
@@ -923,32 +899,32 @@ function Reviews({ userId }) {
   const [selectedReview, setSelectedReview] = useState(null);
   const [loading, setLoading] = useState(true);
   const t = useTranslations("ProfilePage");
-  
+
   // Get current locale
-  const locale = useParams().locale || 'en';
+  const locale = useParams().locale || "en";
 
   // Fetch user's reviews
   const fetchUserReviews = useCallback(async () => {
     if (!userId) return;
-    
+
     try {
       setLoading(true);
       const response = await fetch(`/api/review`);
-      if (!response.ok) throw new Error('Failed to fetch reviews');
+      if (!response.ok) throw new Error("Failed to fetch reviews");
       const data = await response.json();
-      console.log('Fetched reviews:', data); // Debug log
-      
+      console.log("Fetched reviews:", data); // Debug log
+
       // Filter reviews where the userId matches, handling both populated and unpopulated cases
-      const userReviews = data.data.filter(review => {
+      const userReviews = data.data.filter((review) => {
         // Handle both cases: populated (review.userId._id) and unpopulated (review.userId)
         const reviewUserId = review.userId?._id || review.userId;
         return reviewUserId === userId;
       });
-      
-      console.log('Filtered reviews:', userReviews); // Debug log
+
+      console.log("Filtered reviews:", userReviews); // Debug log
       setReviews(userReviews);
     } catch (error) {
-      console.error('Error fetching reviews:', error);
+      console.error("Error fetching reviews:", error);
     } finally {
       setLoading(false);
     }
@@ -961,41 +937,41 @@ function Reviews({ userId }) {
 
   const handleAddReview = async (reviewData) => {
     try {
-      const response = await fetch('/api/review', {
-        method: 'POST',
+      const response = await fetch("/api/review", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(reviewData),
       });
 
-      if (!response.ok) throw new Error('Failed to add review');
-      
+      if (!response.ok) throw new Error("Failed to add review");
+
       await fetchUserReviews();
       setIsAddReviewModalOpen(false);
     } catch (error) {
-      console.error('Error adding review:', error);
+      console.error("Error adding review:", error);
     }
   };
 
   const handleUpdateReview = async (reviewId, updatedData) => {
     try {
       const response = await fetch(`/api/review?id=${reviewId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updatedData),
       });
 
-      if (!response.ok) throw new Error('Failed to update review');
-      
+      if (!response.ok) throw new Error("Failed to update review");
+
       // Fetch only user's reviews after updating
       await fetchUserReviews();
       setIsEditReviewModalOpen(false);
       setSelectedReview(null);
     } catch (error) {
-      console.error('Error updating review:', error);
+      console.error("Error updating review:", error);
     }
   };
 
@@ -1009,17 +985,17 @@ function Reviews({ userId }) {
 
     try {
       const response = await fetch(`/api/review?id=${reviewToDelete._id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
-      if (!response.ok) throw new Error('Failed to delete review');
-      
+      if (!response.ok) throw new Error("Failed to delete review");
+
       // Filter out the deleted review locally
-      setReviews(reviews.filter(review => review._id !== reviewToDelete._id));
+      setReviews(reviews.filter((review) => review._id !== reviewToDelete._id));
       setIsDeleteModalOpen(false);
       setReviewToDelete(null);
     } catch (error) {
-      console.error('Error deleting review:', error);
+      console.error("Error deleting review:", error);
     }
   };
 
@@ -1038,12 +1014,12 @@ function Reviews({ userId }) {
       className="container mx-auto px-4"
     >
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">{t('myReviews')}</h2>
+        <h2 className="text-2xl font-bold">{t("myReviews")}</h2>
         <button
           onClick={() => setIsAddReviewModalOpen(true)}
           className="bg-[#B4E90E] text-black px-4 py-2 rounded-lg hover:bg-[#a3d00c] transition-colors"
         >
-          {t('addReview')}
+          {t("addReview")}
         </button>
       </div>
 
@@ -1053,7 +1029,7 @@ function Reviews({ userId }) {
         </div>
       ) : reviews.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-400">{t('noReviews')}</p>
+          <p className="text-gray-400">{t("noReviews")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1066,13 +1042,14 @@ function Reviews({ userId }) {
                 <div className="flex items-center gap-3">
                   <Image
                     src={
-                      (review.coachId?.profilePic || review.coachId?.profilePicture) || 
-                      ''
+                      review.coachId?.profilePic ||
+                      review.coachId?.profilePicture ||
+                      ""
                     }
                     alt={
-                      review.coachId ? 
-                      `${review.coachId.firstName} ${review.coachId.lastName}` : 
-                      'Coach'
+                      review.coachId
+                        ? `${review.coachId.firstName} ${review.coachId.lastName}`
+                        : "Coach"
                     }
                     width={48}
                     height={48}
@@ -1080,10 +1057,11 @@ function Reviews({ userId }) {
                   />
                   <div>
                     <h3 className="font-semibold">
-                      {review.coachId ? 
-                        `${review.coachId.firstName} ${review.coachId.lastName}` : 
-                        (review.trainerName?.[locale] || review.trainerName?.en || 'Coach')
-                      }
+                      {review.coachId
+                        ? `${review.coachId.firstName} ${review.coachId.lastName}`
+                        : review.trainerName?.[locale] ||
+                          review.trainerName?.en ||
+                          "Coach"}
                     </h3>
                     <div className="flex items-center">
                       {[...Array(5)].map((_, index) => (
@@ -1091,8 +1069,8 @@ function Reviews({ userId }) {
                           key={index}
                           className={`w-4 h-4 ${
                             index < review.rating
-                              ? 'text-[#B4E90E] fill-[#B4E90E]'
-                              : 'text-gray-400'
+                              ? "text-[#B4E90E] fill-[#B4E90E]"
+                              : "text-gray-400"
                           }`}
                         />
                       ))}
@@ -1117,8 +1095,10 @@ function Reviews({ userId }) {
                   </button>
                 </div>
               </div>
-              <p className={`text-gray-300 ${locale === 'ar' ? 'text-right' : ''}`}>
-                {review.quote?.[locale] || review.quote?.en || ''}
+              <p
+                className={`text-gray-300 ${locale === "ar" ? "text-right" : ""}`}
+              >
+                {review.quote?.[locale] || review.quote?.en || ""}
               </p>
             </div>
           ))}
@@ -1167,10 +1147,10 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
   const [formData, setFormData] = useState({
     rating: initialData?.rating || 5,
     quote: {
-      en: initialData?.quote?.en || '',
-      ar: initialData?.quote?.ar || '',
+      en: initialData?.quote?.en || "",
+      ar: initialData?.quote?.ar || "",
     },
-    coachId: initialData?.coachId || '',
+    coachId: initialData?.coachId || "",
   });
   const [coaches, setCoaches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1180,14 +1160,16 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
   useEffect(() => {
     const fetchCoaches = async () => {
       try {
-        const response = await fetch('/api/coach');
-        if (!response.ok) throw new Error('Failed to fetch coaches');
+        const response = await fetch("/api/coach");
+        if (!response.ok) throw new Error("Failed to fetch coaches");
         const data = await response.json();
         // Filter only active coaches
-        const activeCoaches = data.filter(coach => coach.coachActive === true);
+        const activeCoaches = data.filter(
+          (coach) => coach.coachActive === true
+        );
         setCoaches(activeCoaches);
       } catch (error) {
-        console.error('Error fetching coaches:', error);
+        console.error("Error fetching coaches:", error);
       } finally {
         setLoading(false);
       }
@@ -1213,7 +1195,7 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
       >
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold">
-            {isEdit ? t('editReview') : t('addReview')}
+            {isEdit ? t("editReview") : t("addReview")}
           </h3>
           <button
             onClick={onClose}
@@ -1227,7 +1209,7 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
           {!isEdit && (
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-1">
-                {t('selectCoach')}
+                {t("selectCoach")}
               </label>
               {loading ? (
                 <div className="flex items-center justify-center p-2">
@@ -1236,16 +1218,19 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
               ) : (
                 <select
                   value={formData.coachId}
-                  onChange={(e) => setFormData({ ...formData, coachId: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, coachId: e.target.value })
+                  }
                   className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
                   required
                 >
-                  <option value="">{t('selectCoach')}</option>
-                  {coaches && coaches.map((coach) => (
-                    <option key={coach._id} value={coach._id}>
-                      {`${coach.firstName} ${coach.lastName}`}
-                    </option>
-                  ))}
+                  <option value="">{t("selectCoach")}</option>
+                  {coaches &&
+                    coaches.map((coach) => (
+                      <option key={coach._id} value={coach._id}>
+                        {`${coach.firstName} ${coach.lastName}`}
+                      </option>
+                    ))}
                 </select>
               )}
             </div>
@@ -1253,7 +1238,7 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">
-              {t('rating')}
+              {t("rating")}
             </label>
             <div className="flex gap-2">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -1266,8 +1251,8 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
                   <Star
                     className={`w-6 h-6 ${
                       star <= formData.rating
-                        ? 'text-[#B4E90E] fill-[#B4E90E]'
-                        : 'text-gray-400'
+                        ? "text-[#B4E90E] fill-[#B4E90E]"
+                        : "text-gray-400"
                     }`}
                   />
                 </button>
@@ -1277,7 +1262,7 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">
-              {t('reviewEnglish')}
+              {t("reviewEnglish")}
             </label>
             <textarea
               value={formData.quote.en}
@@ -1295,7 +1280,7 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
 
           <div>
             <label className="block text-sm font-medium text-gray-400 mb-1">
-              {t('reviewArabic')}
+              {t("reviewArabic")}
             </label>
             <textarea
               value={formData.quote.ar}
@@ -1318,13 +1303,13 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
               onClick={onClose}
               className="px-4 py-2 bg-[#161c2a] text-white rounded-lg hover:bg-[#1f2937] transition-colors"
             >
-              {t('cancel')}
+              {t("cancel")}
             </button>
             <button
               type="submit"
               className="px-4 py-2 bg-[#B4E90E] text-[#0a0e15] font-medium rounded-lg hover:bg-[#a3d00c] transition-colors"
             >
-              {isEdit ? t('update') : t('submit')}
+              {isEdit ? t("update") : t("submit")}
             </button>
           </div>
         </form>

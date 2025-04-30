@@ -206,11 +206,12 @@
     "completed": "مكتملة",
     "coach": "المدرب",
     "sessionStatus": {
-      "upcoming": "قادمة",
+      "scheduled": "مجدولة",
       "pending": "معلقة",
-      "finished": "منتهية"
+      "completed": "منتهية",
+      "cancelled": "ملغية"
     },
-    "confirmFinishSession": "تأكيد إكمال الجلسة",
+    "confirmCompleted": "تأكيد إكمال الجلسة",
     "confirmFinishSessionMessage": "هل أنت متأكد أنك تريد وضع علامة اكتمال على هذه الجلسة؟",
     "keepSessionOpen": "إبقاء الجلسة مفتوحة",
     "confirmFinish": "نعم، أكمل الجلسة"

@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-const BACKEND_URL = process.env.BACKEND_URL
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export const sessionApi = createApi({
     reducerPath: 'sessionApi',
@@ -11,6 +11,10 @@ export const sessionApi = createApi({
         }),
         getSessionById: builder.query({ 
             query: (id) => `/sessions/${id}`,
+            providesTags: (result, error, id) => [{ type: 'Session', id }]
+        }),
+        getSessionsByClientId: builder.query({
+            query: (id) => `/sessions/client/${id}`,
             providesTags: (result, error, id) => [{ type: 'Session', id }]
         }),
         createSession: builder.mutation({
@@ -35,6 +39,18 @@ export const sessionApi = createApi({
                 method: 'DELETE'
             }),
             invalidatesTags: (result, error, id) => [{ type: 'Session', id }]
+        }),
+        cancelSession: builder.mutation({
+            query: (id) => ({
+                url: `/sessions/cancel/${id}`,
+                method: 'PUT'
+            }),
+        }),
+        completeSession: builder.mutation({
+            query: (id) => ({
+                url: `/sessions/complete/${id}`,
+                method: 'PUT'
+            }),
         })
     }),
     tagTypes: ['Session']
@@ -43,7 +59,10 @@ export const sessionApi = createApi({
 export const { 
     useGetSessionsQuery,
     useGetSessionByIdQuery,
+    useGetSessionsByClientIdQuery,
     useCreateSessionMutation,
     useUpdateSessionMutation,
-    useDeleteSessionMutation
+    useDeleteSessionMutation,
+    useCancelSessionMutation,
+    useCompleteSessionMutation
 } = sessionApi;

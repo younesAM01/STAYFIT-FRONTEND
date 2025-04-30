@@ -179,10 +179,20 @@ const ProfileAvatar = ({ user }) => {
     <div ref={profileRef} className="relative">
       <button
         onClick={() => setShowProfileMenu(!showProfileMenu)}
-        className="flex items-center justify-center w-8 h-8 rounded-full bg-[#B4E90E] text-black text-sm font-bold"
+        className="flex items-center justify-center w-8 h-8 rounded-full bg-[#B4E90E] text-black text-sm font-bold overflow-hidden"
         aria-label="Toggle profile menu"
       >
-        {getUserInitials()}
+        {user?.profilePic ? (
+          <Image
+            src={user.profilePic}
+            alt="Profile"
+            width={32}
+            height={32}
+            className="object-cover w-full h-full"
+          />
+        ) : (
+          getUserInitials()
+        )}
       </button>
 
       {showProfileMenu && (
@@ -343,8 +353,7 @@ const Navbar = () => {
           href={`/${locale}/coaches`}
           isMobile={isMobile}
           disableHover={true}
-        >
-        </MenuItem>
+        ></MenuItem>
         <MenuItem
           setActive={setActive}
           active={active}

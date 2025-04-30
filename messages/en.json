@@ -204,11 +204,12 @@
     "completed": "Completed",
     "coach": "Coach",
     "sessionStatus": {
-      "upcoming": "Upcoming",
-      "pending": "Pending",
-      "finished": "Finished"
+      "scheduled": "scheduled",
+      "pending": "pending",
+      "completed": "completed",
+      "cancelled": "cancelled"
     },
-    "confirmFinishSession": "Confirm Session Completion",
+    "confirmCompleted": "Confirm Session Completion",
     "confirmFinishSessionMessage": "Are you sure you want to mark this session as completed?",
     "keepSessionOpen": "Keep Session Open",
     "confirmFinish": "Yes, Complete Session"

@@ -16,9 +16,14 @@ const SessionSchema = new mongoose.Schema({
     ref: 'Pack',
     required: true
   },
+  clientPack: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "ClientPack",
+    required: [true, "Client pack is required"],
+  },
   sessionDate: {
     type: Date,
-    required: true
+    required: true,
   },
   sessionTime: {
     type: String, // Store as 'HH:mm' (e.g., '14:30' for 2:30 PM)
@@ -34,7 +39,7 @@ const SessionSchema = new mongoose.Schema({
   },
   sessionStatus: {
     type: String,
-    enum: ['finished', 'upcoming', 'pending'],
+    enum: ['finished', 'upcoming', 'pending', 'cancelled'],
     default: 'upcoming'
   },
   status: {
