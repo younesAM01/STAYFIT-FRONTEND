@@ -113,17 +113,16 @@ export default function Footer() {
                 {t("quickLinks.services")}
               </Link>
               <Link
-                href="#"
+                href={`/${locale}/coaches`}
                 className="text-gray-400 hover:text-[#B4E90E] transition-colors"
               >
                 {t("quickLinks.trainers")}
               </Link>
               <Link
-                href="#"
+                href={`/${locale}/term-conditions`}
                 className="text-gray-400 hover:text-[#B4E90E] transition-colors"
               >
                 {t("quickLinks.terms")}
-
               </Link>
             </nav>
           </div>
