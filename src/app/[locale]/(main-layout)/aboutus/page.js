@@ -50,7 +50,6 @@ const textSlideIn = (delay = 0) => ({
 });
 
 export default function AboutUs() {
-  const vid = require("@/assets/pinterest.mp4");
   const locale = useLocale();
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef(null);
@@ -275,7 +274,10 @@ export default function AboutUs() {
                   viewport={{ once: true, amount: 0.3 }}
                   transition={{ duration: 1.2, delay: 0.2 }}
                 >
-                  <source src="https://res.cloudinary.com/dkjx65vc7/video/upload/v1745094824/homevid_n5g9hc.mp4" type="video/mp4" />
+                  <source
+                    src="https://res.cloudinary.com/dkjx65vc7/video/upload/v1745094824/homevid_n5g9hc.mp4"
+                    type="video/mp4"
+                  />
                   Your browser does not support the video tag.
                 </motion.video>
                 {!isPlaying && (
@@ -398,7 +400,6 @@ export default function AboutUs() {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
               className="bg-gray-800 rounded-xl overflow-hidden transition-transform duration-300" // removed hover:transform hover:scale-105
-              
             >
               <div className="p-6">
                 <h3 className="text-xl font-bold">{member.name}</h3>
@@ -444,7 +445,6 @@ export default function AboutUs() {
                   </Link>
                 </Button>
               </motion.div>
-           
             </div>
           </motion.div>
         </div>
