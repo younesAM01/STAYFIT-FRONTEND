@@ -28,6 +28,11 @@ const Highlight = ({ children }) => (
   <span className="text-[#B4E90E]">{children}</span>
 );
 
+// Highlight for session details
+const SessionHighlight = ({ children }) => (
+  <span className="font-semibold text-[#B4E90E]">{children}</span>
+);
+
 // Helper component for animated sections
 const AnimatedSection = ({ children, delay = 0 }) => (
   <motion.section
@@ -46,8 +51,8 @@ export default function TermsAndConditions() {
   const locale = useLocale();
   const t = useTranslations("TermsAndConditions"); // Initialize useTranslations
 
-  const listMarkerStyle = locale === 'ar' ? 'pr-4' : 'pl-4'; // Adjust padding based on locale
-  const listAlignment = locale === 'ar' ? 'text-right' : 'text-left'; // Adjust text alignment
+  const listMarkerStyle = locale === "ar" ? "pr-4" : "pl-4"; // Adjust padding based on locale
+  const listAlignment = locale === "ar" ? "text-right" : "text-left"; // Adjust text alignment
 
   return (
     // Set text direction dynamically based on locale
@@ -64,17 +69,17 @@ export default function TermsAndConditions() {
           className="text-center mb-12 md:mb-16"
         >
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            {t.rich("pageTitle", {
-              highlight: (chunks) => <Highlight>{chunks}</Highlight>,
-              highlightClose: () => <></>, // Placeholder if needed by t.rich structure
-            })}
+            {locale === "ar" ? "الشروط و" : "Terms & "}
+            <Highlight>{locale === "ar" ? "الأحكام" : "Conditions"}</Highlight>
           </h1>
           <p className="text-lg text-gray-400">{t("pageSubtitle")}</p>
         </motion.div>
 
         {/* Section 1: Personal Training & Swimming T&C */}
         <AnimatedSection>
-          <h2 className={`text-2xl md:text-3xl font-bold mb-6 text-[#B4E90E] border-b border-gray-700 pb-2 ${listAlignment}`}>
+          <h2
+            className={`text-2xl md:text-3xl font-bold mb-6 text-[#B4E90E] border-b border-gray-700 pb-2 ${listAlignment}`}
+          >
             {t("ptSwimmingSection.title")}
           </h2>
           <div className={`space-y-4 text-lg text-gray-300 ${listAlignment}`}>
@@ -82,7 +87,9 @@ export default function TermsAndConditions() {
               <h3 className="font-semibold text-xl mb-2 text-white">
                 {t("ptSwimmingSection.attendanceTitle")}
               </h3>
-              <ul className={`list-disc list-inside space-y-1 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}>
+              <ul
+                className={`list-disc list-inside space-y-1 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}
+              >
                 <li>{t("ptSwimmingSection.attendancePoint1")}</li>
                 <li>{t("ptSwimmingSection.attendancePoint2")}</li>
               </ul>
@@ -92,36 +99,48 @@ export default function TermsAndConditions() {
                 {t("ptSwimmingSection.completionTitle")}
               </h3>
               <p className="mb-2">{t("ptSwimmingSection.completionDesc")}</p>
-              <ul className={`list-disc list-inside space-y-1 ${listMarkerStyle} bg-gray-800 p-4 rounded-md [&>li]:marker:text-[#B4E90E]`}>
+              <ul
+                className={`list-disc list-inside space-y-1 ${listMarkerStyle} bg-gray-800 p-4 rounded-md [&>li]:marker:text-[#B4E90E]`}
+              >
                 <li>
-                  {t.rich("ptSwimmingSection.validity1Session", {
-                    highlight: (chunks) => <span className="font-semibold text-[#B4E90E]">{chunks}</span>,
-                    highlightClose: () => <></>,
-                  })}
+                  <SessionHighlight>
+                    {locale === "ar" ? "١ جلسة" : "1 session"}
+                  </SessionHighlight>
+                  {locale === "ar"
+                    ? ": صلاحيتها 15 يوم"
+                    : ": valid for 15 days"}
                 </li>
                 <li>
-                   {t.rich("ptSwimmingSection.validity6Sessions", {
-                    highlight: (chunks) => <span className="font-semibold text-[#B4E90E]">{chunks}</span>,
-                    highlightClose: () => <></>,
-                  })}
+                  <SessionHighlight>
+                    {locale === "ar" ? "٦ جلسات" : "6 sessions"}
+                  </SessionHighlight>
+                  {locale === "ar"
+                    ? ": صلاحيتها 30 يوم"
+                    : ": valid for 30 days"}
                 </li>
                 <li>
-                   {t.rich("ptSwimmingSection.validity12Sessions", {
-                    highlight: (chunks) => <span className="font-semibold text-[#B4E90E]">{chunks}</span>,
-                    highlightClose: () => <></>,
-                  })}
+                  <SessionHighlight>
+                    {locale === "ar" ? "١٢ جلسة" : "12 sessions"}
+                  </SessionHighlight>
+                  {locale === "ar"
+                    ? ": صلاحيتها شهرين (60 يوم)"
+                    : ": valid for 2 months (60 days)"}
                 </li>
                 <li>
-                   {t.rich("ptSwimmingSection.validity24Sessions", {
-                    highlight: (chunks) => <span className="font-semibold text-[#B4E90E]">{chunks}</span>,
-                    highlightClose: () => <></>,
-                  })}
+                  <SessionHighlight>
+                    {locale === "ar" ? "٢٤ جلسة" : "24 sessions"}
+                  </SessionHighlight>
+                  {locale === "ar"
+                    ? ": صلاحيتها 3 شهور (90 يوم)"
+                    : ": valid for 3 months (90 days)"}
                 </li>
                 <li>
-                   {t.rich("ptSwimmingSection.validity50Sessions", {
-                    highlight: (chunks) => <span className="font-semibold text-[#B4E90E]">{chunks}</span>,
-                    highlightClose: () => <></>,
-                  })}
+                  <SessionHighlight>
+                    {locale === "ar" ? "٥٠ جلسة" : "50 sessions"}
+                  </SessionHighlight>
+                  {locale === "ar"
+                    ? ": صلاحيتها 6 شهور (180 يوم)"
+                    : ": valid for 6 months (180 days)"}
                 </li>
               </ul>
             </div>
@@ -129,7 +148,9 @@ export default function TermsAndConditions() {
               <h3 className="font-semibold text-xl mb-2 text-white">
                 {t("ptSwimmingSection.contractTitle")}
               </h3>
-              <ul className={`list-disc list-inside space-y-1 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}>
+              <ul
+                className={`list-disc list-inside space-y-1 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}
+              >
                 <li>{t("ptSwimmingSection.contractPoint1")}</li>
                 <li>{t("ptSwimmingSection.contractPoint2")}</li>
               </ul>
@@ -138,7 +159,9 @@ export default function TermsAndConditions() {
               <h3 className="font-semibold text-xl mb-2 text-white">
                 {t("ptSwimmingSection.notesTitle")}
               </h3>
-              <ul className={`list-disc list-inside space-y-1 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}>
+              <ul
+                className={`list-disc list-inside space-y-1 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}
+              >
                 <li>{t("ptSwimmingSection.notesPoint1")}</li>
                 <li>{t("ptSwimmingSection.notesPoint2")}</li>
                 <li>{t("ptSwimmingSection.notesPoint3")}</li>
@@ -149,11 +172,15 @@ export default function TermsAndConditions() {
 
         {/* Section 2: General Personal Training T&C */}
         <AnimatedSection delay={1}>
-          <h2 className={`text-2xl md:text-3xl font-bold mb-6 text-[#B4E90E] border-b border-gray-700 pb-2 ${listAlignment}`}>
+          <h2
+            className={`text-2xl md:text-3xl font-bold mb-6 text-[#B4E90E] border-b border-gray-700 pb-2 ${listAlignment}`}
+          >
             {t("generalPtSection.title")}
           </h2>
           <div className={`space-y-4 text-lg text-gray-300 ${listAlignment}`}>
-            <ul className={`list-decimal list-inside space-y-3 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}>
+            <ul
+              className={`list-decimal list-inside space-y-3 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}
+            >
               <li>
                 <span className="font-semibold text-white">
                   {t("generalPtSection.point1Title")}
@@ -196,11 +223,15 @@ export default function TermsAndConditions() {
 
         {/* Section 3: Participant Declarations */}
         <AnimatedSection delay={2}>
-          <h2 className={`text-2xl md:text-3xl font-bold mb-6 text-[#B4E90E] border-b border-gray-700 pb-2 ${listAlignment}`}>
+          <h2
+            className={`text-2xl md:text-3xl font-bold mb-6 text-[#B4E90E] border-b border-gray-700 pb-2 ${listAlignment}`}
+          >
             {t("declarationsSection.title")}
           </h2>
           <div className={`space-y-4 text-lg text-gray-300 ${listAlignment}`}>
-            <ul className={`list-decimal list-inside space-y-3 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}>
+            <ul
+              className={`list-decimal list-inside space-y-3 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}
+            >
               <li>{t("declarationsSection.point1")}</li>
               <li>{t("declarationsSection.point2")}</li>
               <li>{t("declarationsSection.point3")}</li>
@@ -212,7 +243,9 @@ export default function TermsAndConditions() {
 
         {/* Section 4: Package Freezing */}
         <AnimatedSection delay={3}>
-          <h2 className={`text-2xl md:text-3xl font-bold mb-6 text-[#B4E90E] border-b border-gray-700 pb-2 ${listAlignment}`}>
+          <h2
+            className={`text-2xl md:text-3xl font-bold mb-6 text-[#B4E90E] border-b border-gray-700 pb-2 ${listAlignment}`}
+          >
             {t("freezeSection.title")}
           </h2>
           <div className={`space-y-6 text-lg text-gray-300 ${listAlignment}`}>
@@ -221,7 +254,9 @@ export default function TermsAndConditions() {
               <h3 className="font-semibold text-xl mb-2 text-white">
                 {t("freezeSection.conditionsTitle")}
               </h3>
-              <ul className={`list-disc list-inside space-y-2 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}>
+              <ul
+                className={`list-disc list-inside space-y-2 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}
+              >
                 <li>{t("freezeSection.condition1")}</li>
                 <li>{t("freezeSection.condition2")}</li>
                 <li>
@@ -246,7 +281,9 @@ export default function TermsAndConditions() {
                 </Link>
                 {t("freezeSection.howtoDescPart2")}
               </p>
-              <ol className={`list-decimal list-inside space-y-1 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}>
+              <ol
+                className={`list-decimal list-inside space-y-1 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}
+              >
                 <li>{t("freezeSection.howtoPoint1")}</li>
                 <li>{t("freezeSection.howtoPoint2")}</li>
               </ol>
@@ -267,11 +304,15 @@ export default function TermsAndConditions() {
               <h3 className="font-semibold text-xl mb-2 text-white">
                 {t("freezeSection.notesTitle")}
               </h3>
-              <ul className={`list-disc list-inside space-y-2 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}>
+              <ul
+                className={`list-disc list-inside space-y-2 ${listMarkerStyle} [&>li]:marker:text-[#B4E90E]`}
+              >
                 <li>{t("freezeSection.notesFreezePoint1")}</li>
                 <li>
                   {t("freezeSection.notesFreezePoint2")}
-                  <ul className={`list-[circle] list-inside ${listMarkerStyle} mt-1 space-y-1 [&>li]:marker:text-[#B4E90E]`}>
+                  <ul
+                    className={`list-[circle] list-inside ${listMarkerStyle} mt-1 space-y-1 [&>li]:marker:text-[#B4E90E]`}
+                  >
                     <li>{t("freezeSection.notesFreezeOption1")}</li>
                     <li>{t("freezeSection.notesFreezeOption2")}</li>
                   </ul>

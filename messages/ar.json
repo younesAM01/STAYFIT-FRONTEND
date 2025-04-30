@@ -68,7 +68,7 @@
         "contact": "اتصل بنا",
         "services": "الخدمات",
         "trainers": "مدربينا",
-        "faq": "الأسئلة الشائعة"
+        "terms": "الشروط والأحكام"
       },
       "connect": {
         "title": "تواصل معنا",
@@ -159,7 +159,6 @@
     "preferred": "المفضل",
     "nationality": "الجنسية",
     "profile": "الصورة",
-    "cancel": "إلغاء",
     "save": "حفظ",
     "firstName": "الاسم الأول",
     "lastName": "اسم العائلة",
