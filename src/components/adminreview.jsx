@@ -10,10 +10,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label"
 import { useSidebar } from "@/components/ui/sidebar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useGetReviewsQuery, useUpdateReviewMutation, useDeleteReviewMutation } from "@/redux/services/review.service"
+import { toast } from "sonner"
 
 export default function ReviewsPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [reviews, setReviews] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
   const { state } = useSidebar()
@@ -42,41 +43,19 @@ export default function ReviewsPage() {
   })
   const [activeLanguage, setActiveLanguage] = useState("en")
 
-  useEffect(() => {
-    fetchReviews()
-  }, [])
+  const { data: reviewsResponse, isLoading: isReviewsLoading, error: reviewsError } = useGetReviewsQuery()
+  const [updateReview] = useUpdateReviewMutation()
+  const [deleteReview] = useDeleteReviewMutation()
 
-  const fetchReviews = async () => {
-    try {
-      setIsLoading(true)
-      const response = await fetch('/api/review')
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to fetch reviews')
-      }
-      
-      console.log('Fetched reviews:', data)
-      
-      const reviewsWithTimestamp = (data.reviews || data.data || []).map(review => ({
-        ...review,
-        name: review.name || { en: '', ar: '' },
-        trainerName: review.trainerName || { en: '', ar: '' },
-        quote: review.quote || { en: '', ar: '' },
-        image: review.image + '?t=' + new Date().getTime(),
-        rating: review.rating || 5
-      }))
-      
-      console.log('Processed reviews:', reviewsWithTimestamp)
-      
-      setReviews(reviewsWithTimestamp)
-    } catch (err) {
-      setError(err.message)
-      console.error('Error fetching reviews:', err)
-    } finally {
-      setIsLoading(false)
+  const reviews = reviewsResponse?.data || []
+
+  useEffect(() => {
+    if (reviewsError) {
+      setError(reviewsError.message || 'Failed to fetch reviews')
+      toast.error(reviewsError.message || 'Failed to fetch reviews')
     }
-  }
+    setIsLoading(isReviewsLoading)
+  }, [reviewsError, isReviewsLoading])
 
   const handleImageUpload = async (file) => {
     try {
@@ -96,15 +75,14 @@ export default function ReviewsPage() {
       )
 
       const data = await response.json()
-      console.log('Cloudinary response:', data)
-
       if (data && data.secure_url) {
+        toast.success('Image uploaded successfully!')
         return data.secure_url
       } else {
         throw new Error('Failed to get image URL from Cloudinary')
       }
     } catch (err) {
-      console.error('Error details:', err)
+      toast.error(err.message || 'Failed to upload image. Please try again.')
       throw new Error(`Failed to upload image: ${err.message}`)
     } finally {
       setUploadingImage(false)
@@ -126,11 +104,9 @@ export default function ReviewsPage() {
 
       setFormData(prev => ({ ...prev, imageFile: file }))
       const imageUrl = await handleImageUpload(file)
-      console.log('New image URL:', imageUrl)
       setFormData(prev => ({ ...prev, image: imageUrl }))
       setError(null)
     } catch (err) {
-      console.error('Upload error:', err)
       setError(err.message || 'Failed to upload image. Please try again.')
     }
   }
@@ -138,82 +114,61 @@ export default function ReviewsPage() {
   const handleUpdateReview = async (e) => {
     e.preventDefault()
     try {
-      if (!formData.name.en || !formData.trainerName.en || !formData.quote.en) {
-        throw new Error('Name, trainer name, and quote in English are required')
+      const updateData = {
+        id: selectedReview._id
       }
 
-      console.log('Updating review with data:', {
-        name: formData.name,
-        trainerName: formData.trainerName,
-        quote: formData.quote,
-        rating: formData.rating,
-        image: formData.image
-      })
-
-      const response = await fetch(`/api/review?id=${selectedReview._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          trainerName: formData.trainerName,
-          quote: formData.quote,
-          rating: formData.rating,
-          image: formData.image
-        })
-      })
-      
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to update review')
+      // Preserve existing quote values and only update what's changed
+      updateData.quote = {
+        en: formData.quote.en !== undefined ? formData.quote.en : selectedReview.quote?.en || "",
+        ar: formData.quote.ar !== undefined ? formData.quote.ar : selectedReview.quote?.ar || ""
       }
-      
-      setReviews(prevReviews => prevReviews.map(review => 
-        review._id === selectedReview._id 
-          ? {
-              ...review,
-              name: formData.name,
-              trainerName: formData.trainerName,
-              quote: formData.quote,
-              rating: formData.rating,
-              image: formData.image + '?t=' + new Date().getTime()
-            }
-          : review
-      ))
-      
+
+      if (formData.rating !== undefined) {
+        updateData.rating = formData.rating
+      }
+
+      if (formData.image) {
+        updateData.image = formData.image
+      }
+
+      const result = await updateReview(updateData).unwrap()
+
+      if (!result.success) {
+        toast.error(result.error || 'Failed to update review')
+        throw new Error(result.error || 'Failed to update review')
+      }
+
       setShowEditForm(false)
       setSelectedReview(null)
       setError(null)
+      toast.success('Review updated successfully!')
     } catch (err) {
-      console.error('Error updating review:', err)
       setError(err.message)
+      toast.error(err.message)
     }
   }
 
   const handleDeleteReview = async () => {
     try {
       if (!selectedReview?._id) {
+        toast.error('No review selected for deletion')
         throw new Error('No review selected for deletion')
       }
 
-      const response = await fetch(`/api/review?id=${selectedReview._id}`, {
-        method: 'DELETE'
-      })
+      const result = await deleteReview(selectedReview._id).unwrap()
 
-      const data = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to delete review')
+      if (!result.success) {
+        toast.error(result.error || 'Failed to delete review')
+        throw new Error(result.error || 'Failed to delete review')
       }
-      
-      await fetchReviews()
+
       setShowDeleteDialog(false)
       setSelectedReview(null)
+      toast.success('Review deleted successfully!')
     } catch (err) {
-      console.error('Error deleting review:', err)
       setError(err.message)
+      toast.error(err.message)
     }
   }
 
@@ -230,15 +185,13 @@ export default function ReviewsPage() {
   })
 
   return (
-    <div className="flex">
-      <main className={`flex-1 transition-all duration-300 ease-in-out ${
-        state === "collapsed" ? "ml-40" : "ml-18"
-      }`}>
-        <div className="p-6">
-          <h2 className="text-3xl font-bold text-white mb-6">Reviews</h2>
+    <div className="flex flex-col min-h-screen w-full">
+      <main className="flex-1 w-full">
+        <div className="w-full px-2 sm:px-4 md:px-6">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Reviews</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <Card className="bg-gray-900 border-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 mb-3 sm:mb-6 w-full min-w-0">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-white mt-3">Total Reviews</CardTitle>
                 <Package className="h-4 w-4 text-[#B4E90E] " />
@@ -247,7 +200,7 @@ export default function ReviewsPage() {
                 <div className="text-2xl font-bold text-white">{reviews.length}</div>
               </CardContent>
             </Card>
-            <Card className="bg-gray-900 border-0">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-white mt-3 ">Average Rating</CardTitle>
                 <Star className="h-4 w-4 text-[#B4E90E] " />
@@ -260,7 +213,7 @@ export default function ReviewsPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-gray-900 border-0">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-white mt-3">Latest Review</CardTitle>
                 <CalendarDays className="h-4 w-4 text-[#B4E90E] " />
@@ -272,30 +225,30 @@ export default function ReviewsPage() {
               </CardContent>
             </Card>
           </div>
+          <div className="border-t border-white/10 my-6"></div>
 
-          <div className="flex items-end justify-end mb-6 gap-3">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
+          <div className="flex flex-col sm:flex-row justify-end items-center mb-3 sm:mb-6 gap-2 sm:gap-x-3 w-full">
+            <div className="relative w-full sm:w-[200px]">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
               <Input 
                 type="search" 
                 placeholder="Search reviews..." 
-                className="w-[200px] pl-8 bg-gray-300 border-0 text-black placeholder:text-black"
+                className="w-full pl-8 bg-gray-300 border-0 text-black placeholder:text-black"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <div className="w-full sm:w-auto flex justify-end">
+              <Tabs defaultValue="en" value={activeLanguage} onValueChange={setActiveLanguage}>
+                <TabsList className="bg-[#1F1F1F] flex flex-row w-full sm:w-auto">
+                  <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:text-black w-full sm:w-auto">English</TabsTrigger>
+                  <TabsTrigger value="ar" className="data-[state=active]:bg-white data-[state=active]:text-black w-full sm:w-auto">Arabic</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
 
-          <div className="mb-4 flex justify-end">
-            <Tabs defaultValue="en" value={activeLanguage} onValueChange={setActiveLanguage}>
-              <TabsList className="bg-[#1F1F1F]">
-                <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:text-black">English</TabsTrigger>
-                <TabsTrigger value="ar" className="data-[state=active]:bg-white data-[state=active]:text-black">Arabic</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
-
-          <Card className="bg-gray-900 border-0">
+          <Card className="bg-gray-900 border-0 w-full min-w-0">
             <CardHeader>
               <CardTitle className="text-white mt-3">Available Reviews</CardTitle>
               <CardDescription className="text-white/60">Manage all reviews and their details</CardDescription>
@@ -310,16 +263,16 @@ export default function ReviewsPage() {
                   <div className="text-red-500">{error}</div>
                 </div>
               ) : (
-                <div className="relative overflow-x-auto">
-                  <table className="w-full border-collapse">
+                <div className="block w-full overflow-x-auto rounded-md">
+                  <table className="w-full min-w-full md:min-w-[700px] border-collapse text-xs sm:text-sm md:text-base">
                     <thead className="sticky top-0 bg-gray-900 z-10">
                       <tr className="border-b border-white/10">
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Image</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Name</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Trainer</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Quote</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Rating</th>
-                        <th className="h-10 px-4 text-right text-sm font-medium text-white/60">Actions</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Image</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Name</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Trainer</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Quote</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Rating</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-right text-xs sm:text-sm font-medium text-white/60">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -332,7 +285,7 @@ export default function ReviewsPage() {
                       ) : (
                         filteredData.map((review) => (
                           <tr key={review._id} className="border-b border-white/10 hover:bg-white/5">
-                            <td className="p-4 text-sm border-r border-white/10">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm border-r border-white/10">
                               <img 
                                 src={review.image} 
                                 alt={review.name?.[activeLanguage] || 'Review Image'}
@@ -344,19 +297,19 @@ export default function ReviewsPage() {
                                 key={review.image}
                               />
                             </td>
-                            <td className="p-4 text-sm font-medium text-white border-r border-white/10">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm font-medium text-white border-r border-white/10">
                               {review.name?.[activeLanguage] || review.name?.en || review.name?.ar || "—"}
                             </td>
-                            <td className="p-4 text-sm text-white border-r border-white/10">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                               {review.trainerName?.[activeLanguage] || review.trainerName?.en || review.trainerName?.ar || "—"}
                             </td>
-                            <td className="p-4 text-sm text-white border-r border-white/10">
-                              {review.quote?.[activeLanguage] || review.quote?.en || review.quote?.ar || "—"}
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
+                              {review.quote?.[activeLanguage] || "—"}
                             </td>
-                            <td className="p-4 text-sm text-white border-r border-white/10">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                               {review.rating || "—"}
                             </td>
-                            <td className="p-4 text-right">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" className="h-8 w-8 p-0">
@@ -418,7 +371,7 @@ export default function ReviewsPage() {
 
       {/* Edit Form Dialog */}
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="bg-gray-900 text-white w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden p-2 sm:p-6">
           <DialogHeader>
             <DialogTitle>Edit Review</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -428,38 +381,28 @@ export default function ReviewsPage() {
           <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
             <form onSubmit={handleUpdateReview} className="space-y-4">
               <div className="grid gap-4 py-4">
+                {/* Display Name (Read-only) */}
+                <div className="grid gap-2">
+                  <Label>Name</Label>
+                  <div className="bg-gray-800 p-2 rounded-md">
+                    {selectedReview?.name?.en}
+                  </div>
+                </div>
+
+                {/* Display Trainer Name (Read-only) */}
+                <div className="grid gap-2">
+                  <Label>Trainer Name</Label>
+                  <div className="bg-gray-800 p-2 rounded-md">
+                    {selectedReview?.trainerName?.en}
+                  </div>
+                </div>
+
                 <Tabs defaultValue="en" className="w-full">
                   <TabsList className="mb-4 bg-gray-800">
                     <TabsTrigger value="en" className="data-[state=active]:bg-white data-[state=active]:text-black">English</TabsTrigger>
                     <TabsTrigger value="ar" className="data-[state=active]:bg-white data-[state=active]:text-black">Arabic</TabsTrigger>
                   </TabsList>
                   <TabsContent value="en" className="space-y-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-name-en">Name (English)</Label>
-                      <Input
-                        id="edit-name-en"
-                        value={formData.name.en}
-                        onChange={(e) => setFormData({
-                          ...formData, 
-                          name: {...formData.name, en: e.target.value}
-                        })}
-                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-trainer-name-en">Trainer Name (English)</Label>
-                      <Input
-                        id="edit-trainer-name-en"
-                        value={formData.trainerName.en}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          trainerName: {...formData.trainerName, en: e.target.value}
-                        })}
-                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                        required
-                      />
-                    </div>
                     <div className="grid gap-2">
                       <Label htmlFor="edit-quote-en">Quote (English)</Label>
                       <Input
@@ -470,37 +413,10 @@ export default function ReviewsPage() {
                           quote: {...formData.quote, en: e.target.value}
                         })}
                         className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                        required
                       />
                     </div>
                   </TabsContent>
                   <TabsContent value="ar" className="space-y-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-name-ar">Name (Arabic)</Label>
-                      <Input
-                        id="edit-name-ar"
-                        value={formData.name.ar}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          name: {...formData.name, ar: e.target.value}
-                        })}
-                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                        dir="rtl"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-trainer-name-ar">Trainer Name (Arabic)</Label>
-                      <Input
-                        id="edit-trainer-name-ar"
-                        value={formData.trainerName.ar}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          trainerName: {...formData.trainerName, ar: e.target.value}
-                        })}
-                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                        dir="rtl"
-                      />
-                    </div>
                     <div className="grid gap-2">
                       <Label htmlFor="edit-quote-ar">Quote (Arabic)</Label>
                       <Input
@@ -530,7 +446,6 @@ export default function ReviewsPage() {
                         rating: Number(e.target.value)
                       })}
                       className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                      required
                     />
                   </div>
                   <div className="grid gap-2">
@@ -578,7 +493,7 @@ export default function ReviewsPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-gray-900 text-white">
+        <DialogContent className="bg-gray-900 text-white w-full max-w-xs sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Review</DialogTitle>
             <DialogDescription className="text-white/60">

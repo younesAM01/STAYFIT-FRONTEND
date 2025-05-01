@@ -11,6 +11,15 @@ import { Label } from "@/components/ui/label"
 import { useSidebar } from "@/components/ui/sidebar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useLocale } from "next-intl"
+import { 
+  useGetSessionsQuery,
+  useCreateSessionMutation,
+  useUpdateSessionMutation,
+  useDeleteSessionMutation
+} from "@/redux/services/session.service"
+import { useGetUserQuery } from "@/redux/services/user.service"
+import { useGetPacksQuery } from "@/redux/services/pack.service"
+
 export default function SessionsPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [sessions, setSessions] = useState([])
@@ -44,27 +53,99 @@ export default function SessionsPage() {
     status: "scheduled"
   })
 
+  // Check if backend URL is configured
   useEffect(() => {
-    // Load all data needed for the page
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        await Promise.all([
-          fetchSessions(),
-          fetchCoaches(),
-          fetchClients(),
-          fetchPacks()
-        ]);
-      } catch (err) {
-        console.error("Error loading data:", err);
-        setError("Failed to load data. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadData();
+    if (!process.env.NEXT_PUBLIC_BACKEND_URL) {
+      console.error('NEXT_PUBLIC_BACKEND_URL is not configured');
+      setError('Backend URL is not configured. Please check your environment variables.');
+      return;
+    }
   }, []);
+
+  // RTK Query hooks
+  const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } = useGetSessionsQuery(undefined, {
+    skip: !process.env.NEXT_PUBLIC_BACKEND_URL
+  });
+  const { data: usersData, isLoading: usersLoading } = useGetUserQuery(undefined, {
+    skip: !process.env.NEXT_PUBLIC_BACKEND_URL
+  });
+  const { data: packsData, isLoading: packsLoading } = useGetPacksQuery(undefined, {
+    skip: !process.env.NEXT_PUBLIC_BACKEND_URL
+  });
+  const [createSession] = useCreateSessionMutation()
+  const [updateSession] = useUpdateSessionMutation()
+  const [deleteSession] = useDeleteSessionMutation()
+
+  // Debug logs
+  useEffect(() => {
+    console.log('Backend URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
+    console.log('Sessions Data:', sessionsData);
+    console.log('Users Data:', usersData);
+    console.log('Packs Data:', packsData);
+    console.log('Loading States:', {
+      sessions: sessionsLoading,
+      users: usersLoading,
+      packs: packsLoading
+    });
+    console.log('Errors:', {
+      sessions: sessionsError,
+    });
+  }, [sessionsData, usersData, packsData, sessionsLoading, usersLoading, packsLoading, sessionsError]);
+
+  useEffect(() => {
+    // Always extract from sessions as a fallback
+    const sessionClients = sessions
+      .map(s => s.client)
+      .filter(Boolean)
+      .filter((c, i, arr) => c && c._id && arr.findIndex(x => x._id === c._id) === i);
+
+    const sessionCoaches = sessions
+      .map(s => s.coach)
+      .filter(Boolean)
+      .filter((c, i, arr) => c && c._id && arr.findIndex(x => x._id === c._id) === i);
+
+    if (usersData && usersData.users && Array.isArray(usersData.users)) {
+      const usersArray = usersData.users;
+      setClients(usersArray.filter(u => u.role === 'client'));
+      setCoaches(usersArray.filter(u => u.role === 'coach'));
+    } else {
+      // Fallback: use clients/coaches from sessions
+      setClients(sessionClients);
+      setCoaches(sessionCoaches);
+    }
+  }, [usersData, sessions]);
+
+  // Add a separate effect to handle session data
+  useEffect(() => {
+    if (sessionsData) {
+      console.log('Setting sessions:', sessionsData);
+      // Handle the API response structure
+      const sessionsArray = sessionsData.success ? sessionsData.sessions : [];
+      console.log('Processed sessions array:', sessionsArray);
+      setSessions(Array.isArray(sessionsArray) ? sessionsArray : []);
+    }
+  }, [sessionsData])
+
+  useEffect(() => {
+    if (packsData) {
+      console.log('Setting packs:', packsData);
+      // Handle the API response structure
+      const packsArray = packsData.success ? packsData.packs : [];
+      setPacks(Array.isArray(packsArray) ? packsArray : [])
+    }
+  }, [packsData])
+
+  useEffect(() => {
+    if (sessionsError) {
+      console.error('Sessions Error:', sessionsError);
+      setError(sessionsError.message || 'Failed to load sessions')
+    }
+  }, [sessionsError])
+
+  // Update loading state based on all queries
+  useEffect(() => {
+    setIsLoading(sessionsLoading || usersLoading || packsLoading);
+  }, [sessionsLoading, usersLoading, packsLoading]);
 
   // Separate useEffect for handling automatic pending status
   useEffect(() => {
@@ -84,33 +165,11 @@ export default function SessionsPage() {
           if (sessionDate.toDateString() === now.toDateString() && 
               sessionTimeInMinutes <= currentTime) {
             try {
-              const response = await fetch(`/api/session?id=${session._id}`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  sessionStatus: 'pending',
-                  status: 'scheduled'
-                })
+              await updateSession({
+                id: session._id,
+                sessionStatus: 'pending',
+                status: 'scheduled'
               });
-
-              if (response.ok) {
-                setSessions(prevSessions =>
-                  prevSessions.map(s =>
-                    s._id === session._id
-                      ? { ...s, sessionStatus: 'pending' }
-                      : s
-                  )
-                );
-
-                if (selectedCalendarSession?._id === session._id) {
-                  setSelectedCalendarSession(prev => ({
-                    ...prev,
-                    sessionStatus: 'pending'
-                  }));
-                }
-              }
             } catch (error) {
               console.error('Error updating session status:', error);
             }
@@ -126,7 +185,7 @@ export default function SessionsPage() {
     const intervalId = setInterval(updatePendingSessions, 60000);
 
     return () => clearInterval(intervalId);
-  }, [sessions, selectedCalendarSession]);
+  }, [sessions, selectedCalendarSession, updateSession]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -137,255 +196,108 @@ export default function SessionsPage() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  const fetchSessions = async () => {
-    try {
-      const response = await fetch('/api/session')
-      
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to fetch sessions')
-      }
-      
-      const data = await response.json()
-      setSessions(data)
-      return data
-    } catch (err) {
-      setError(err.message)
-      console.error('Error fetching sessions:', err)
-      throw err
-    }
-  }
-
-  const fetchCoaches = async () => {
-    try {
-      const response = await fetch('/api/users?role=coach')
-      
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to fetch coaches')
-      }
-      
-      const data = await response.json()
-      setCoaches(data.filter(user => user.role === 'coach'))
-      return data
-    } catch (err) {
-      console.error('Error fetching coaches:', err)
-      throw err
-    }
-  }
-
-  const fetchClients = async () => {
-    try {
-      const response = await fetch('/api/users?role=client')
-      
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to fetch clients')
-      }
-      
-      const data = await response.json()
-      setClients(data.filter(user => user.role === 'client'))
-      return data
-    } catch (err) {
-      console.error('Error fetching clients:', err)
-      throw err
-    }
-  }
-
-  const fetchPacks = async () => {
-    try {
-      const response = await fetch('/api/packs')
-      
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to fetch packs')
-      }
-      
-      const data = await response.json()
-      console.log("Packs data:", data)
-      setPacks(data)
-      return data
-    } catch (err) {
-      console.error('Error fetching packs:', err)
-      throw err
-    }
-  }
-
   // Improved helper functions for name lookups with better error handling and debugging
   const getClientName = (clientId) => {
     if (!clientId) return 'No Client';
-    if (!clients || clients.length === 0) return 'Loading...';
-    
-    // Ensure both IDs are strings for comparison
-    const clientIdStr = String(clientId);
-    
-    // Find the client by ID
-    const client = clients.find(c => String(c._id) === clientIdStr);
-    
-    // Debug logging for troubleshooting
-    if (!client) {
-      console.log(`Client with ID ${clientIdStr} not found among ${clients.length} clients`);
+    if (typeof clientId === 'object' && clientId.firstName && clientId.lastName) {
+      return `${clientId.firstName} ${clientId.lastName}`;
     }
-    
+    const client = clients.find(c => c._id === clientId);
     return client ? `${client.firstName} ${client.lastName}` : 'Unknown Client';
   }
 
   const getCoachName = (coachId) => {
     if (!coachId) return 'No Coach';
-    if (!coaches || coaches.length === 0) return 'Loading...';
-    
-    // Ensure both IDs are strings for comparison
-    const coachIdStr = String(coachId);
-    
-    // Find the coach by ID
-    const coach = coaches.find(c => String(c._id) === coachIdStr);
-    
-    // Debug logging for troubleshooting
-    if (!coach) {
-      console.log(`Coach with ID ${coachIdStr} not found among ${coaches.length} coaches`);
+    if (typeof coachId === 'object' && coachId.firstName && coachId.lastName) {
+      return `${coachId.firstName} ${coachId.lastName}`;
     }
-    
+    const coach = coaches.find(c => c._id === coachId);
     return coach ? `${coach.firstName} ${coach.lastName}` : 'Unknown Coach';
   }
 
   const getPackName = (packId) => {
     if (!packId) return 'No Pack';
-    if (!packs || packs.length === 0) return 'Loading...';
-    
-    // Ensure both IDs are strings for comparison
-    const packIdStr = String(packId);
-    
-    // Find the pack by ID
-    const pack = packs.find(p => String(p._id) === packIdStr);
-    
-    // Debug logging for troubleshooting
-    if (!pack) {
-      console.log(`Pack with ID ${packIdStr} not found among ${packs.length} packs`);
-      if (packs.length > 0) {
-        console.log("Available pack IDs:", packs.map(p => p._id));
+    if (typeof packId === 'object') {
+      // If pack is an object, try to get the localized name
+      if (packId.category && packId.category[locale]) {
+        return packId.category[locale];
       }
+      // Fallback to name if category is not available
+      return packId.name || 'Unknown Pack';
     }
-    
-    // Check both name and category fields
-    return pack ? (pack.name || pack.category?.[locale] || 'Unnamed Pack') : 'Unknown Pack';
+    const pack = packs.find(p => p._id === packId);
+    if (pack) {
+      if (pack.category && pack.category[locale]) {
+        return pack.category[locale];
+      }
+      return pack.name || 'Unknown Pack';
+    }
+    return 'Unknown Pack';
   }
 
   const handleUpdateSession = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      if (!selectedSession?._id) {
-        throw new Error('No session selected for update')
+      if (!selectedSession) {
+        console.error('No session selected for update');
+        return;
       }
 
-      // Determine the session status based on the new time
-      const now = new Date();
-      const sessionDate = new Date(formData.sessionDate);
-      const [hours, minutes] = formData.sessionTime.split(':').map(Number);
-      const sessionTimeInMinutes = hours * 60 + minutes;
-      const currentTime = now.getHours() * 60 + now.getMinutes();
+      // Prepare the update data (only send status, let backend sync sessionStatus)
+      const updateData = {
+        client: typeof formData.client === 'object' ? formData.client._id : formData.client,
+        coach: typeof formData.coach === 'object' ? formData.coach._id : formData.coach,
+        pack: typeof formData.pack === 'object' ? formData.pack._id : formData.pack,
+        sessionDate: formData.sessionDate,
+        sessionTime: formData.sessionTime,
+        location: formData.location,
+        duration: formData.duration,
+        status: formData.status
+      };
+
+      // Call the update mutation
+      const result = await updateSession({
+        id: selectedSession._id,
+        ...updateData
+      }).unwrap();
       
-      // If session is today, check if it should be pending or upcoming
-      let newSessionStatus = formData.sessionStatus;
-      if (sessionDate.toDateString() === now.toDateString()) {
-        if (sessionTimeInMinutes <= currentTime) {
-          newSessionStatus = 'pending';
-        } else {
-          newSessionStatus = 'upcoming';
+      if (result.success && result.session) {
+        // Update the sessions array with the new data from backend
+        setSessions(prevSessions => 
+          prevSessions.map(session => 
+            session._id === selectedSession._id 
+              ? result.session 
+              : session
+          )
+        );
+
+        // Update the selected calendar session if it's the same session
+        if (selectedCalendarSession?._id === selectedSession._id) {
+          setSelectedCalendarSession(result.session);
         }
-      } else if (sessionDate > now) {
-        newSessionStatus = 'upcoming';
+
+        // Force a calendar refresh by updating the current week start
+        setCurrentWeekStart(new Date(currentWeekStart));
+
+        setShowEditForm(false);
+        setSelectedSession(null);
+        // Reset form data
+        setFormData({
+          client: "",
+          coach: "",
+          pack: "",
+          sessionDate: new Date().toISOString().split('T')[0],
+          sessionTime: "09:00",
+          location: "",
+          duration: 60,
+          status: "scheduled"
+        });
       }
-
-      // Create an object with only the changed fields
-      const changedFields = {}
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== selectedSession[key]) {
-          changedFields[key] = formData[key]
-        }
-      })
-
-      // Add sessionStatus if it needs to be updated
-      if (newSessionStatus !== selectedSession.sessionStatus) {
-        changedFields.sessionStatus = newSessionStatus;
-      }
-
-      // If no fields were changed, return early
-      if (Object.keys(changedFields).length === 0) {
-        setShowEditForm(false)
-        return
-      }
-
-      const response = await fetch(`/api/session?id=${selectedSession._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...changedFields,
-          sessionDate: formData.sessionDate ? new Date(formData.sessionDate).toISOString() : undefined,
-          sessionStatus: newSessionStatus // Include the new status
-        })
-      })
-      
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to update session')
-      }
-      
-      const updatedSession = await response.json()
-
-      // Update the sessions state with the new data
-      setSessions(prevSessions => {
-        const updatedSessions = prevSessions.map(session => 
-          session._id === selectedSession._id 
-            ? {
-                ...session,
-                ...changedFields,
-                sessionDate: formData.sessionDate,
-                sessionTime: formData.sessionTime,
-                sessionStatus: newSessionStatus,
-                client: updatedSession.client || session.client,
-                coach: updatedSession.coach || session.coach,
-                pack: updatedSession.pack || session.pack
-              }
-            : session
-        )
-        return updatedSessions
-      })
-      
-      // Close the edit form and reset states
-      setShowEditForm(false)
-      setSelectedSession(null)
-      setError(null)
-
-      // If the updated session was being viewed in the calendar, update that too
-      if (selectedCalendarSession?._id === selectedSession._id) {
-        setSelectedCalendarSession(prev => ({
-          ...prev,
-          ...changedFields,
-          sessionDate: formData.sessionDate,
-          sessionTime: formData.sessionTime,
-          sessionStatus: newSessionStatus,
-          client: updatedSession.client || prev.client,
-          coach: updatedSession.coach || prev.coach,
-          pack: updatedSession.pack || prev.pack
-        }))
-      }
-
-      // Force a re-render of the calendar if the date changed
-      const updatedDate = new Date(formData.sessionDate)
-      const currentWeekStartDate = new Date(currentWeekStart)
-      const updatedWeekStart = getWeekStartDate(updatedDate)
-      
-      if (updatedWeekStart.getTime() !== currentWeekStartDate.getTime()) {
-        setCurrentWeekStart(updatedWeekStart)
-      }
-
-    } catch (err) {
-      console.error('Error updating session:', err)
-      setError(err.message)
+    } catch (error) {
+      console.error('Error updating session:', error);
+      setError(error.message);
     }
-  }
+  };
 
   const handleDeleteSession = async () => {
     try {
@@ -393,14 +305,7 @@ export default function SessionsPage() {
         throw new Error('No session selected for deletion')
       }
 
-      const response = await fetch(`/api/session?id=${selectedSession._id}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to delete session')
-      }
+      await deleteSession(selectedSession._id);
       
       // Remove the deleted session from all relevant states
       setSessions(prevSessions => prevSessions.filter(session => session._id !== selectedSession._id))
@@ -421,19 +326,18 @@ export default function SessionsPage() {
     }
   }
 
-  const getStatusColor = (status, sessionStatus) => {
-    if (status === 'canceled') return 'text-red-500';
-    switch (sessionStatus) {
-      case 'upcoming':
-        return 'text-blue-500';
-      case 'finished':
-        return 'text-green-500';
-      case 'pending':
-        return 'text-yellow-500';
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "canceled":
+        return "text-red-500";
+      case "completed":
+        return "text-green-500";
+      case "scheduled":
+        return "text-blue-500";
       default:
-        return 'text-white';
+        return "text-white";
     }
-  }
+  };
 
   const formatDate = (dateString) => {
     try {
@@ -492,55 +396,66 @@ export default function SessionsPage() {
     setCurrentWeekStart(getWeekStartDate(new Date()))
   }
 
-  const getSessionHour = (sessionTime) => {
-    const timeMatch = sessionTime.match(/(\d+)([AP]M)/)
-    if (!timeMatch) return null
-
-    let hour = parseInt(timeMatch[1], 10)
-    const meridian = timeMatch[2]
-
-    if (meridian === "PM" && hour < 12) {
-      hour += 12
-    } else if (meridian === "AM" && hour === 12) {
-      hour = 0
-    }
-
-    return hour
-  }
-
   const getSessionForTimeSlot = (day, hour) => {
+    if (!sessions || !Array.isArray(sessions)) return [];
+    
     return sessions.filter((session) => {
-      const sessionDate = new Date(session.sessionDate)
-      const sessionHour = getSessionHour(session.sessionTime)
+      try {
+        if (!session || !session.sessionDate || !session.sessionTime) return false;
+        
+        const sessionDate = new Date(session.sessionDate);
+        if (isNaN(sessionDate.getTime())) return false;
 
-      const isSameDate = 
-        sessionDate.getDate() === day.date.getDate() &&
-        sessionDate.getMonth() === day.date.getMonth() &&
-        sessionDate.getFullYear() === day.date.getFullYear()
-
-      // Handle different time formats
-      let sessionTimeHour = sessionHour
-      if (sessionTimeHour === null) {
-        // Try to parse time in 24-hour format (e.g., "22:02")
-        const timeMatch = session.sessionTime.match(/^(\d{1,2}):/)
-        if (timeMatch) {
-          sessionTimeHour = parseInt(timeMatch[1], 10)
+        // Parse the session time
+        let sessionHour;
+        if (session.sessionTime.includes(':')) {
+          // Handle 24-hour format (e.g., "14:30")
+          const [hours, minutes] = session.sessionTime.split(':').map(Number);
+          sessionHour = hours;
+        } else {
+          // Handle 12-hour format (e.g., "2:30 PM")
+          const timeMatch = session.sessionTime.match(/(\d+)([AP]M)/);
+          if (!timeMatch) return false;
+          
+          let hour = parseInt(timeMatch[1], 10);
+          const meridian = timeMatch[2];
+          
+          if (meridian === "PM" && hour < 12) {
+            hour += 12;
+          } else if (meridian === "AM" && hour === 12) {
+            hour = 0;
+          }
+          sessionHour = hour;
         }
-      }
 
-      return isSameDate && sessionTimeHour === hour
-    })
-  }
+        const isSameDate = 
+          sessionDate.getDate() === day.date.getDate() &&
+          sessionDate.getMonth() === day.date.getMonth() &&
+          sessionDate.getFullYear() === day.date.getFullYear();
+
+        return isSameDate && sessionHour === hour;
+      } catch (error) {
+        console.error('Error processing session:', error);
+        return false;
+      }
+    });
+  };
 
   const formatSessionTime = (sessionTime) => {
-    const timeMatch = sessionTime.match(/(\d+)([AP]M)/)
-    if (!timeMatch) return sessionTime
-
-    const hour = timeMatch[1]
-    const meridian = timeMatch[2]
-
-    return `${hour}:00 ${meridian}`
-  }
+    if (!sessionTime) return '';
+    
+    if (sessionTime.includes(':')) {
+      // Handle 24-hour format
+      const [hours, minutes] = sessionTime.split(':');
+      const hour = parseInt(hours, 10);
+      const meridian = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${minutes} ${meridian}`;
+    } else {
+      // Handle 12-hour format
+      return sessionTime;
+    }
+  };
 
   const calculateEndTime = (startTime, durationMinutes) => {
     const timeMatch = startTime.match(/(\d+)([AP]M)/)
@@ -573,73 +488,203 @@ export default function SessionsPage() {
 
   const getSessionBackgroundColor = (session) => {
     if (!session) return "hover:bg-[#1a1e2a]";
-    if (session.status === "canceled") return "bg-[#3e2a2a]";
-    switch (session.sessionStatus) {
-      case "upcoming":
-        return "bg-blue-400";
-      case "finished":
+    
+    switch (session.status) {
+      case "canceled":
+        return "bg-[#3e2a2a]";
+      case "completed":
         return "bg-green-400";
-      case "pending":
-        return "bg-yellow-400";
+      case "scheduled":
+        return "bg-blue-400";
       default:
         return "bg-[#223039]";
     }
-  }
+  };
 
   const handleAddSession = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      if (!formData.client || !formData.coach || !formData.pack || !formData.sessionDate || !formData.sessionTime || !formData.location) {
-        throw new Error('All fields are required')
+      // Validate all required fields
+      if (!formData.client) {
+        throw new Error('Please select a client');
+      }
+      if (!formData.coach) {
+        throw new Error('Please select a coach');
+      }
+      if (!formData.pack) {
+        throw new Error('Please select a pack');
+      }
+      if (!formData.sessionDate) {
+        throw new Error('Please select a date');
+      }
+      if (!formData.sessionTime) {
+        throw new Error('Please select a time');
+      }
+      if (!formData.location) {
+        throw new Error('Please enter a location');
       }
 
-      const response = await fetch('/api/session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          sessionDate: new Date(formData.sessionDate).toISOString()
-        })
-      })
+      // Extract IDs from objects if they are objects
+      const newSession = {
+        ...formData,
+        client: typeof formData.client === 'object' ? formData.client._id : formData.client,
+        coach: typeof formData.coach === 'object' ? formData.coach._id : formData.coach,
+        pack: typeof formData.pack === 'object' ? formData.pack._id : formData.pack,
+      };
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to add session')
+      const result = await createSession(newSession).unwrap();
+      if (result.success) {
+        setShowAddForm(false);
+        setFormData({
+          client: "",
+          coach: "",
+          pack: "",
+          sessionDate: new Date().toISOString().split('T')[0],
+          sessionTime: "09:00",
+          location: "",
+          duration: 60,
+          status: "scheduled"
+        });
       }
-      
-      const newSession = await response.json()
-      
-      // Update the sessions list with the new session
-      setSessions(prevSessions => [...prevSessions, newSession])
-      
-      // Reset form and close dialog
-      setShowAddForm(false)
-      setFormData({
-        client: "",
-        coach: "",
-        pack: "",
-        sessionDate: new Date().toISOString().split('T')[0],
-        sessionTime: "09:00",
-        location: "",
-        duration: 60,
-        status: "scheduled"
-      })
-
-      // Update calendar week if needed
-      const newSessionDate = new Date(formData.sessionDate)
-      const currentWeekStartDate = new Date(currentWeekStart)
-      const newSessionWeekStart = getWeekStartDate(newSessionDate)
-      
-      if (newSessionWeekStart.getTime() !== currentWeekStartDate.getTime()) {
-        setCurrentWeekStart(newSessionWeekStart)
-      }
-    } catch (err) {
-      console.error('Error adding session:', err)
-      setError(err.message)
+    } catch (error) {
+      console.error('Error creating session:', error);
+      setError(error.message || 'Failed to create session');
     }
-  }
+  };
+
+  const renderClientSelect = () => {
+    console.log('Rendering client select with clients:', clients);
+    return (
+      <Select 
+        value={formData.client?._id || formData.client} 
+        onValueChange={(value) => {
+          const selectedClient = clients.find(c => c._id === value);
+          setFormData({...formData, client: selectedClient || value});
+        }}
+        required
+      >
+        <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+          <SelectValue placeholder="Select client">
+            {formData.client?.firstName ? `${formData.client.firstName} ${formData.client.lastName}` : "Select client"}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent className="border-white/10">
+          {clients.map((client) => (
+            <SelectItem key={client._id} value={client._id}>
+              {client.firstName} {client.lastName}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  };
+
+  const renderCoachSelect = () => {
+    console.log('Rendering coach select with coaches:', coaches);
+    return (
+      <Select 
+        value={formData.coach?._id || formData.coach} 
+        onValueChange={(value) => {
+          const selectedCoach = coaches.find(c => c._id === value);
+          setFormData({...formData, coach: selectedCoach || value});
+        }}
+        required
+      >
+        <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+          <SelectValue placeholder="Select coach">
+            {formData.coach?.firstName ? `${formData.coach.firstName} ${formData.coach.lastName}` : "Select coach"}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent className="border-white/10">
+          {coaches.map((coach) => (
+            <SelectItem key={coach._id} value={coach._id}>
+              {coach.firstName} {coach.lastName}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  };
+
+  const renderPackSelect = () => {
+    console.log('Rendering pack select with packs:', packs);
+    return (
+      <Select 
+        value={formData.pack?._id || formData.pack} 
+        onValueChange={(value) => {
+          const selectedPack = packs.find(p => p._id === value);
+          setFormData({...formData, pack: selectedPack || value});
+        }}
+        required
+      >
+        <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+          <SelectValue placeholder="Select pack">
+            {formData.pack?.category?.[locale] || "Select pack"}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent className="border-white/10">
+          {packs.map((pack) => (
+            <SelectItem key={pack._id} value={pack._id}>
+              {pack.category?.[locale]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  };
+
+  const renderDateInput = () => {
+    return (
+      <Input
+        type="date"
+        value={formData.sessionDate}
+        onChange={(e) => setFormData({...formData, sessionDate: e.target.value})}
+        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+        required
+      />
+    );
+  };
+
+  const renderTimeInput = () => {
+    return (
+      <Input
+        type="time"
+        value={formData.sessionTime}
+        onChange={(e) => setFormData({...formData, sessionTime: e.target.value})}
+        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+        required
+      />
+    );
+  };
+
+  const renderLocationInput = () => {
+    return (
+      <Input
+        type="text"
+        value={formData.location}
+        onChange={(e) => setFormData({...formData, location: e.target.value})}
+        placeholder="Enter location"
+        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+        required
+      />
+    );
+  };
+
+  // Add a useEffect to handle session updates
+  useEffect(() => {
+    if (sessionsData) {
+      const sessionsArray = sessionsData.success ? sessionsData.sessions : [];
+      setSessions(Array.isArray(sessionsArray) ? sessionsArray : []);
+    }
+  }, [sessionsData]);
+
+  // Add a useEffect to handle calendar updates
+  useEffect(() => {
+    if (sessions.length > 0) {
+      // Force calendar refresh when sessions change
+      setCurrentWeekStart(new Date(currentWeekStart));
+    }
+  }, [sessions]);
 
   return (
     <div className="flex">
@@ -750,70 +795,42 @@ export default function SessionsPage() {
                           {formatHour(hour)}
                         </div>
                         {weekDays.map((day) => {
-                          const sessionsInSlot = getSessionForTimeSlot(day, hour)
+                          const sessionsInSlot = getSessionForTimeSlot(day, hour);
                           return (
                             <div
                               key={`${day.dateStr}-${hour}`}
                               className="border-r border-gray-700 h-[50px] relative overflow-hidden"
                             >
                               <div className="absolute inset-0 flex flex-wrap gap-1 p-1 overflow-hidden">
-                                {sessionsInSlot.length > 2 ? (
-                                  // Show circles when there are more than 2 sessions
-                                  <div className="w-full h-full flex flex-wrap items-center gap-1 p-1">
-                                    {sessionsInSlot.map((session) => (
-                                      <div
-                                        key={session._id}
-                                        className={`w-3 h-3 rounded-full cursor-pointer transition-all hover:ring-2 hover:ring-white ${
-                                          session.status === "scheduled" ? "bg-blue-400" :
-                                          session.status === "completed" ? "bg-green-400" :
-                                          session.status === "canceled" ? "bg-[#3e2a2a]" :
-                                          "bg-[#223039]"
-                                        }`}
-                                        onClick={() => {
-                                          setSelectedCalendarSession(session)
-                                          setShowSessionInfo(true)
-                                        }}
-                                        onMouseEnter={() => !isMobile && setHoveredSession(session)}
-                                        onMouseLeave={() => !isMobile && setHoveredSession(null)}
-                                      />
-                                    ))}
-                                  </div>
-                                ) : (
-                                  // Show full session info for 1-2 sessions
-                                  <div className="w-full h-full flex gap-1">
-                                    {sessionsInSlot.map((session) => (
-                                      <div
-                                        key={session._id}
-                                        className={`flex-1 h-full rounded overflow-hidden cursor-pointer transition-all hover:bg-[#35505d] ${getSessionBackgroundColor(session)}`}
-                                        onMouseEnter={() => !isMobile && setHoveredSession(session)}
-                                        onMouseLeave={() => !isMobile && setHoveredSession(null)}
-                                        onClick={() => {
-                                          setSelectedCalendarSession(session)
-                                          setShowSessionInfo(true)
-                                        }}
-                                      >
-                                        <div className="h-full flex flex-col justify-start p-1">
-                                          <div className="flex items-center gap-1 min-w-0">
-                                            <User size={10} className="text-[#B4E90E] flex-shrink-0" />
-                                            <span className="font-bold truncate text-xs">
-                                              {getClientName(session.client)}
-                                            </span>
-                                          </div>
-                                          <div className="text-gray-300 flex items-center gap-1 min-w-0">
-                                            <MapPin size={8} className="flex-shrink-0" />
-                                            <span className="truncate text-xs">{session.location}</span>
-                                          </div>
-                                          <div className="text-[#B4E90E] text-xs truncate min-w-0">
-                                            {formatSessionTime(session.sessionTime)}
-                                          </div>
-                                        </div>
+                                {sessionsInSlot.map((session) => (
+                                  <div
+                                    key={session._id}
+                                    className={`flex-1 h-full rounded overflow-hidden cursor-pointer transition-all hover:bg-[#35505d] ${getSessionBackgroundColor(session)}`}
+                                    onClick={() => {
+                                      setSelectedCalendarSession(session);
+                                      setShowSessionInfo(true);
+                                    }}
+                                  >
+                                    <div className="h-full flex flex-col justify-start p-1">
+                                      <div className="flex items-center gap-1 min-w-0">
+                                        <User size={10} className="text-[#B4E90E] flex-shrink-0" />
+                                        <span className="font-bold truncate text-xs">
+                                          {getClientName(session.client)}
+                                        </span>
                                       </div>
-                                    ))}
+                                      <div className="text-gray-300 flex items-center gap-1 min-w-0">
+                                        <MapPin size={8} className="flex-shrink-0" />
+                                        <span className="truncate text-xs">{session.location}</span>
+                                      </div>
+                                      <div className="text-[#B4E90E] text-xs truncate min-w-0">
+                                        {formatSessionTime(session.sessionTime)}
+                                      </div>
+                                    </div>
                                   </div>
-                                )}
+                                ))}
                               </div>
                             </div>
-                          )
+                          );
                         })}
                       </div>
                     ))}
@@ -903,7 +920,7 @@ export default function SessionsPage() {
           <td className="p-4 text-sm text-white">
             {session.location}
           </td>
-          <td className={`p-4 text-sm ${getStatusColor(session.status, session.sessionStatus)}`}>
+          <td className={`p-4 text-sm ${getStatusColor(session.status)}`}>
             {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
           </td>
           <td className="p-4 text-right">
@@ -919,18 +936,20 @@ export default function SessionsPage() {
                 <DropdownMenuItem 
                   className="text-white"
                   onClick={() => {
-                    setSelectedSession(session)
+                    if (!session) return;
+                    
+                    setSelectedSession(session);
                     setFormData({
-                      client: session.client,
-                      coach: session.coach,
-                      pack: session.pack,
+                      client: session.client?._id || session.client,
+                      coach: session.coach?._id || session.coach,
+                      pack: session.pack?._id || session.pack,
                       sessionDate: new Date(session.sessionDate).toISOString().split('T')[0],
                       sessionTime: session.sessionTime,
                       location: session.location,
                       duration: session.duration,
                       status: session.status
-                    })
-                    setShowEditForm(true)
+                    });
+                    setShowEditForm(true);
                   }}
                 >
                   Edit session
@@ -980,48 +999,68 @@ export default function SessionsPage() {
                   </h3>
                 </div>
                 <div className="flex items-center gap-2">
+                  {/* Only show the sessionStatus badge if it is a valid value */}
+                  {['upcoming', 'pending', 'finished'].includes(selectedCalendarSession.sessionStatus) && (
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold
+                        ${selectedCalendarSession.sessionStatus === 'upcoming' ? 'bg-blue-900 text-blue-300' : ''}
+                        ${selectedCalendarSession.sessionStatus === 'pending' ? 'bg-yellow-900 text-yellow-300' : ''}
+                        ${selectedCalendarSession.sessionStatus === 'finished' ? 'bg-green-900 text-green-300' : ''}
+                      `}
+                    >
+                      {selectedCalendarSession.sessionStatus === 'upcoming' && 'Upcoming'}
+                      {selectedCalendarSession.sessionStatus === 'pending' && 'Pending'}
+                      {selectedCalendarSession.sessionStatus === 'finished' && 'Finished'}
+                    </span>
+                  )}
                   <Select 
-                    value={selectedCalendarSession.sessionStatus} 
+                    value={selectedCalendarSession.sessionStatus || ''} 
                     onValueChange={async (value) => {
+                      // Optimistically update the badge
+                      setSelectedCalendarSession(prev => ({
+                        ...prev,
+                        sessionStatus: value
+                      }));
                       try {
                         const newStatus = value === 'finished' ? 'completed' : 'scheduled';
-                        const response = await fetch(`/api/session?id=${selectedCalendarSession._id}`, {
-                          method: 'PUT',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({
-                            sessionStatus: value,
-                            status: newStatus
-                          })
-                        });
-                        
-                        if (!response.ok) {
-                          throw new Error('Failed to update session status');
+                        const result = await updateSession({
+                          id: selectedCalendarSession._id,
+                          sessionStatus: value,
+                          status: newStatus
+                        }).unwrap();
+                        // Update sessions and selectedCalendarSession with backend data
+                        if (result && result.session) {
+                          setSessions(prevSessions =>
+                            prevSessions.map(session =>
+                              session._id === result.session._id ? result.session : session
+                            )
+                          );
+                          setSelectedCalendarSession(prev => ({
+                            ...prev,
+                            ...result.session,
+                            // Fallback: if backend does not return sessionStatus, use the selected value
+                            sessionStatus: result.session.sessionStatus || value
+                          }));
+                        } else {
+                          // Fallback: ensure badge updates even if backend does not return session
+                          setSelectedCalendarSession(prev => ({
+                            ...prev,
+                            sessionStatus: value
+                          }));
                         }
-                        
-                        // Update local state
-                        setSessions(prevSessions => 
-                          prevSessions.map(session => 
-                            session._id === selectedCalendarSession._id 
-                              ? { ...session, sessionStatus: value, status: newStatus }
-                              : session
-                          )
-                        );
-                        setSelectedCalendarSession(prev => ({ ...prev, sessionStatus: value, status: newStatus }));
-                        
                       } catch (error) {
                         console.error('Error updating session status:', error);
                       }
                     }}
                   >
-                    <SelectTrigger className={`w-[140px] ${
-                      selectedCalendarSession.sessionStatus === "upcoming" ? "bg-blue-900 text-blue-300" :
-                      selectedCalendarSession.sessionStatus === "finished" ? "bg-green-900 text-green-300" :
+                    <SelectTrigger className={`w-[140px] font-bold text-white ${
+                      selectedCalendarSession.sessionStatus === "upcoming" ? "bg-blue-900" :
+                      selectedCalendarSession.sessionStatus === "finished" ? "bg-green-900" :
                       selectedCalendarSession.sessionStatus === "pending" ? "bg-yellow-900 text-yellow-300" :
                       "bg-gray-800 text-gray-300"
                     }`}>
-                      <SelectValue placeholder="Change status" />
+                      {/* Always show placeholder, not the value */}
+                      <span className="text-white font-bold">Change status</span>
                     </SelectTrigger>
                     <SelectContent className="border-white/10">
                       <SelectItem value="upcoming">Upcoming</SelectItem>
@@ -1132,93 +1171,30 @@ export default function SessionsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="edit-client">Client</Label>
-                    <Select 
-                      value={formData.client} 
-                      onValueChange={(value) => setFormData({...formData, client: value})}
-                    >
-                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-                        <SelectValue placeholder="Select client" />
-                      </SelectTrigger>
-                      <SelectContent className="border-white/10">
-                        {clients.map((client) => (
-                          <SelectItem key={client._id} value={client._id}>
-                            {client.firstName} {client.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {renderClientSelect()}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="edit-coach">Coach</Label>
-                    <Select 
-                      value={formData.coach} 
-                      onValueChange={(value) => setFormData({...formData, coach: value})}
-                    >
-                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-                        <SelectValue placeholder="Select coach" />
-                      </SelectTrigger>
-                      <SelectContent className="border-white/10">
-                        {coaches.map((coach) => (
-                          <SelectItem key={coach._id} value={coach._id}>
-                            {coach.firstName} {coach.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {renderCoachSelect()}
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-pack">Pack</Label>
-                  <Select 
-                    value={formData.pack} 
-                    onValueChange={(value) => setFormData({...formData, pack: value})}
-                  >
-                    <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-                      <SelectValue placeholder="Select pack" />
-                    </SelectTrigger>
-                    <SelectContent className="border-white/10">
-                      {packs.map((pack) => (
-                        <SelectItem key={pack._id} value={pack._id}>
-                          {pack.name || pack.category?.[locale]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {renderPackSelect()}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="edit-sessionDate">Date</Label>
-                    <Input
-                      id="edit-sessionDate"
-                      type="date"
-                      value={formData.sessionDate}
-                      onChange={(e) => setFormData({...formData, sessionDate: e.target.value})}
-                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                      required
-                    />
+                    {renderDateInput()}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="edit-sessionTime">Time</Label>
-                    <Input
-                      id="edit-sessionTime"
-                      type="time"
-                      value={formData.sessionTime}
-                      onChange={(e) => setFormData({...formData, sessionTime: e.target.value})}
-                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                      required
-                    />
+                    {renderTimeInput()}
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-location">Location</Label>
-                  <Input
-                    id="edit-location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                    placeholder="Gym A, Room 2 or Online (Zoom)"
-                    required
-                  />
+                  {renderLocationInput()}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
@@ -1245,22 +1221,22 @@ export default function SessionsPage() {
                       </SelectTrigger>
                       <SelectContent className="border-white/10">
                         <SelectItem value="scheduled">Scheduled</SelectItem>
-                        <SelectItem value="completed">Finished</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="canceled">Canceled</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
               </div>
+              <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+                <Button 
+                  type="submit"
+                  className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors"
+                >
+                  Update Session
+                </Button>
+              </DialogFooter>
             </form>
-            <DialogFooter className="mt-4 border-t border-white/10 pt-4">
-              <Button 
-                onClick={handleUpdateSession}
-                className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors"
-              >
-                Update Session
-              </Button>
-            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>
@@ -1309,93 +1285,30 @@ export default function SessionsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="client">Client</Label>
-                    <Select 
-                      value={formData.client} 
-                      onValueChange={(value) => setFormData({...formData, client: value})}
-                    >
-                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-                        <SelectValue placeholder="Select client" />
-                      </SelectTrigger>
-                      <SelectContent className="border-white/10">
-                        {clients.map((client) => (
-                          <SelectItem key={client._id} value={client._id}>
-                            {client.firstName} {client.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {renderClientSelect()}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="coach">Coach</Label>
-                    <Select 
-                      value={formData.coach} 
-                      onValueChange={(value) => setFormData({...formData, coach: value})}
-                    >
-                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-                        <SelectValue placeholder="Select coach" />
-                      </SelectTrigger>
-                      <SelectContent className="border-white/10">
-                        {coaches.map((coach) => (
-                          <SelectItem key={coach._id} value={coach._id}>
-                            {coach.firstName} {coach.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {renderCoachSelect()}
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="pack">Pack</Label>
-                  <Select 
-                    value={formData.pack} 
-                    onValueChange={(value) => setFormData({...formData, pack: value})}
-                  >
-                    <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-                      <SelectValue placeholder="Select pack" />
-                    </SelectTrigger>
-                    <SelectContent className="border-white/10">
-                      {packs.map((pack) => (
-                        <SelectItem key={pack._id} value={pack._id}>
-                          {pack.name || pack.category?.[locale]}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {renderPackSelect()}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="sessionDate">Date</Label>
-                    <Input
-                      id="sessionDate"
-                      type="date"
-                      value={formData.sessionDate}
-                      onChange={(e) => setFormData({...formData, sessionDate: e.target.value})}
-                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                      required
-                    />
+                    {renderDateInput()}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="sessionTime">Time</Label>
-                    <Input
-                      id="sessionTime"
-                      type="time"
-                      value={formData.sessionTime}
-                      onChange={(e) => setFormData({...formData, sessionTime: e.target.value})}
-                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                      required
-                    />
+                    {renderTimeInput()}
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                    className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                    placeholder="Gym A, Room 2 or Online (Zoom)"
-                    required
-                  />
+                  {renderLocationInput()}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
@@ -1422,7 +1335,7 @@ export default function SessionsPage() {
                       </SelectTrigger>
                       <SelectContent className="border-white/10">
                         <SelectItem value="scheduled">Scheduled</SelectItem>
-                        <SelectItem value="completed">Finished</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="canceled">Canceled</SelectItem>
                       </SelectContent>
                     </Select>
