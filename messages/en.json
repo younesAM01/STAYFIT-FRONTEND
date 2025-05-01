@@ -231,7 +231,8 @@
     "selectTime": "Select Time",
     "confirm": "Confirm",
     "sessionBookedSuccessfully": "Session booked successfully!",
-    "noCoachesAvailable": "No coaches available"
+    "noCoachesAvailable": "No coaches available",
+    "loadingCoaches": "Loading coaches..."
   },
   "BookingCalendar": {
     "membershipRequired": "Membership Required",
@@ -322,7 +323,10 @@
     "invalidCoupon": "Invalid coupon code",
     "errorApplyingCoupon": "Error applying coupon",
     "couponApplied": "Coupon applied successfully",
-    "off": "off"
+    "off": "off",
+    "noPendingPurchase": "No pack choose's yet ",
+    "pleaseSelectPackFirst": "Please select a pack first in home page",
+    "goToHomePage": "Back Home"
   },
   "FAQ": {
     "faqtitle": "Frequently Asked Questions",

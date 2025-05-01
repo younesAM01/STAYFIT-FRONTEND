@@ -47,7 +47,6 @@ export default function CoachProfile() {
     isSuccess,
     refetch,
   } = useGetUserByIdQuery(coachId);
-  console.log(coachId);
 
   const [
     updateUser,
@@ -118,6 +117,19 @@ export default function CoachProfile() {
       }
     }
   }, [coachId, isSuccess, data?.profilePic, data?.user, locale, mongoUser]);
+
+  // Add new useEffect to handle successful update
+  useEffect(() => {
+    if (isUpdateSuccess) {
+      // Close the modal when update is successful
+      closeEditModal();
+
+      // Reset first-time user flag if this was their first update
+      if (isFirstTimeUser) {
+        setIsFirstTimeUser(false);
+      }
+    }
+  }, [isUpdateSuccess, isFirstTimeUser ]);
 
   const openEditModal = () => {
     // If editFormData is already set (for first-time users), use that
@@ -480,18 +492,9 @@ export default function CoachProfile() {
         id: coachId,
         user: dataToSave,
       });
-      console.log(result);
       if (isUpdateError) {
         console.error("Update failed:", updateError);
         return;
-      }
-
-      // Close the modal first
-      closeEditModal();
-
-      // Reset first-time user flag if this was their first update
-      if (isFirstTimeUser) {
-        setIsFirstTimeUser(false);
       }
 
       // Refetch the data to get the latest state from the server

@@ -4,7 +4,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Calendar,
-  Info,
   User,
   Mail,
   MapPin,
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { useLocale } from "next-intl";
+import { useGetSessionsByCoachIdQuery } from "@/redux/services/session.service";
 
 const CoachCalendar = () => {
   const { mongoUser } = useAuth();
@@ -25,30 +25,16 @@ const CoachCalendar = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
   const [coachSessions, setCoachSessions] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  console.log(coachSessions);
-
-  const fetchCoachSessions = async (coachId) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/session?coachId=${coachId}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch sessions: ${response.status}`);
-      }
-      const data = await response.json();
-      setCoachSessions(data);
-    } catch (error) {
-      console.error("Error fetching coach sessions:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data, isSuccess, isLoading, isError, error } =
+    useGetSessionsByCoachIdQuery(coachId, {
+      skip: !coachId,
+    });
 
   useEffect(() => {
-    if (coachId) {
-      fetchCoachSessions(coachId);
+    if (isSuccess && data) {
+      setCoachSessions(data.sessions);
     }
-  }, [coachId]);
+  }, [data, isSuccess]);
 
   useEffect(() => {
     // Set up mouse move event listener for tooltip positioning
@@ -129,23 +115,27 @@ const CoachCalendar = () => {
   // Get active (non-cancelled) session for a time slot if available, otherwise return cancelled one
   const getPrioritySessionForTimeSlot = (day, hour) => {
     const sessions = getSessionsForTimeSlot(day, hour);
-    
+
     if (!sessions || sessions.length === 0) {
       return null;
     }
-    
+
     // First look for scheduled/active sessions
-    const scheduledSession = sessions.find(session => session.status === "scheduled");
+    const scheduledSession = sessions.find(
+      (session) => session.status === "scheduled"
+    );
     if (scheduledSession) {
       return scheduledSession;
     }
-    
+
     // Then look for completed sessions
-    const completedSession = sessions.find(session => session.status === "completed");
+    const completedSession = sessions.find(
+      (session) => session.status === "completed"
+    );
     if (completedSession) {
       return completedSession;
     }
-    
+
     // Otherwise, return the first cancelled session or any other status
     return sessions[0];
   };
@@ -248,6 +238,15 @@ const CoachCalendar = () => {
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
+          </div>
+        ) : isError ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="text-red-500 text-center">
+              <p className="text-lg font-semibold mb-2">
+                Error loading sessions
+              </p>
+              <p className="text-sm">Please try again later</p>
+            </div>
           </div>
         ) : (
           // Calendar container with horizontal scroll on mobile
@@ -456,7 +455,9 @@ const CoachCalendar = () => {
                 />
                 <div>
                   <p className="text-xs text-gray-400">Package</p>
-                  <p className="text-sm">{hoveredSession.pack?.category?.[locale]}</p>
+                  <p className="text-sm">
+                    {hoveredSession.pack?.category?.[locale]}
+                  </p>
                 </div>
               </div>
 

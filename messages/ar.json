@@ -233,7 +233,8 @@
     "selectTime": "اختر الوقت",
     "confirm": "تأكيد",
     "sessionBookedSuccessfully": "تم حجز الجلسة بنجاح",
-    "noCoachesAvailable": "لا يوجد مدربين متاحين"
+    "noCoachesAvailable": "لا يوجد مدربين متاحين",
+    "loadingCoaches": "جاري تحميل المدربين..."
   },
   "BookingCalendar": {
     "membershipRequired": "العضوية مطلوبة",
@@ -322,7 +323,10 @@
     "errorApplyingCoupon": "خطأ في تطبيق القسيمة",
     "couponApplied": "تم تطبيق القسيمة بنجاح",
     "off": "خصم",
-    "validity": "الصلاحية"
+    "validity": "الصلاحية",
+    "noPendingPurchase": "لا يوجد باقة مختارة بعد",
+    "pleaseSelectPackFirst": "الرجاء اختيار باقة اولا في الصفحة الرئيسية",
+    "goToHomePage": "العودة الى الرئيسية"
   },
   "FAQ": {
     "faqtitle": "الأسئلة الشائعة",

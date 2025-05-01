@@ -18,13 +18,20 @@ export default function BookingCalendar({ coachId, onSelect }) {
   } = useGetClientPackByClientIdQuery(mongoUser?._id, {
     skip: !mongoUser?._id,
   });
-  const { data:sessionData, isLoading: coachSessionsLoading , isSuccess: coachSessionsSuccess, refetch: refetchCoachSessions } = useGetSessionsByCoachIdQuery(coachId, {
+  const {
+    data: sessionData,
+    isLoading: coachSessionsLoading,
+    isSuccess: coachSessionsSuccess,
+    refetch: refetchCoachSessions,
+  } = useGetSessionsByCoachIdQuery(coachId, {
     skip: !coachId,
   });
   const locale = useLocale();
 
   const today = new Date();
-  const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStartDate(today));
+  const [currentWeekStart, setCurrentWeekStart] = useState(
+    getWeekStartDate(today)
+  );
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [availableSlots, setAvailableSlots] = useState({});
   const [coachSessions, setCoachSessions] = useState([]);
@@ -62,7 +69,7 @@ export default function BookingCalendar({ coachId, onSelect }) {
   );
   const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   console.log(coachSessions);
-    
+
   useEffect(() => {
     if (coachId && hasValidMembership && sessionData) {
       setCoachSessions(sessionData.sessions);
@@ -85,7 +92,7 @@ export default function BookingCalendar({ coachId, onSelect }) {
             new Date(pack.expirationDate) > currentDate &&
             pack.remainingSessions > 0 &&
             pack.isActive === true
-          );
+        );
         setMemberships(validMemberships);
         setHasValidMembership(validMemberships.length > 0);
         setIsLoading(false);
@@ -96,8 +103,6 @@ export default function BookingCalendar({ coachId, onSelect }) {
       }
     }
   }, [clientPackSuccess, clientPack]);
-
-
 
   // Create a wrapped refresh function to pass up to parent
   // const refreshSessions = () => {
@@ -338,21 +343,30 @@ export default function BookingCalendar({ coachId, onSelect }) {
       </div>
 
       <div className="flex justify-center mb-6 flex-wrap gap-2">
-        {availableMonths.map((month) => (
-          <Button
-            key={month.index}
-            onClick={() => goToMonth(month.index, month.year)}
-            variant="ghost"
-            size="sm"
-            className={`text-gray-400 hover:text-white hover:bg-[#2a3142] ${
-              currentWeekStart.getMonth() === month.index
-                ? "bg-[#2a3142] text-white"
-                : ""
-            }`}
-          >
-            {month.name}
-          </Button>
-        ))}
+        {availableMonths.map((month) => {
+          // Calculate the end of the current week
+          const weekEndDate = new Date(currentWeekStart);
+          weekEndDate.setDate(currentWeekStart.getDate() + 6);
+
+          // Check if this month is visible in the current week view
+          const isMonthVisible =
+            currentWeekStart.getMonth() === month.index ||
+            weekEndDate.getMonth() === month.index;
+
+          return (
+            <Button
+              key={month.index}
+              onClick={() => goToMonth(month.index, month.year)}
+              variant="ghost"
+              size="sm"
+              className={`text-gray-400 hover:text-white hover:bg-[#2a3142] ${
+                isMonthVisible ? "bg-[#2a3142] text-white" : ""
+              }`}
+            >
+              {month.name}
+            </Button>
+          );
+        })}
       </div>
 
       <div className="w-full overflow-auto">

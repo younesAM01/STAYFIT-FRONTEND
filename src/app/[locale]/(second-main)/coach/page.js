@@ -32,47 +32,29 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/context/authContext";
+import { useGetSessionsByCoachIdQuery } from "@/redux/services/session.service";
 
 export default function CoachDashboard() {
   const { mongoUser } = useAuth();
   const coachId = mongoUser?._id;
-
+  const { data, isSuccess, isLoading } = useGetSessionsByCoachIdQuery(coachId, {
+    skip: !coachId,
+  });
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState("upcoming");
   const [coachSessions, setCoachSessions] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
+  const [monthlySessions, setMonthlySessions] = useState([]);
   const [monthlyStats, setMonthlyStats] = useState({
     scheduled: 0,
     completed: 0,
     canceled: 0,
     total: 0,
   });
-
-  const fetchCoachSessions = async (coachId) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/session?coachId=${coachId}`);
-      if (!response.ok)
-        throw new Error(`Failed to fetch sessions: ${response.status}`);
-      const data = await response.json();
-      setCoachSessions(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error("Error fetching coach sessions:", error);
-      setCoachSessions([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (coachId) {
-      fetchCoachSessions(coachId);
-    } else {
-      setIsLoading(false);
-      setCoachSessions([]);
+    if (isSuccess && data) {
+      setCoachSessions(data.sessions);
     }
-  }, [coachId]);
+  }, [data, isSuccess]);
 
   useEffect(() => {
     if (!isLoading && coachSessions?.length > 0) {
@@ -92,11 +74,9 @@ export default function CoachDashboard() {
                 sessionYear === currentYear
               ) {
                 const status = session.status?.toLowerCase() || "";
-                if (status === "scheduled" || status === "confirmed")
-                  acc.scheduled++;
+                if (status === "scheduled") acc.scheduled++;
                 else if (status === "completed") acc.completed++;
-                else if (status === "canceled" || status === "cancelled")
-                  acc.canceled++;
+                else if (status === "cancelled") acc.canceled++;
               }
             }
           }
@@ -166,7 +146,7 @@ export default function CoachDashboard() {
     [monthlyStats]
   );
 
-  const monthlySessions = useMemo(() => {
+  useEffect(() => {
     const now = new Date();
     const monthNames = [
       "Jan",
@@ -182,26 +162,27 @@ export default function CoachDashboard() {
       "Nov",
       "Dec",
     ];
-    const monthsData = [];
+
+    let monthsData = [];
 
     // Generate data for last 4 months, current month, and next 2 months
     for (let i = -4; i <= 2; i++) {
       const monthDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
       const monthIndex = monthDate.getMonth();
       const monthName = monthNames[monthIndex];
+      const year = monthDate.getFullYear();
       const label =
-        now.getFullYear() !== monthDate.getFullYear()
-          ? `${monthName}`
-          : monthName;
+        year !== now.getFullYear() ? `${monthName} ${year}` : monthName;
 
       monthsData.push({
         name: label,
         sessions: 0,
         monthNum: monthIndex,
-        year: monthDate.getFullYear(),
+        year: year,
       });
     }
 
+    // Count sessions for each month (but only for the months in our range)
     if (coachSessions?.length > 0) {
       coachSessions.forEach((session) => {
         if (session.sessionDate) {
@@ -212,7 +193,12 @@ export default function CoachDashboard() {
             const monthEntry = monthsData.find(
               (m) => m.monthNum === sessionMonth && m.year === sessionYear
             );
-            if (monthEntry && session.status?.toLowerCase() === "completed") {
+            if (
+              monthEntry &&
+              (session.status?.toLowerCase() === "completed" ||
+                session.status?.toLowerCase() === "pending" ||
+                session.status?.toLowerCase() === "scheduled")
+            ) {
               monthEntry.sessions++;
             }
           }
@@ -220,8 +206,13 @@ export default function CoachDashboard() {
       });
     }
 
-    return monthsData;
-  }, [coachSessions]);
+    console.log("Monthly data (fixed range):", monthsData);
+    setMonthlySessions(monthsData);
+
+    // Update the CardDescription to match the actual range being shown
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+  }, [coachSessions, data, isSuccess]);
 
   const weeklySessionsData = useMemo(() => {
     const now = new Date();
@@ -419,7 +410,8 @@ export default function CoachDashboard() {
                 Monthly Sessions
               </CardTitle>
               <CardDescription className="text-gray-400">
-                Number of sessions per month over the last 6 months
+                Number of sessions per month over the last 4 months, current
+                month, and next 2 months
               </CardDescription>
             </CardHeader>
             <CardContent className="h-80">

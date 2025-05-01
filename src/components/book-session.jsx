@@ -174,7 +174,12 @@ export default function BookingSection({
           </TabsList>
 
           <TabsContent value="coach" className="mt-6">
-            {coaches.length > 0 ? (
+            {isLoadingCoaches ? (
+              <div className="flex justify-center items-center p-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
+                <span className="ml-3 text-white">{t("loadingCoaches")}</span>
+              </div>
+            ) : coaches.length > 0 ? (
               <CoachSelection onSelect={handleCoachSelect} />
             ) : (
               <div className="text-center text-white p-4">

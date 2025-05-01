@@ -13,8 +13,8 @@ const TrainerShowcase = () => {
       try {
         const response = await fetch('/api/users');
         const data = await response.json();
-        // Filter only coaches
-        const coaches = data.filter(user => user.role === 'coach');
+        // Filter only active coaches
+        const coaches = data.filter(user => user.role === 'coach' && user.coachActive === true);
         setTrainers(coaches);
       } catch (error) {
         console.error('Error fetching trainers:', error);
