@@ -212,7 +212,8 @@
     "confirmCompleted": "Confirm Session Completion",
     "confirmFinishSessionMessage": "Are you sure you want to mark this session as completed?",
     "keepSessionOpen": "Keep Session Open",
-    "confirmFinish": "Yes, Complete Session"
+    "confirmFinish": "Yes, Complete Session",
+    "noSessionsRemaining": "No sessions remaining in your active packages"
   },
   "BookingPage": {
     "title": "Book a Session",

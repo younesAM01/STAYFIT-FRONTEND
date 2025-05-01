@@ -5,14 +5,26 @@ import { ChevronRight, ShoppingCart, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/authContext";
 import { useTranslations, useLocale } from "next-intl";
+import { useGetClientPackByClientIdQuery } from "@/redux/services/clientpack.service";
+import { useGetSessionsByCoachIdQuery } from "@/redux/services/session.service";
 
 export default function BookingCalendar({ coachId, onSelect }) {
-  const locale = useLocale();
   const { mongoUser } = useAuth();
+  const {
+    data: clientPack,
+    isLoading: clientPackLoading,
+    isSuccess: clientPackSuccess,
+    refetch: refetchClientPack,
+  } = useGetClientPackByClientIdQuery(mongoUser?._id, {
+    skip: !mongoUser?._id,
+  });
+  const { data:sessionData, isLoading: coachSessionsLoading , isSuccess: coachSessionsSuccess, refetch: refetchCoachSessions } = useGetSessionsByCoachIdQuery(coachId, {
+    skip: !coachId,
+  });
+  const locale = useLocale();
+
   const today = new Date();
-  const [currentWeekStart, setCurrentWeekStart] = useState(
-    getWeekStartDate(today)
-  );
+  const [currentWeekStart, setCurrentWeekStart] = useState(getWeekStartDate(today));
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [availableSlots, setAvailableSlots] = useState({});
   const [coachSessions, setCoachSessions] = useState([]);
@@ -50,20 +62,12 @@ export default function BookingCalendar({ coachId, onSelect }) {
   );
   const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   console.log(coachSessions);
+    
   useEffect(() => {
-    if (mongoUser?._id) {
-      checkClientMembership();
-    } else {
-      setIsLoading(false);
-      setHasValidMembership(false);
+    if (coachId && hasValidMembership && sessionData) {
+      setCoachSessions(sessionData.sessions);
     }
-  }, [mongoUser]);
-
-  useEffect(() => {
-    if (coachId && hasValidMembership) {
-      fetchCoachSessions(coachId);
-    }
-  }, [coachId, hasValidMembership]);
+  }, [coachId, hasValidMembership, sessionData]);
 
   useEffect(() => {
     if (hasValidMembership) {
@@ -71,55 +75,36 @@ export default function BookingCalendar({ coachId, onSelect }) {
     }
   }, [currentWeekStart, coachSessions, hasValidMembership]);
 
-  const checkClientMembership = async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:3000/api/client-pack?clientId=${mongoUser._id}`
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch membership info");
+  useEffect(() => {
+    if (clientPackSuccess && clientPack) {
+      try {
+        const currentDate = new Date();
+        const validMemberships = clientPack.clientPack.filter(
+          (pack) =>
+            pack.purchaseState === "completed" &&
+            new Date(pack.expirationDate) > currentDate &&
+            pack.remainingSessions > 0 &&
+            pack.isActive === true
+          );
+        setMemberships(validMemberships);
+        setHasValidMembership(validMemberships.length > 0);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error checking client membership:", error);
+        setIsLoading(false);
+        setHasValidMembership(false);
       }
-      const data = await response.json();
-      const currentDate = new Date();
-      const validMemberships = data.filter(
-        (pack) =>
-          pack.purchaseState === "completed" &&
-          new Date(pack.expirationDate) > currentDate &&
-          pack.remainingSessions > 0
-      );
-
-      setMemberships(validMemberships);
-      setHasValidMembership(validMemberships.length > 0);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error checking client membership:", error);
-      setIsLoading(false);
-      setHasValidMembership(false);
     }
-  };
+  }, [clientPackSuccess, clientPack]);
 
-  const fetchCoachSessions = async (coachId) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`/api/session?coachId=${coachId}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch sessions: ${response.status}`);
-      }
-      const data = await response.json();
-      setCoachSessions(data);
-    } catch (error) {
-      console.error("Error fetching coach sessions:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
 
   // Create a wrapped refresh function to pass up to parent
-  const refreshSessions = () => {
-    if (coachId) {
-      fetchCoachSessions(coachId);
-    }
-  };
+  // const refreshSessions = () => {
+  //   if (coachId) {
+  //     fetchCoachSessions(coachId);
+  //   }
+  // };
 
   const generateAvailableSlots = (startDate, sessions) => {
     const dummyData = {};
@@ -237,7 +222,7 @@ export default function BookingCalendar({ coachId, onSelect }) {
       selectedSlot.date,
       selectedSlot.formattedTime,
       sessionLocation,
-      refreshSessions
+      refetchCoachSessions
     );
   };
 

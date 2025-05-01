@@ -12,6 +12,7 @@ import {
   Info,
   Check,
   CheckCircle,
+  MapPin,
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { useLocale, useTranslations } from "next-intl";
@@ -59,7 +60,7 @@ const Membership = ({ setActiveTab }) => {
     useCompleteSessionMutation();
   const [updateClientPack, { isLoading: updateClientPackLoading }] =
     useUpdateClientPackMutation();
-
+  console.log("sessions", sessions);
   useEffect(() => {
     if (sessions?.sessions) {
       const completedSessions = sessions.sessions.filter(
@@ -83,9 +84,6 @@ const Membership = ({ setActiveTab }) => {
       setLoading(false);
 
       if (clientPack) {
-        const currentDate = new Date();
-        console.log("clientPack", clientPack.clientPack);
-        // Filter for active memberships
         setHasActiveMemberships(clientPack?.clientPack?.length > 0);
         setMemberships(clientPack?.clientPack);
       }
@@ -705,20 +703,16 @@ const Membership = ({ setActiveTab }) => {
                             {session.coach?.lastName || "" || "Not assigned"}
                           </span>
                         </div>
+
+                        <div className="flex items-center gap-3 mt-3">
+                          <div className="p-2 bg-[#161c2a] rounded-full">
+                            <MapPin size={18} className="text-[#B4E90E]" />
+                          </div>
+                          <span>{session.location || "unknown location"}</span>
+                        </div>
                       </div>
 
                       <div className="flex gap-2">
-                        {/* Show Finish button for pending sessions */}
-                        {session.status === "pending" && (
-                          <button
-                            onClick={() => handleCompleteSession(session)}
-                            className="px-4 py-2 rounded-lg transition-colors flex items-center gap-2 self-end sm:self-center bg-green-500/10 hover:bg-green-500/20 text-green-400"
-                          >
-                            <Check size={16} />
-                            {t("finishSession")}
-                          </button>
-                        )}
-
                         {/* For sessions past due by 1 hour, show confirm button */}
                         {isPastDueByOneHour &&
                         session.status === "scheduled" ? (
@@ -763,54 +757,6 @@ const Membership = ({ setActiveTab }) => {
                   <Calendar size={36} className="text-gray-400" />
                 </div>
                 <p className="text-gray-400">{t("noUpcomingSessions")}</p>
-
-                {/* Check if there are active memberships with sessions remaining */}
-                {memberships.some(
-                  (membership) =>
-                    membership.isActive && membership.remainingSessions > 0
-                ) ? (
-                  <button
-                    className="mt-6 bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-2 px-6 rounded-lg transition-colors inline-flex items-center gap-2"
-                    onClick={() => {
-                      // Double check that we have valid packages before navigating
-                      if (
-                        memberships.some(
-                          (m) => m.isActive && m.remainingSessions > 0
-                        )
-                      ) {
-                        setActiveTab("book");
-                      } else {
-                        // If somehow the state is inconsistent, show an error
-                        toast.error(
-                          t(
-                            "noRemainingSessionsError",
-                            "No active sessions available. Please purchase a new package."
-                          )
-                        );
-                      }
-                    }}
-                  >
-                    <Calendar size={18} />
-                    {t("bookASession")}
-                  </button>
-                ) : (
-                  <div className="mt-6">
-                    <p className="text-amber-400 mb-3">
-                      <Info size={18} className="inline mr-2" />
-                      {t(
-                        "noSessionsRemaining",
-                        "No sessions remaining in your active packages"
-                      )}
-                    </p>
-                    <button
-                      className="bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-2 px-6 rounded-lg transition-colors inline-flex items-center gap-2"
-                      onClick={() => (window.location.href = `/${locale}/`)}
-                    >
-                      <ShoppingCart size={18} />
-                      {t("buyAPackage")}
-                    </button>
-                  </div>
-                )}
               </div>
             )}
           </motion.div>
@@ -865,6 +811,13 @@ const Membership = ({ setActiveTab }) => {
                             {t("coach", "Coach")}: {session.coach?.firstName}{" "}
                             {session.coach?.lastName || ""}
                           </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 mt-3">
+                          <div className="p-2 bg-[#161c2a] rounded-full">
+                            <MapPin size={18} className="text-[#B4E90E]" />
+                          </div>
+                          <span>{session.location || "unknown location"}</span>
                         </div>
                       </div>
                     </div>
@@ -1020,43 +973,6 @@ const Membership = ({ setActiveTab }) => {
                 className="py-2 px-4 rounded-lg bg-[#161c2a] hover:bg-[#252d3d] transition-colors"
               >
                 {t("ok", "OK")}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Finish Session Confirmation Modal */}
-      {finishModalOpen && sessionToFinish && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#0a0e15] p-6 rounded-lg border border-[#161c2a] max-w-md w-full"
-          >
-            <div className="flex items-center gap-3 mb-4 text-green-400">
-              <CheckCircle size={24} />
-              <h3 className="text-xl font-bold">{t("confirmFinishSession")}</h3>
-            </div>
-
-            <p className="mb-6">{t("confirmFinishSessionMessage")}</p>
-
-            <div className="flex flex-col sm:flex-row gap-3 sm:justify-end">
-              <button
-                onClick={() => {
-                  setFinishModalOpen(false);
-                  setSessionToFinish(null);
-                }}
-                className="py-2 px-4 rounded-lg border border-gray-600 hover:bg-gray-800 transition-colors"
-              >
-                {t("keepSessionOpen")}
-              </button>
-              <button
-                onClick={handleCompleteSession}
-                className="py-2 px-4 rounded-lg bg-green-500/20 text-green-400 hover:bg-green-500/30 transition-colors flex items-center justify-center gap-2"
-              >
-                <Check size={16} />
-                {t("confirmFinish")}
               </button>
             </div>
           </motion.div>

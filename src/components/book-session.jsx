@@ -15,6 +15,7 @@ import BookingCalendar from "./booking-calendar";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { useCreateSessionMutation } from "@/redux/services/session.service";
+import { useGetCoachQuery } from "@/redux/services/user.service";
 export default function BookingSection({
   clientId,
   setActiveTab,
@@ -33,27 +34,14 @@ export default function BookingSection({
   const [refreshSessionsFunction, setRefreshSessionsFunction] = useState(null);
   const t = useTranslations("BookingPage");
   const [createSession, { isLoading }] = useCreateSessionMutation();
+  const { data, isLoading: isLoadingCoaches , isSuccess } = useGetCoachQuery();
 
   useEffect(() => {
-    // Fetch coaches to have access to the coach data
-    const fetchCoaches = async () => {
-      try {
-        const response = await fetch("/api/coach");
-        if (!response.ok) {
-          throw new Error("Failed to fetch coaches");
-        }
-        const data = await response.json();
-        const activeCoaches = data.filter(
-          (coach) => coach.coachActive === true
-        );
-        setCoaches(activeCoaches);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchCoaches();
-  }, []);
+    if (isSuccess) {
+      console.log("data", data);
+      setCoaches(data.coach);
+    }
+  }, [data, isSuccess]);
 
   // Find coach by ID whenever selectedCoachId changes
   useEffect(() => {
@@ -68,11 +56,11 @@ export default function BookingSection({
     setStep("calendar");
   };
 
-  const handleDateTimeSelect = (date, time, location, refreshSessions) => {
+  const handleDateTimeSelect = (date, time, location, refetchCoachSessions) => {
     setSelectedDate(date);
     setSelectedTime(time);
     setSessionLocation(location);
-    setRefreshSessionsFunction(() => refreshSessions);
+    setRefreshSessionsFunction(() => refetchCoachSessions);
     setStep("confirmation");
   };
 
@@ -129,10 +117,10 @@ export default function BookingSection({
         await refreshClientPack();
       }
 
-      // Call the refresh sessions function if it exists
-      if (refreshSessionsFunction) {
-        refreshSessionsFunction();
-      }
+      // // Call the refresh sessions function if it exists
+      // if (refreshSessionsFunction) {
+      //   refreshSessionsFunction();
+      // }
 
       toast.success("Session booked successfully!");
 

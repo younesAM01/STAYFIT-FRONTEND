@@ -14,6 +14,9 @@ export const userApi = createApi({
     getUserBySupabaseId: builder.query({
       query: (supabaseId) => `/users/supabase/${supabaseId}`,
     }),
+    getCoach: builder.query({
+      query: () => "/users/coach",
+    }),
     createUser: builder.mutation({
       query: (user) => ({
         url: "/users",
@@ -43,4 +46,5 @@ export const {
   useCreateUserMutation,
   useUpdateUserMutation,
   useDeleteUserMutation,
+  useGetCoachQuery,
 } = userApi;

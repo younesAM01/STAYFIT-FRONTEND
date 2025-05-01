@@ -214,7 +214,8 @@
     "confirmCompleted": "تأكيد إكمال الجلسة",
     "confirmFinishSessionMessage": "هل أنت متأكد أنك تريد وضع علامة اكتمال على هذه الجلسة؟",
     "keepSessionOpen": "إبقاء الجلسة مفتوحة",
-    "confirmFinish": "نعم، أكمل الجلسة"
+    "confirmFinish": "نعم، أكمل الجلسة",
+    "noSessionsRemaining": "لا يوجد جلسات متبقية في باقاتك النشطة"
   },
   "BookingPage": {
     "title": "حجز جلسة",

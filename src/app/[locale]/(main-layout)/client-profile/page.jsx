@@ -47,7 +47,6 @@ export default function ClientProfile() {
   } = useGetClientPackByClientIdQuery(mongoUser?._id, {
     skip: !mongoUser?._id,
   });
-  console.log("clientPack", clientPack[0]?._id);
   const profile =
     "https://res.cloudinary.com/dkjx65vc7/image/upload/v1745098188/blank-profile-picture-973460_960_720_oxeuux.webp";
   const t = useTranslations("ProfilePage");
@@ -1044,7 +1043,7 @@ function Reviews({ userId }) {
                     src={
                       review.coachId?.profilePic ||
                       review.coachId?.profilePicture ||
-                      ""
+                      "https://res.cloudinary.com/dkjx65vc7/image/upload/v1745098188/blank-profile-picture-973460_960_720_oxeuux.webp"
                     }
                     alt={
                       review.coachId
