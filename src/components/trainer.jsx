@@ -3,31 +3,23 @@ import { useTranslations } from 'next-intl';
 import React, { useEffect, useState } from 'react';
 import Link from "next/link"
 import { useLocale } from 'next-intl';
+import { useGetCoachQuery } from '@/redux/services/user.service';
 const TrainerShowcase = () => {
   const t = useTranslations('HomePage');
   const [trainers, setTrainers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const locale = useLocale();
+  const { data, isLoading: isCoachesLoading , isSuccess: isCoachesSuccess , isError: isCoachesError } = useGetCoachQuery();
   useEffect(() => {
-    const fetchTrainers = async () => {
-      try {
-        const response = await fetch('/api/users');
-        const data = await response.json();
-        // Filter only active coaches
-        const coaches = data.filter(user => user.role === 'coach' && user.coachActive === true);
-        setTrainers(coaches);
-      } catch (error) {
-        console.error('Error fetching trainers:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (isCoachesSuccess && data) {
+      setTrainers(data.coach.filter(coach => coach.coachActive === true));
+    }
+  }, [data, isCoachesSuccess]);
 
-    fetchTrainers();
-  }, []);
-
-  if (loading) {
+  if (isCoachesLoading) {
     return <div className="text-white text-center py-16">Loading...</div>;
+  }
+  if (isCoachesError) {
+    return <div className="text-white text-center py-16">Error fetching coaches</div>;
   }
   
   return (
@@ -48,7 +40,7 @@ const TrainerShowcase = () => {
             <div key={index} className="flex flex-col items-center">
               <div className="mb-4 overflow-hidden hover:rounded-3xl rounded-3xl" style={{ maxWidth: '300px', width: '100%' }}>
                 <img 
-                  src={trainer.profilePic || trainer.hoverImage} 
+                  src={trainer.profilePic || trainer.hoverImage || null} 
                   alt={trainer.firstName} 
                   className="w-full h-[400px] object-cover transition-transform duration-300 hover:scale-105"
                 />

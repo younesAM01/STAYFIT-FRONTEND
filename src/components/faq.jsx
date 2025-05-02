@@ -18,9 +18,9 @@ export default function FAQ() {
         <h1 className="text-5xl font-bold text-center mb-6">{t("faqtitle")}</h1>
 
         <div
-          className={`flex flex-row items-center justify-center mb-12 ${locale === "ar" ? "flex-row-reverse" : ""}`}
+          className={`flex flex-col sm:flex-row items-center justify-center mb-12 ${locale === "ar" ? "sm:flex-row-reverse" : ""}`}
         >
-          <p className={`${locale === "ar" ? "text-right" : "text-center"}`}>
+          <p className={`${locale === "ar" ? "text-right" : "text-center"} mb-2 sm:mb-0`}>
             {t("faqdescription")}
           </p>
           <Link

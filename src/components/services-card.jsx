@@ -11,7 +11,7 @@ const ActivityCard = ({ activity }) => {
   
     return (
       <motion.div
-        className="relative h-[250px] sm:h-[300px] rounded-xl sm:rounded-2xl overflow-hidden group"
+        className="relative h-[330px] sm:h-[300px] rounded-xl sm:rounded-2xl overflow-hidden group"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ 
           opacity: 1, 

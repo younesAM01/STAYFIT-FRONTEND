@@ -55,6 +55,7 @@ export const sessionApi = createApi({
         url: `/sessions/complete/${id}`,
         method: "PUT",
       }),
+      invalidatesTags: (result, error, id) => [{ type: "Session", id }],
     }),
   }),
   tagTypes: ["Session"],

@@ -82,7 +82,7 @@ export default function Footer() {
         {/* Footer Content - 3 Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-[#1a1f2e]">
           {/* Left Column - Logo and Description */}
-          <div className="flex flex-col">
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <Image src={logo} alt="STAY FiT" width={130} height={40} />
             <p className="text-gray-400 mb-4">{t("description")}</p>
             <p className="text-gray-500 text-sm">
@@ -91,9 +91,9 @@ export default function Footer() {
           </div>
 
           {/* Middle Column - Links */}
-          <div className="flex flex-col md:items-center">
+          <div className="flex flex-col items-center">
             <h4 className="font-bold text-lg mb-4">{t("quickLinks.title")}</h4>
-            <nav className="flex flex-col space-y-2">
+            <nav className="flex flex-col space-y-2 items-center md:items-center">
               <Link
                 href="#"
                 className="text-gray-400 hover:text-[#B4E90E] transition-colors"
@@ -102,7 +102,7 @@ export default function Footer() {
               </Link>
               <button
                 onClick={scrollToContact}
-                className="text-gray-400 hover:text-[#B4E90E] transition-colors text-left cursor-pointer"
+                className="text-gray-400 hover:text-[#B4E90E] transition-colors text-center md:text-left cursor-pointer"
               >
                 {t("quickLinks.contact")}
               </button>
@@ -128,7 +128,7 @@ export default function Footer() {
           </div>
 
           {/* Right Column - Social Media */}
-          <div className="flex flex-col md:items-end">
+          <div className="flex flex-col items-center md:items-end">
             <h4 className="font-bold text-lg mb-4">{t("connect.title")}</h4>
             <div className="flex space-x-4">
               <Link
@@ -160,10 +160,10 @@ export default function Footer() {
                 <span className="sr-only">YouTube</span>
               </Link>
             </div>
-            <div className={`mt-6 `}>
-              <div className="text-gray-400 text-sm ">
+            <div className="mt-6 text-center md:text-left">
+              <div className="text-gray-400 text-sm">
                 {locale === "ar" ? (
-                  <div className="text-right">
+                  <div className="text-center md:text-right">
                     <a
                       href="mailto:info@fitcoach.com"
                       className="text-[#B4E90E]"
@@ -184,9 +184,9 @@ export default function Footer() {
                   </div>
                 )}
               </div>
-              <div className="text-gray-400 text-sm mt-1 text-left">
+              <div className="text-gray-400 text-sm mt-1 text-center md:text-left">
                 {locale === "ar" ? (
-                  <div className="text-right">
+                  <div className="text-center md:text-right">
                     <a href="tel:+1234567890" className="text-[#B4E90E]">
                       {t("connect.phoneNumber")}
                     </a>{" "}
