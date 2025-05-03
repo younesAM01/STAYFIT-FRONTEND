@@ -96,8 +96,7 @@ const MembershipPlans = () => {
           expirationDays: selectedSession.expirationDays,
         },
       };
-      console.log(clientPackData);
-      // Make API call
+      
 
       await createClientPackMutation(clientPackData);
 

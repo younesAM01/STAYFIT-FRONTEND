@@ -6,12 +6,12 @@ export const couponApi = createApi({
     baseQuery: fetchBaseQuery({ baseUrl: BACKEND_URL }),
     endpoints: (builder) => ({
         getCoupons: builder.query({ 
-            query: (id) => id ? `/getcoupons?id=${id}` : '/getcoupons',
+            query: (id) => id ? `/coupons/getcoupons?id=${id}` : '/coupons/getcoupons',
             providesTags: (result, error, id) => [{ type: 'Coupon', id }]
         }),
         createCoupon: builder.mutation({
             query: (coupon) => ({
-                url: '/createcoupon',
+                url: '/coupons/createcoupon',
                 method: 'POST',
                 body: coupon
             }),
@@ -19,19 +19,17 @@ export const couponApi = createApi({
         }),
         updateCoupon: builder.mutation({
             query: ({ id, ...coupon }) => ({
-                url: `/updatecoupon?id=${id}`,
+                url: `/coupons/updatecoupon?id=${id}`,
                 method: 'PUT',
                 body: coupon
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: 'Coupon', id }]
-        }),
+            invalidatesTags: ['Coupon']        }),
         deleteCoupon: builder.mutation({
             query: (id) => ({
-                url: `/deletecoupon?id=${id}`,
+                url: `/coupons/deletecoupon?id=${id}`,
                 method: 'DELETE'
             }),
-            invalidatesTags: (result, error, id) => [{ type: 'Coupon', id }]
-        })
+            invalidatesTags: ['Coupon']        })
     }),
     tagTypes: ['Coupon']
 });

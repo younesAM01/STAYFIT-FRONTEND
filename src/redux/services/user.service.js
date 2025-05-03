@@ -7,19 +7,19 @@ export const userApi = createApi({
   endpoints: (builder) => ({
     getUser: builder.query({
       query: () => "/users",
-      providesTags: (result, error, arg) => [{ type: "User", id: arg.id }],
+      providesTags: ["User"],
     }),
     getUserById: builder.query({
       query: (id) => `/users/${id}`,
-      providesTags: (result, error, arg) => [{ type: "User", id: arg.id }],
+      providesTags: ["User"],
     }),
     getUserBySupabaseId: builder.query({
       query: (supabaseId) => `/users/supabase/${supabaseId}`,
-      providesTags: (result, error, arg) => [{ type: "User", id: arg.id }],
+      providesTags: ["User"],
     }),
     getCoach: builder.query({
       query: () => "/users/coach",
-      providesTags: (result, error, ) => [{ type: "User" }],
+      providesTags: ["User"],
     }),
     createUser: builder.mutation({
       query: (user) => ({
@@ -27,7 +27,7 @@ export const userApi = createApi({
         method: "POST",
         body: user,
       }),
-      invalidatesTags: (result, error, arg) => [{ type: "User", id: arg.id }],
+      invalidatesTags: ["User"],
     }),
     updateUser: builder.mutation({
       query: ({ id, user }) => ({
@@ -35,14 +35,14 @@ export const userApi = createApi({
         method: "PUT",
         body: user,
       }),
-      invalidatesTags: (result, error, arg) => [{ type: "User", id: arg.id }],
+      invalidatesTags: ["User"],
     }),
     deleteUser: builder.mutation({
       query: (id) => ({
         url: `/users/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, arg) => [{ type: "User", id: arg.id }],
+      invalidatesTags: ["User"],
     }),
   }),
   tagTypes: ["User"],

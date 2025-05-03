@@ -222,7 +222,7 @@ export function AppSidebar({ ...props }) {
                   </div>
                   <p className="text-gray-300 mb-2 break-words">{mongoUser?.email || "email@example.com"}</p>
                   <a 
-                    href={`/${locale}/${mongoUser?.role === 'admin' ? 'profile' : `coach/${mongoUser?._id}`}`} 
+                    href={`/${locale}/${mongoUser?.role === 'admin' ? 'client-profile' : `coach/${mongoUser?._id}`}`} 
                     className="block text-[#B4E90E] hover:underline mb-2 cursor-pointer"
                   >
                     View Profile

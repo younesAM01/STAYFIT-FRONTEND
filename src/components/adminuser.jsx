@@ -45,12 +45,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLocale } from "next-intl";
+import { useGetUserQuery, useUpdateUserMutation, useDeleteUserMutation } from "@/redux/services/user.service";
+import { toast } from "sonner";
+
 export default function UsersPage() {
   const locale = useLocale();
   const [searchQuery, setSearchQuery] = useState("");
-  const [users, setUsers] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
   const { state } = useSidebar();
   const [showEditForm, setShowEditForm] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -75,130 +75,124 @@ export default function UsersPage() {
     certifications: [],
     aboutContent: {
       paragraphs: [],
-      languages: [],
+      languages: []
     },
-    heroContent: {
-      name: "",
-      title: "",
-      image: "",
+    title: {
+      en: "",
+      ar: ""
     },
-    hoverImage: "",
+    available: {
+      en: "",
+      ar: ""
+    },
+    hoverImage: ""
   });
   const [roleFilter, setRoleFilter] = useState("all");
 
+  const { data: usersResponse, isLoading, error: fetchError, isSuccess , isError ,  refetch } = useGetUserQuery();
+  const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
+  const [deleteUser, { isLoading: isDeleting , isSuccess: deleteSuccess , isError : isDeleteError , error: deleteError }] = useDeleteUserMutation();
+  const [users , setUsers ] = useState([])
+
+ 
+
   useEffect(() => {
-    // Load all users
-    const loadData = async () => {
-      try {
-        setIsLoading(true);
-        await fetchUsers();
-      } catch (err) {
-        console.error("Error loading data:", err);
-        setError("Failed to load user data. Please try again.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadData();
-  }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch("/api/users");
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "Failed to fetch users");
-      }
-
-      const data = await response.json();
-      console.log("Users data:", data);
-      setUsers(data);
-      return data;
-    } catch (err) {
-      setError(err.message);
-      console.error("Error fetching users:", err);
-      throw err;
+    if (isSuccess) {
+     setUsers(usersResponse?.users)
     }
-  };
+    if (isError) {
+     console.log(fetchError)  
+    }
+  }, [isSuccess, isError, usersResponse]);
+
+  useEffect(() => {
+    if (deleteSuccess) {
+       refetch()
+      toast.success('User deleted successfully!');  
+    }
+    if (isDeleteError) {
+     console.log(deleteError)  
+    }
+  }, [deleteSuccess, isDeleteError, deleteError]);
 
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     try {
-      if (!selectedUser?.supabaseId) {
+      if (!selectedUser?._id) {
         throw new Error("No user selected for update");
       }
 
-      const response = await fetch(
-        `/api/users?supabaseId=${selectedUser.supabaseId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      // Prepare the update data according to the User model
+      const updateData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        address: formData.address,
+        role: formData.role,
+        nationality: formData.nationality,
+        preferredLanguage: formData.preferredLanguage,
+        // Client specific fields
+        weight: formData.weight ? Number(formData.weight) : undefined,
+        height: formData.height ? Number(formData.height) : undefined,
+        goals: formData.goals,
+        diseases: formData.diseases,
+        // Coach specific fields
+        coachActive: formData.coachActive,
+        specialties: formData.specialties,
+        certifications: formData.certifications,
+        aboutContent: formData.aboutContent,
+        title: formData.title,
+        available: formData.available,
+        hoverImage: formData.hoverImage
+      };
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update user");
+      const result = await updateUser({
+        id: selectedUser._id,
+        ...updateData
+      }).unwrap();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to update user');
       }
 
-      const updatedUser = await response.json();
-      setUsers((prevUsers) =>
-        prevUsers.map((user) =>
-          user.supabaseId === updatedUser.supabaseId ? updatedUser : user
-        )
-      );
       setShowEditForm(false);
       setSelectedUser(null);
+      toast.success(result.message || 'User updated successfully!');
+      refetch(); // Refresh the users list
     } catch (error) {
       console.error("Error updating user:", error);
-      setError(error.message);
+      toast.error(error.message || 'Failed to update user');
     }
   };
 
   const handleDeleteUser = async () => {
     try {
-      if (!selectedUser?.supabaseId) {
-        throw new Error("No user selected for deletion");
+      if (!selectedUser?._id) {
+        throw new Error('No user selected for deletion');
       }
 
-      const response = await fetch(
-        `/api/users?supabaseId=${selectedUser.supabaseId}`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      const result = await deleteUser(selectedUser._id).unwrap();
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to delete user");
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to delete user');
       }
 
-      // Remove the user from the local state
-      setUsers((prevUsers) =>
-        prevUsers.filter((user) => user.supabaseId !== selectedUser.supabaseId)
-      );
-
-      // Close the dialog and reset selected user
       setShowDeleteDialog(false);
       setSelectedUser(null);
+     
+      refetch(); // Refresh the users list
     } catch (error) {
       console.error("Error deleting user:", error);
-      setError(error.message);
+      toast.error(error.message || 'Failed to delete user');
     }
   };
 
   const handleEditClick = (user) => {
     setSelectedUser(user);
-    setFormData({
+    
+    // Initialize base form data with all common fields
+    const baseFormData = {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
@@ -207,17 +201,77 @@ export default function UsersPage() {
       role: user.role,
       preferredLanguage: user.preferredLanguage || "",
       nationality: user.nationality || "",
-      weight: user.weight || "",
-      height: user.height || "",
-      goals: user.goals || [],
-      diseases: user.diseases || [],
-      coachActive: user.coachActive || false,
-      specialties: user.specialties || [],
-      certifications: user.certifications || [],
-      aboutContent: user.aboutContent || { paragraphs: [], languages: [] },
-      heroContent: user.heroContent || { name: "", title: "", image: "" },
-      hoverImage: user.hoverImage || "",
-    });
+      age: user.age || "",
+      city: user.city || "",
+      profilePic: user.profilePic || "",
+      rating: user.rating || 0,
+      reviews: user.reviews || 0
+    };
+
+    // Add role-specific fields
+    if (user.role === "client") {
+      setFormData({
+        ...baseFormData,
+        // Client specific fields
+        weight: user.weight || "",
+        height: user.height || "",
+        goals: user.goals || [],
+        diseases: user.diseases || [],
+        // Reset coach-specific fields
+        coachActive: false,
+        specialties: [],
+        certifications: [],
+        aboutContent: { 
+          paragraphs: { en: [], ar: [] },
+          languages: [] 
+        },
+        title: { en: "", ar: "" },
+        available: { en: "", ar: "" },
+        hoverImage: ""
+      });
+    } else if (user.role === "coach") {
+      setFormData({
+        ...baseFormData,
+        // Reset client-specific fields
+        weight: "",
+        height: "",
+        goals: [],
+        diseases: [],
+        // Set coach-specific fields
+        coachActive: user.coachActive || false,
+        specialties: user.specialties || [],
+        certifications: user.certifications || [],
+        aboutContent: user.aboutContent || { 
+          paragraphs: { en: [], ar: [] },
+          languages: [] 
+        },
+        title: user.title || { en: "", ar: "" },
+        available: user.available || { en: "", ar: "" },
+        hoverImage: user.hoverImage || ""
+      });
+    } else {
+      // For admin or other roles, reset all role-specific fields
+      setFormData({
+        ...baseFormData,
+        // Reset client-specific fields
+        weight: "",
+        height: "",
+        goals: [],
+        diseases: [],
+        // Reset coach-specific fields
+        coachActive: false,
+        specialties: [],
+        certifications: [],
+        aboutContent: { 
+          paragraphs: { en: [], ar: [] },
+          languages: [] 
+        },
+        title: { en: "", ar: "" },
+        available: { en: "", ar: "" },
+        hoverImage: ""
+      });
+    }
+    
     setShowEditForm(true);
   };
 
@@ -246,7 +300,7 @@ export default function UsersPage() {
     }
   };
 
-  const filteredData = users.filter((user) => {
+  const filteredData = users?.filter((user) => {
     const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
     const email = user.email ? user.email.toLowerCase() : "";
     const role = user.role ? user.role.toLowerCase() : "";
@@ -269,74 +323,75 @@ export default function UsersPage() {
     (user) => user.role === "admin" || user.role === "super admin"
   ).length;
 
+  // Add loading states to the UI
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-white">Loading users...</div>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="text-red-500">Error loading users: {fetchError.message}</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex">
-      <main
-        className={`flex-1 transition-all duration-300 ease-in-out ${
-          state === "collapsed" ? "ml-40" : "ml-18"
-        }`}
-      >
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-white">Users</h2>
-          </div>
+    <div className="flex flex-col min-h-screen w-full">
+      <main className="flex-1 w-full">
+        <div className="w-full px-2 sm:px-4 md:px-6">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Users</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card className="bg-gray-900 border-0 p-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 mb-3 sm:mb-6 w-full min-w-0">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">
-                  Clients
-                </CardTitle>
-                <User className="h-4 w-4 text-green-500" />
+                <CardTitle className="text-sm font-medium text-white mt-3">Clients</CardTitle>
+                <User className="h-4 w-4 text-[#B4E90E]" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-white">
-                  {clientsCount}
-                </div>
+                <div className="text-2xl font-bold text-white">{clientsCount}</div>
               </CardContent>
             </Card>
-            <Card className="bg-gray-900 border-0 p-2">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">
-                  Coaches
-                </CardTitle>
-                <Users className="h-4 w-4 text-blue-500" />
+                <CardTitle className="text-sm font-medium text-white mt-3">Coaches</CardTitle>
+                <Users className="h-4 w-4 text-[#B4E90E]" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-white">
-                  {coachesCount}
-                </div>
+                <div className="text-2xl font-bold text-white">{coachesCount}</div>
               </CardContent>
             </Card>
-            <Card className="bg-gray-900 border-0 p-2">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">
-                  Admins
-                </CardTitle>
-                <Shield className="h-4 w-4 text-red-500" />
+                <CardTitle className="text-sm font-medium text-white mt-3">Admins</CardTitle>
+                <Shield className="h-4 w-4 text-[#B4E90E]" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-white">
-                  {adminsCount}
-                </div>
+                <div className="text-2xl font-bold text-white">{adminsCount}</div>
               </CardContent>
             </Card>
           </div>
 
-          <div className="flex justify-end gap-4 mb-6">
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
+          <div className="border-t border-white/10 my-6"></div>
+
+          <div className="flex flex-col sm:flex-row justify-end items-center mb-3 sm:mb-6 gap-2 sm:gap-x-3 w-full">
+            <div className="relative w-full sm:w-[200px] mr-7">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
               <Input
                 type="search"
                 placeholder="Search users..."
-                className="w-[200px] pl-8 bg-gray-300 text-black placeholder:text-black"
+                className="w-full pl-8 bg-gray-300 border-0 text-black placeholder:text-black"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
 
-          <Card className="bg-gray-900 border-0 p-2">
+          <Card className="bg-gray-900 border-0 w-full min-w-0">
             <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
@@ -394,74 +449,42 @@ export default function UsersPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {isLoading ? (
+              {isUpdating || isDeleting ? (
                 <div className="flex justify-center items-center h-32">
-                  <div className="text-white">Loading...</div>
-                </div>
-              ) : error ? (
-                <div className="flex justify-center items-center h-32">
-                  <div className="text-red-500">{error}</div>
+                  <div className="text-white">Processing...</div>
                 </div>
               ) : (
-                <div className="relative overflow-x-auto">
-                  <table className="w-full">
+                <div className="block w-full overflow-x-auto rounded-md">
+                  <table className="w-full min-w-full md:min-w-[700px] border-collapse text-xs sm:text-sm md:text-base">
                     <thead className="sticky top-0 bg-gray-900 z-10">
                       <tr className="border-b border-white/10">
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                          Name
-                        </th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                          Email
-                        </th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                          Phone
-                        </th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                          Role
-                        </th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Name</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Email</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Phone</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Role</th>
                         {roleFilter === "client" && (
                           <>
-                            <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                              Weight
-                            </th>
-                            <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                              Height
-                            </th>
-                            <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                              Goals
-                            </th>
-                            <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                              Diseases
-                            </th>
-                            <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                              Created
-                            </th>
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Weight</th>
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Height</th>
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Goals</th>
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Diseases</th>
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Created</th>
                           </>
                         )}
                         {roleFilter === "coach" && (
                           <>
-                            <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                              Active Status
-                            </th>
-                            <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                              Specialties
-                            </th>
-                            <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                              Certifications
-                            </th>
-                            <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                              Created
-                            </th>
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Active Status</th>
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Specialties</th>
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Certifications</th>
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Title</th>
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Available For</th>
+                            <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Created</th>
                           </>
                         )}
                         {roleFilter === "all" && (
-                          <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">
-                            Created
-                          </th>
+                          <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Created</th>
                         )}
-                        <th className="h-10 px-4 text-right text-sm font-medium text-white/60">
-                          Actions
-                        </th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-right text-xs sm:text-sm font-medium text-white/60">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -477,111 +500,93 @@ export default function UsersPage() {
                                     ? 10
                                     : 6
                             }
-                            className="p-4 text-center text-white"
+                            className="p-4 text-center text-white border-b border-white/10"
                           >
                             No users found
                           </td>
                         </tr>
                       ) : (
                         filteredData.map((user) => (
-                          <tr
-                            key={user._id}
-                            className="border-b border-white/10 hover:bg-white/5"
-                          >
-                            <td className="p-4 text-sm font-medium text-white border-r border-white/10">
+                          <tr key={user._id} className="border-b border-white/10 hover:bg-white/5">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm font-medium text-white border-r border-white/10">
                               {user.firstName} {user.lastName}
                             </td>
-                            <td className="p-4 text-sm text-white border-r border-white/10">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                               {user.email}
                             </td>
-                            <td className="p-4 text-sm text-white border-r border-white/10">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                               {user.phoneNumber || "—"}
                             </td>
-                            <td
-                              className={`p-4 text-sm ${getRoleColor(user.role)} border-r border-white/10`}
-                            >
-                              {user.role.charAt(0).toUpperCase() +
-                                user.role.slice(1)}
+                            <td className={`px-2 py-2 sm:px-4 sm:py-3 text-sm ${getRoleColor(user.role)} border-r border-white/10`}>
+                              {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
                             </td>
                             {roleFilter === "client" && (
                               <>
-                                <td className="p-4 text-sm text-white border-r border-white/10">
+                                <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                                   {user.weight ? `${user.weight} kg` : "—"}
                                 </td>
-                                <td className="p-4 text-sm text-white border-r border-white/10">
+                                <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                                   {user.height ? `${user.height} cm` : "—"}
                                 </td>
-                                <td className="p-4 text-sm text-white border-r border-white/10">
-                                  {user.goals?.length > 0
-                                    ? user.goals.join(", ")
-                                    : "—"}
+                                <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
+                                  {user.goals?.length > 0 ? user.goals.join(", ") : "—"}
                                 </td>
-                                <td className="p-4 text-sm text-white border-r border-white/10">
-                                  {user.diseases?.length > 0
-                                    ? user.diseases.join(", ")
-                                    : "—"}
+                                <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
+                                  {user.diseases?.length > 0 ? user.diseases.join(", ") : "—"}
                                 </td>
-                                <td className="p-4 text-sm text-white border-r border-white/10">
+                                <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                                   {formatDate(user.createdAt)}
                                 </td>
                               </>
                             )}
                             {roleFilter === "coach" && (
                               <>
-                                <td className="p-4 text-sm text-white border-r border-white/10">
+                                <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                                   {user.coachActive ? (
                                     <span className="text-green-500">Active</span>
                                   ) : (
                                     <span className="text-red-500">Inactive</span>
                                   )}
                                 </td>
-                                <td className="p-4 text-sm text-white border-r border-white/10">
+                                <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                                   {user.specialties?.length > 0
-                                    ? user.specialties
-                                        .map((s) => s.title[locale])
-                                        .join(", ")
+                                    ? user.specialties.map((s) => s.title[locale]).join(", ")
                                     : "—"}
                                 </td>
-                                <td className="p-4 text-sm text-white border-r border-white/10">
+                                <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                                   {user.certifications?.length > 0
-                                    ? user.certifications
-                                        .map((c) => c.title[locale])
-                                        .join(", ")
+                                    ? user.certifications.map((c) => c.title[locale]).join(", ")
                                     : "—"}
                                 </td>
-                                <td className="p-4 text-sm text-white border-r border-white/10">
+                                <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
+                                  {user.title?.[locale] || "—"}
+                                </td>
+                                <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
+                                  {user.available?.[locale] || "—"}
+                                </td>
+                                <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                                   {formatDate(user.createdAt)}
                                 </td>
                               </>
                             )}
                             {roleFilter === "all" && (
-                              <td className="p-4 text-sm text-white border-r border-white/10">
+                              <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                                 {formatDate(user.createdAt)}
                               </td>
                             )}
-                            <td className="p-4 text-right">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    className="h-8 w-8 p-0"
-                                  >
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
                                     <span className="sr-only">Open menu</span>
                                     <MoreHorizontal className="h-4 w-4 text-white" />
                                   </Button>
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                  align="end"
-                                  className="w-[160px] bg-[#1F1F1F] border-white/10"
-                                >
-                                  <DropdownMenuLabel className="text-white">
-                                    Actions
-                                  </DropdownMenuLabel>
+                                <DropdownMenuContent align="end" className="w-[160px] bg-[#1F1F1F] border-white/10">
+                                  <DropdownMenuLabel className="text-white">Actions</DropdownMenuLabel>
                                   <DropdownMenuItem
                                     className="text-white"
-                                    onClick={() => {
-                                      handleEditClick(user);
-                                    }}
+                                    onClick={() => handleEditClick(user)}
                                   >
                                     Edit user
                                   </DropdownMenuItem>
@@ -612,7 +617,7 @@ export default function UsersPage() {
 
       {/* Edit Form Dialog */}
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="bg-gray-900 text-white w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden p-2 sm:p-6">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -687,7 +692,7 @@ export default function UsersPage() {
                       <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
-                      <SelectContent className=" border-white/10">
+                      <SelectContent className="border-white/10">
                         <SelectItem value="client">Client</SelectItem>
                         <SelectItem value="coach">Coach</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
@@ -726,36 +731,28 @@ export default function UsersPage() {
                       </div>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="edit-goals">
-                        Goals (comma separated)
-                      </Label>
+                      <Label htmlFor="edit-goals">Goals (comma separated)</Label>
                       <Input
                         id="edit-goals"
                         value={formData.goals.join(", ")}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            goals: e.target.value
-                              .split(",")
-                              .map((g) => g.trim()),
+                            goals: e.target.value.split(",").map((g) => g.trim()),
                           })
                         }
                         className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="edit-diseases">
-                        Diseases (comma separated)
-                      </Label>
+                      <Label htmlFor="edit-diseases">Diseases (comma separated)</Label>
                       <Input
                         id="edit-diseases"
                         value={formData.diseases.join(", ")}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            diseases: e.target.value
-                              .split(",")
-                              .map((d) => d.trim()),
+                            diseases: e.target.value.split(",").map((d) => d.trim()),
                           })
                         }
                         className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
@@ -788,14 +785,10 @@ export default function UsersPage() {
                       </Select>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="edit-specialties">
-                        Specialties (comma separated)
-                      </Label>
+                      <Label htmlFor="edit-specialties">Specialties (comma separated)</Label>
                       <Input
                         id="edit-specialties"
-                        value={formData.specialties
-                          .map((s) => s.title[locale])
-                          .join(", ")}
+                        value={formData.specialties.map((s) => s.title[locale]).join(", ")}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
@@ -809,52 +802,33 @@ export default function UsersPage() {
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="edit-certifications">
-                        Certifications (comma separated)
-                      </Label>
+                      <Label htmlFor="edit-certifications">Certifications (comma separated)</Label>
                       <Input
                         id="edit-certifications"
-                        value={formData.certifications
-                          .map((c) => c.title[locale])
-                          .join(", ")}
+                        value={formData.certifications.map((c) => c.title[locale]).join(", ")}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            certifications: e.target.value
-                              .split(",")
-                              .map((c) => ({
-                                title: { [locale]: c.trim() },
-                                org: "",
-                              })),
+                            certifications: e.target.value.split(",").map((c) => ({
+                              title: { [locale]: c.trim() },
+                              org: "",
+                            })),
                           })
                         }
                         className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="edit-about">
-                        About Content (paragraphs, comma separated)
-                      </Label>
+                      <Label htmlFor="edit-title">Title</Label>
                       <Input
-                        id="edit-about"
-                        value={
-                          formData.aboutContent.paragraphs[locale]
-                            ? formData.aboutContent.paragraphs[locale].join(
-                                ", "
-                              )
-                            : ""
-                        }
+                        id="edit-title"
+                        value={formData.title[locale]}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            aboutContent: {
-                              ...formData.aboutContent,
-                              paragraphs: {
-                                ...formData.aboutContent.paragraphs,
-                                [locale]: e.target.value
-                                  .split(",")
-                                  .map((p) => p.trim()),
-                              },
+                            title: {
+                              ...formData.title,
+                              [locale]: e.target.value,
                             },
                           })
                         }
@@ -862,38 +836,27 @@ export default function UsersPage() {
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="edit-hero-name">Hero Name</Label>
-                      <Input
-                        id="edit-hero-name"
-                        value={formData.heroContent.name}
-                        onChange={(e) =>
+                      <Label htmlFor="edit-available">Available For</Label>
+                      <Select
+                        value={formData.available[locale]}
+                        onValueChange={(value) =>
                           setFormData({
                             ...formData,
-                            heroContent: {
-                              ...formData.heroContent,
-                              name: e.target.value,
+                            available: {
+                              ...formData.available,
+                              [locale]: value,
                             },
                           })
                         }
-                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="edit-hero-title">Hero Title</Label>
-                      <Input
-                        id="edit-hero-title"
-                        value={formData.heroContent.title}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            heroContent: {
-                              ...formData.heroContent,
-                              title: e.target.value,
-                            },
-                          })
-                        }
-                        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                      />
+                      >
+                        <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+                          <SelectValue placeholder="Select availability" />
+                        </SelectTrigger>
+                        <SelectContent className="border-white/10">
+                          <SelectItem value="Available only for women">Available only for women</SelectItem>
+                          <SelectItem value="Available for all">Available for all</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </>
                 )}
@@ -914,9 +877,7 @@ export default function UsersPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="edit-preferredLanguage">
-                      Preferred Language
-                    </Label>
+                    <Label htmlFor="edit-preferredLanguage">Preferred Language</Label>
                     <Input
                       id="edit-preferredLanguage"
                       value={formData.preferredLanguage}
@@ -933,33 +894,31 @@ export default function UsersPage() {
               </div>
             </form>
             <DialogFooter className="mt-4 border-t border-white/10 pt-4">
-            <Button
-              onClick={handleUpdateUser}
-              className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors"
-            >
-              Update User
-            </Button>
-          </DialogFooter>
+              <Button
+                onClick={handleUpdateUser}
+                className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors"
+              >
+                Update User
+              </Button>
+            </DialogFooter>
           </div>
-          
         </DialogContent>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white w-full max-w-xs sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription className="text-white/60">
-              Are you sure you want to delete this user? This action cannot be
-              undone.
+              Are you sure you want to delete this user? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className="mt-4 border-t border-white/10 pt-4">
             <Button
               variant="ghost"
               onClick={() => setShowDeleteDialog(false)}
-              className="text-white hover:bg-white/10"
+              className="hover:bg-gray-800"
             >
               Cancel
             </Button>

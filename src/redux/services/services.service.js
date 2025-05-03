@@ -1,14 +1,26 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+// Make sure this matches your backend URL
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ;
 
 export const servicesApi = createApi({
     reducerPath: 'servicesApi',
-    baseQuery: fetchBaseQuery({ baseUrl: BACKEND_URL }),
+    baseQuery: fetchBaseQuery({ 
+        baseUrl: BACKEND_URL,
+    }),
+    tagTypes: ['Services'],
     endpoints: (builder) => ({
-        getServices: builder.query({ query: () => '/services' }),
+        getServices: builder.query({ 
+            query: () => {
+                return '/services';
+            },
+           
+            providesTags: ['Services']
+        }),
         getServiceById: builder.query({ 
             query: (id) => `/services/${id}`,
-            providesTags: (result, error, id) => [{ type: 'Service', id }]
+        
+            providesTags: ['Services']
         }),
         createService: builder.mutation({
             query: (service) => ({
@@ -16,7 +28,8 @@ export const servicesApi = createApi({
                 method: 'POST',
                 body: service
             }),
-            invalidatesTags: ['Service']
+            
+            invalidatesTags: ['Services']
         }),
         updateService: builder.mutation({
             query: ({ id, ...service }) => ({
@@ -24,17 +37,18 @@ export const servicesApi = createApi({
                 method: 'PUT',
                 body: service
             }),
-            invalidatesTags: (result, error, { id }) => [{ type: 'Service', id }]
+           
+            invalidatesTags: ['Services']
         }),
         deleteService: builder.mutation({
             query: (id) => ({
                 url: `/services/${id}`,
                 method: 'DELETE'
             }),
-            invalidatesTags: (result, error, id) => [{ type: 'Service', id }]
+            
+            invalidatesTags: ['Services']
         })
-    }),
-    tagTypes: ['Service']
+    })
 });
 
 export const { 

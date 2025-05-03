@@ -11,10 +11,20 @@ import { Label } from "@/components/ui/label"
 import { useSidebar } from "@/components/ui/sidebar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useLocale } from "next-intl"
+import { 
+  useGetPacksQuery,
+  useCreatePackMutation,
+  useUpdatePackMutation,
+  useDeletePackMutation
+} from "@/redux/services/pack.service"
+import { toast } from "sonner"
+
 export default function PacksPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [packs, setPacks] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { data: response = { packs: [] }, isLoading, error: queryError } = useGetPacksQuery()
+  const [createPack] = useCreatePackMutation()
+  const [updatePack] = useUpdatePackMutation()
+  const [deletePack] = useDeletePackMutation()
   const [error, setError] = useState(null)
   const { state } = useSidebar()
   const [showAddForm, setShowAddForm] = useState(false)
@@ -50,30 +60,30 @@ export default function PacksPage() {
   const [enFeatures, setEnFeatures] = useState([""])
   const [arFeatures, setArFeatures] = useState([""])
 
-  useEffect(() => {
-    fetchPacks()
-  }, [])
+  // Ensure packs is always an array
+  const packsArray = Array.isArray(response.packs) ? response.packs : [];
 
-  const fetchPacks = async () => {
-    try {
-      setIsLoading(true)
-      const response = await fetch('/api/packs')
-      
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to fetch packs')
-      }
-      
-      const data = await response.json()
-      console.log("Packs data:", data)
-      setPacks(data)
-    } catch (err) {
-      setError(err.message)
-      console.error('Error fetching packs:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const filteredData = packsArray.filter((pack) => {
+    const categoryEn = pack.category?.en || '';
+    const categoryAr = pack.category?.ar || '';
+    const features = [...(pack.features?.en || []), ...(pack.features?.ar || [])].join(' ');
+    
+    const searchFields = [
+      categoryEn.toLowerCase(),
+      categoryAr.toLowerCase(),
+      features.toLowerCase()
+    ];
+    
+    const query = searchQuery.toLowerCase();
+    return searchFields.some((field) => field.includes(query));
+  });
+
+  // Count packs by category
+  const singleCount = packsArray.filter(pack => pack.category?.en === 'Pack Single').length;
+  const packageCount = packsArray.filter(pack => pack.category?.en === 'Body Package').length;
+  const nutritionCount = packsArray.filter(pack => pack.category?.en === 'Pack Nutrition').length;
+
+
 
   const handleAddPack = async (e) => {
     e.preventDefault()
@@ -91,30 +101,33 @@ export default function PacksPage() {
         throw new Error('All fields are required')
       }
 
-      const response = await fetch('/api/packs', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(packData)
-      })
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to add pack')
+      const result = await createPack(packData).unwrap()
+      
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to add pack')
       }
-      
-      const data = await response.json()
-      console.log("New pack created:", data)
-      
-      // Refresh the packs list
-      await fetchPacks()
       
       // Reset form and close dialog
       setShowAddForm(false)
       resetForm()
+      toast.success('Pack added successfully')
     } catch (err) {
-      console.error('Error adding pack:', err)
-      setError(err.message)
+      // Handle different error formats
+      let errorMessage = 'An error occurred while adding the pack'
+      
+      if (err.data?.message) {
+        errorMessage = err.data.message
+      } else if (err.message) {
+        errorMessage = err.message
+      } else if (err.originalError?.message) {
+        errorMessage = err.originalError.message
+      } else if (err.status === 'FETCH_ERROR') {
+        errorMessage = 'Network error: Could not connect to the server'
+      } else if (err.status === 'PARSING_ERROR') {
+        errorMessage = 'Error parsing server response'
+      }
+      
+      toast.error(errorMessage)
     }
   }
 
@@ -123,15 +136,20 @@ export default function PacksPage() {
     try {
       // Prepare the form data with current session packages and features
       const packData = {
-        ...formData,
-        sessions: sessionPackages,
+        startPrice: formData.startPrice,
+        category: formData.category,
+        sessions: sessionPackages.map(session => ({
+          price: Number(session.price),
+          sessionCount: Number(session.sessionCount),
+          expirationDays: Number(session.expirationDays)
+        })),
         features: {
           en: enFeatures.filter(feature => feature.trim() !== ""),
           ar: arFeatures.filter(feature => feature.trim() !== "")
         }
       }
 
-      if (!packData.category || packData.sessions.length === 0 || packData.features.en.length === 0 || packData.features.ar.length === 0) {
+      if (!packData.startPrice || !packData.category || !packData.sessions.length || !packData.features.en.length || !packData.features.ar.length) {
         throw new Error('All fields are required')
       }
 
@@ -139,39 +157,33 @@ export default function PacksPage() {
         throw new Error('No pack selected for update')
       }
 
-      const response = await fetch(`/api/packs?id=${selectedPack._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(packData)
-      })
+      const result = await updatePack({ id: selectedPack._id, ...packData }).unwrap()
       
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to update pack')
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to update pack')
       }
-      
-      const data = await response.json()
-      console.log("Pack updated:", data)
-      
-      // Update the packs state immediately with the new data
-      setPacks(prevPacks => prevPacks.map(pack => 
-        pack._id === selectedPack._id 
-          ? {
-              ...pack,
-              ...packData
-            }
-          : pack
-      ))
       
       setShowEditForm(false)
       setSelectedPack(null)
       resetForm()
-      setError(null)
+      toast.success('Pack updated successfully')
     } catch (err) {
-      console.error('Error updating pack:', err)
-      setError(err.message)
+      // Handle different error formats
+      let errorMessage = 'An error occurred while updating the pack'
+      
+      if (err.data?.message) {
+        errorMessage = err.data.message
+      } else if (err.message) {
+        errorMessage = err.message
+      } else if (err.originalError?.message) {
+        errorMessage = err.originalError.message
+      } else if (err.status === 'FETCH_ERROR') {
+        errorMessage = 'Network error: Could not connect to the server'
+      } else if (err.status === 'PARSING_ERROR') {
+        errorMessage = 'Error parsing server response'
+      }
+      
+      toast.error(errorMessage)
     }
   }
 
@@ -181,26 +193,13 @@ export default function PacksPage() {
         throw new Error('No pack selected for deletion')
       }
 
-      const response = await fetch(`/api/packs?id=${selectedPack._id}`, {
-        method: 'DELETE'
-      })
-
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Failed to delete pack')
-      }
-      
-      const data = await response.json()
-      console.log("Pack deleted:", data)
-      
-      // Remove the deleted pack from state
-      setPacks(prevPacks => prevPacks.filter(pack => pack._id !== selectedPack._id))
+      await deletePack(selectedPack._id).unwrap()
       
       setShowDeleteDialog(false)
       setSelectedPack(null)
+      toast.success('Pack deleted successfully')
     } catch (err) {
-      console.error('Error deleting pack:', err)
-      setError(err.message)
+      toast.error(err.message || 'Failed to delete pack')
     }
   }
 
@@ -254,8 +253,15 @@ export default function PacksPage() {
   }
 
   const updateSessionPackage = (index, field, value) => {
-    const updated = [...sessionPackages]
-    updated[index][field] = value
+    const updated = sessionPackages.map((session, i) => {
+      if (i === index) {
+        return {
+          ...session,
+          [field]: value
+        }
+      }
+      return session
+    })
     setSessionPackages(updated)
   }
 
@@ -291,38 +297,17 @@ export default function PacksPage() {
     updated[index] = value
     setArFeatures(updated)
   }
-  const filteredData = packs.filter((pack) => {
-    const categoryEn = pack.category?.en || '';
-    const categoryAr = pack.category?.ar || '';
-    const features = [...(pack.features?.en || []), ...(pack.features?.ar || [])].join(' ');
-    
-    const searchFields = [
-      categoryEn.toLowerCase(),
-      categoryAr.toLowerCase(),
-      features.toLowerCase()
-    ];
-    
-    const query = searchQuery.toLowerCase();
-    return searchFields.some((field) => field.includes(query));
-  });
-  // Count packs by category
-  const singleCount = packs.filter(pack => pack.category?.en === 'Pack Single').length
-  const packageCount = packs.filter(pack => pack.category?.en === 'Body Package').length
-  const nutritionCount = packs.filter(pack => pack.category?.en=== 'Pack Nutrition').length
 
   return (
-    <div className="flex">
-      <main className={`flex-1 transition-all duration-300 ease-in-out ${
-        state === "collapsed" ? "ml-40" : "ml-18"
-      }`}>
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-white">Packs</h2>
-          
+    <div className="flex flex-col min-h-screen w-full">
+      <main className="flex-1 w-full">
+        <div className="w-full px-2 sm:px-4 md:px-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">Packs</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card className="bg-gray-900 border-gray-800 border-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 mb-3 sm:mb-6 w-full min-w-0">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                 <CardTitle className="text-sm font-medium text-white mt-2 ">Single Sessions</CardTitle>
                 <Package className="h-4 w-4 text-[#B4E90E]" />
@@ -331,7 +316,7 @@ export default function PacksPage() {
                 <div className="text-2xl font-bold text-white">{singleCount}</div>
               </CardContent>
             </Card>
-            <Card className="bg-gray-900 border-gray-800 border-0">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-white mt-2">Body Packages</CardTitle>
                 <CheckCircle className="h-4 w-4 text-[#B4E90E]" />
@@ -340,7 +325,7 @@ export default function PacksPage() {
                 <div className="text-2xl font-bold text-white">{packageCount}</div>
               </CardContent>
             </Card>
-            <Card className="bg-gray-900 border-gray-800 border-0">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-white mt-2">Nutrition Packs</CardTitle>
                 <Tag className="h-4 w-4 text-[#B4E90E]" />
@@ -353,26 +338,27 @@ export default function PacksPage() {
 
           <div className="border-t border-white/10 my-6"></div>
 
-          <div className="flex items-end justify-end gap-3 m-3">
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
-                <Input 
-                  type="search" 
-                  placeholder="Search packs..." 
-                  className="w-[200px] pl-8 bg-gray-300 text-black placeholder:text-black"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <Button 
-                variant="outline" 
-                className="bg-[#B4E90E] text-black hover:bg-[#B4E90E] cursor-pointer"
-                onClick={() => setShowAddForm(true)}
-              >
-                Add New
-              </Button>
+          <div className="flex flex-col sm:flex-row items-end justify-end gap-2 sm:gap-3 m-3 w-full">
+            <div className="relative w-full sm:w-auto">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
+              <Input 
+                type="search" 
+                placeholder="Search packs..." 
+                className="w-full sm:w-[200px] pl-8 bg-gray-300 text-black placeholder:text-black"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-          <Card className="bg-gray-900 border-gray-800 border-0">
+            <Button 
+              variant="outline" 
+              className="bg-[#B4E90E] text-black hover:bg-[#B4E90E] cursor-pointer w-full sm:w-auto"
+              onClick={() => setShowAddForm(true)}
+            >
+              Add New
+            </Button>
+          </div>
+
+          <Card className="bg-gray-900 border-gray-800 border-0 w-full min-w-0">
             <CardHeader>
               <CardTitle className="text-white mt-2">All Packs</CardTitle>
               <CardDescription className="text-white/60">Manage packs, pricing, and features</CardDescription>
@@ -382,20 +368,20 @@ export default function PacksPage() {
                 <div className="flex justify-center items-center h-32">
                   <div className="text-white">Loading...</div>
                 </div>
-              ) : error ? (
+              ) : (queryError || error) ? (
                 <div className="flex justify-center items-center h-32">
-                  <div className="text-red-500">{error}</div>
+                  <div className="text-red-500">{queryError?.message || error}</div>
                 </div>
               ) : (
-                <div className="relative overflow-x-auto">
-                  <table className="w-full border-collapse">
+                <div className="block w-full overflow-x-auto rounded-md">
+                  <table className="w-full min-w-full md:min-w-[700px] border-collapse text-xs sm:text-sm md:text-base">
                     <thead className="sticky top-0 bg-gray-900 border-gray-800 z-10">
                       <tr className="border-b border-white/10">
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Category</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Session Options</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Features (EN)</th>
-                        <th className="h-10 px-4 text-left text-sm font-medium text-white/60 border-r border-white/10">Features (AR)</th>
-                        <th className="h-10 px-4 text-right text-sm font-medium text-white/60">Actions</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Category</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Session Options</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Features (EN)</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Features (AR)</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-right text-xs sm:text-sm font-medium text-white/60">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -408,31 +394,31 @@ export default function PacksPage() {
                       ) : (
                         filteredData.map((pack) => (
                           <tr key={pack._id} className="border-b border-white/10 hover:bg-white/5">
-                            <td className="p-4 text-sm font-medium text-white border-r border-white/10">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm font-medium text-white border-r border-white/10">
                               {pack.category?.[locale]}
                             </td>
-                            <td className="p-4 text-sm text-white border-r border-white/10">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                               {pack.sessions.map((session, idx) => (
                                 <div key={idx} className="mb-1">
                                   {session.sessionCount} sessions - ${session.price} ({session.expirationDays} days)
                                 </div>
                               ))}
                             </td>
-                            <td className="p-4 text-sm text-white border-r border-white/10">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                               <ul className="list-disc pl-4">
                                 {pack.features?.en?.map((feature, idx) => (
                                   <li key={idx}>{feature}</li>
                                 ))}
                               </ul>
                             </td>
-                            <td className="p-4 text-sm text-white border-r border-white/10">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                               <ul className="list-disc pl-4">
                                 {pack.features?.ar?.map((feature, idx) => (
                                   <li key={idx}>{feature}</li>
                                 ))}
                               </ul>
                             </td>
-                            <td className="p-4 text-right">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-right">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <Button variant="ghost" className="h-8 w-8 p-0">
@@ -446,13 +432,12 @@ export default function PacksPage() {
                                     className="text-white"
                                     onClick={() => {
                                       setSelectedPack(pack)
-                                      // Populate the form data
                                       setFormData({
+                                        startPrice: pack.startPrice,
                                         category: pack.category,
                                         sessions: pack.sessions,
                                         features: pack.features
                                       })
-                                      // Set session packages and features
                                       setSessionPackages(pack.sessions)
                                       setEnFeatures(pack.features?.en || [""])
                                       setArFeatures(pack.features?.ar || [""])
@@ -488,7 +473,7 @@ export default function PacksPage() {
 
       {/* Add Form Dialog */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="bg-gray-900 text-white w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden p-2 sm:p-6">
           <DialogHeader>
             <DialogTitle>Add New Pack</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -721,7 +706,7 @@ export default function PacksPage() {
 
       {/* Edit Form Dialog */}
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="bg-gray-900 text-white w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden p-2 sm:p-6">
           <DialogHeader>
             <DialogTitle>Edit Pack</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -940,7 +925,7 @@ export default function PacksPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-gray-900 text-white">
+        <DialogContent className="bg-gray-900 text-white w-full max-w-xs sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Pack</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -962,4 +947,5 @@ export default function PacksPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )}
+  )
+}

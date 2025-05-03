@@ -63,7 +63,7 @@ export default function Footer() {
     <footer className="w-full bg-[#0d111a] text-white py-12">
       <div className="container mx-auto px-4">
         {/* Newsletter Subscription */}
-        <div className="flex flex-col items-center justify-center mb-12 text-center">
+        {/* <div className="flex flex-col items-center justify-center mb-12 text-center">
           <h3 className="text-xl font-bold mb-4 text-[#B4E90E]">
             {t("newsletter.title")}
           </h3>
@@ -77,7 +77,7 @@ export default function Footer() {
               {t("newsletter.button")}
             </Button>
           </div>
-        </div>
+        </div> */}
 
         {/* Footer Content - 3 Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-[#1a1f2e]">
