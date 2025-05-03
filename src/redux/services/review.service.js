@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 // Use hardcoded URL for testing
-const BACKEND_URL = 'http://localhost:5500'
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export const reviewApi = createApi({
     reducerPath: 'reviewApi',
@@ -14,12 +14,12 @@ export const reviewApi = createApi({
     }),
     endpoints: (builder) => ({
         getReviews: builder.query({ 
-            query: (id) => id ? `/api/reviews/getreviews?id=${id}` : '/api/reviews/getreviews',
+            query: (id) => id ? `/reviews/getreviews?id=${id}` : '/reviews/getreviews',
             providesTags: ['Review']
         }),
         createReview: builder.mutation({
             query: (review) => ({
-                url: '/api/reviews/createreview',
+                url: '/reviews/createreview',
                 method: 'POST',
                 body: review
             }),
@@ -27,7 +27,7 @@ export const reviewApi = createApi({
         }),
         updateReview: builder.mutation({
             query: ({ id, ...review }) => ({
-                url: `/api/reviews/updatereview?id=${id}`,
+                url: `/reviews/updatereview?id=${id}`,
                 method: 'PUT',
                 body: review
             }),
@@ -35,7 +35,7 @@ export const reviewApi = createApi({
         }),
         deleteReview: builder.mutation({
             query: (id) => ({
-                url: `/api/reviews/deletereview?id=${id}`,
+                url: `/reviews/deletereview?id=${id}`,
                 method: 'DELETE'
             }),
             invalidatesTags: ['Review']

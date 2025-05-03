@@ -99,7 +99,7 @@ const MembershipPlans = () => {
       console.log(clientPackData);
       // Make API call
 
-      const response = await createClientPackMutation(clientPackData);
+      await createClientPackMutation(clientPackData);
 
       if (isClientPackError) {
         throw new Error(clientPackError || "Failed to create client pack");

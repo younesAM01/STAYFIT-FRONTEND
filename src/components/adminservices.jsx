@@ -41,7 +41,7 @@ export default function ServicesPage() {
   const [updateService] = useUpdateServiceMutation()
   const [deleteService] = useDeleteServiceMutation()
 
-  const services = servicesResponse || []
+  const services = servicesResponse?.services || []
 
   useEffect(() => {
     console.log('Component mounted');

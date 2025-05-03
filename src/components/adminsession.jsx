@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle, MoreHorizontal, Calendar, CalendarDays, User, Search, Clock, MapPin, ChevronRight, ChevronLeft, Info, Mail, Package } from "lucide-react"
+import { CheckCircle, MoreHorizontal, Calendar, CalendarDays, User, Search, Clock, MapPin, ChevronRight, ChevronLeft, Info, Mail, Package, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,10 +15,14 @@ import {
   useGetSessionsQuery,
   useCreateSessionMutation,
   useUpdateSessionMutation,
-  useDeleteSessionMutation
+  useDeleteSessionMutation,
+  useCancelSessionMutation,
+  useCompleteSessionMutation
 } from "@/redux/services/session.service"
 import { useGetUserQuery } from "@/redux/services/user.service"
 import { useGetPacksQuery } from "@/redux/services/pack.service"
+import { toast } from "sonner"
+import { useGetClientPackByClientIdQuery } from '@/redux/services/clientpack.service'
 
 export default function SessionsPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -46,146 +50,59 @@ export default function SessionsPage() {
     client: "",
     coach: "",
     pack: "",
+    clientPack: "",
     sessionDate: new Date().toISOString().split('T')[0],
     sessionTime: "09:00",
     location: "",
     duration: 60,
     status: "scheduled"
   })
-
-  // Check if backend URL is configured
-  useEffect(() => {
-    if (!process.env.NEXT_PUBLIC_BACKEND_URL) {
-      console.error('NEXT_PUBLIC_BACKEND_URL is not configured');
-      setError('Backend URL is not configured. Please check your environment variables.');
-      return;
-    }
-  }, []);
+  const [selectedClientId, setSelectedClientId] = useState("")
+  const [filteredClientPacks, setFilteredClientPacks] = useState([])
+  const [filteredPacks, setFilteredPacks] = useState([])
 
   // RTK Query hooks
-  const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } = useGetSessionsQuery(undefined, {
-    skip: !process.env.NEXT_PUBLIC_BACKEND_URL
-  });
-  const { data: usersData, isLoading: usersLoading } = useGetUserQuery(undefined, {
-    skip: !process.env.NEXT_PUBLIC_BACKEND_URL
-  });
-  const { data: packsData, isLoading: packsLoading } = useGetPacksQuery(undefined, {
-    skip: !process.env.NEXT_PUBLIC_BACKEND_URL
-  });
-  const [createSession] = useCreateSessionMutation()
-  const [updateSession] = useUpdateSessionMutation()
-  const [deleteSession] = useDeleteSessionMutation()
+  const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } = useGetSessionsQuery();
+  const { data: usersData, isLoading: usersLoading } = useGetUserQuery();
+  const { data: packsData, isLoading: packsLoading } = useGetPacksQuery();
+  const [createSession] = useCreateSessionMutation();
+  const [updateSession] = useUpdateSessionMutation();
+  const [deleteSession] = useDeleteSessionMutation();
+  const [cancelSession] = useCancelSessionMutation();
+  const [completeSession] = useCompleteSessionMutation();
 
-  // Debug logs
-  useEffect(() => {
-    console.log('Backend URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
-    console.log('Sessions Data:', sessionsData);
-    console.log('Users Data:', usersData);
-    console.log('Packs Data:', packsData);
-    console.log('Loading States:', {
-      sessions: sessionsLoading,
-      users: usersLoading,
-      packs: packsLoading
-    });
-    console.log('Errors:', {
-      sessions: sessionsError,
-    });
-  }, [sessionsData, usersData, packsData, sessionsLoading, usersLoading, packsLoading, sessionsError]);
+  // Fetch client packs for the selected client
+  const { data: clientPackData, isLoading: clientPackLoading } = useGetClientPackByClientIdQuery(selectedClientId, { skip: !selectedClientId });
 
   useEffect(() => {
-    // Always extract from sessions as a fallback
-    const sessionClients = sessions
-      .map(s => s.client)
-      .filter(Boolean)
-      .filter((c, i, arr) => c && c._id && arr.findIndex(x => x._id === c._id) === i);
-
-    const sessionCoaches = sessions
-      .map(s => s.coach)
-      .filter(Boolean)
-      .filter((c, i, arr) => c && c._id && arr.findIndex(x => x._id === c._id) === i);
-
-    if (usersData && usersData.users && Array.isArray(usersData.users)) {
-      const usersArray = usersData.users;
-      setClients(usersArray.filter(u => u.role === 'client'));
-      setCoaches(usersArray.filter(u => u.role === 'coach'));
-    } else {
-      // Fallback: use clients/coaches from sessions
-      setClients(sessionClients);
-      setCoaches(sessionCoaches);
+    if (usersData?.success) {
+      const users = usersData.users || [];
+      setClients(users.filter(u => u.role === 'client'));
+      setCoaches(users.filter(u => u.role === 'coach'));
     }
-  }, [usersData, sessions]);
-
-  // Add a separate effect to handle session data
-  useEffect(() => {
-    if (sessionsData) {
-      console.log('Setting sessions:', sessionsData);
-      // Handle the API response structure
-      const sessionsArray = sessionsData.success ? sessionsData.sessions : [];
-      console.log('Processed sessions array:', sessionsArray);
-      setSessions(Array.isArray(sessionsArray) ? sessionsArray : []);
-    }
-  }, [sessionsData])
+  }, [usersData]);
 
   useEffect(() => {
-    if (packsData) {
-      console.log('Setting packs:', packsData);
-      // Handle the API response structure
-      const packsArray = packsData.success ? packsData.packs : [];
-      setPacks(Array.isArray(packsArray) ? packsArray : [])
+    if (sessionsData?.success) {
+      setSessions(sessionsData.sessions || []);
     }
-  }, [packsData])
+  }, [sessionsData]);
+
+  useEffect(() => {
+    if (packsData?.success) {
+      setPacks(packsData.packs || []);
+    }
+  }, [packsData]);
 
   useEffect(() => {
     if (sessionsError) {
-      console.error('Sessions Error:', sessionsError);
-      setError(sessionsError.message || 'Failed to load sessions')
+      setError(sessionsError.message || 'Failed to load sessions');
     }
-  }, [sessionsError])
+  }, [sessionsError]);
 
-  // Update loading state based on all queries
   useEffect(() => {
     setIsLoading(sessionsLoading || usersLoading || packsLoading);
   }, [sessionsLoading, usersLoading, packsLoading]);
-
-  // Separate useEffect for handling automatic pending status
-  useEffect(() => {
-    if (!sessions.length) return;
-
-    const updatePendingSessions = async () => {
-      const now = new Date();
-      const currentTime = now.getHours() * 60 + now.getMinutes(); // Current time in minutes
-
-      sessions.forEach(async (session) => {
-        if (session.sessionStatus === 'upcoming' && session.status === 'scheduled') {
-          const sessionDate = new Date(session.sessionDate);
-          const [hours, minutes] = session.sessionTime.split(':').map(Number);
-          const sessionTimeInMinutes = hours * 60 + minutes;
-          
-          // Check if session is today and time has arrived
-          if (sessionDate.toDateString() === now.toDateString() && 
-              sessionTimeInMinutes <= currentTime) {
-            try {
-              await updateSession({
-                id: session._id,
-                sessionStatus: 'pending',
-                status: 'scheduled'
-              });
-            } catch (error) {
-              console.error('Error updating session status:', error);
-            }
-          }
-        }
-      });
-    };
-
-    // Initial check
-    updatePendingSessions();
-
-    // Set up interval to check every minute
-    const intervalId = setInterval(updatePendingSessions, 60000);
-
-    return () => clearInterval(intervalId);
-  }, [sessions, selectedCalendarSession, updateSession]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -195,6 +112,47 @@ export default function SessionsPage() {
     window.addEventListener("resize", checkMobile)
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
+
+  // When client changes, update filtered packs and client packs
+  useEffect(() => {
+    if (formData.client && (typeof formData.client === 'string' || formData.client._id)) {
+      const clientId = typeof formData.client === 'string' ? formData.client : formData.client._id;
+      setSelectedClientId(clientId);
+    } else {
+      setSelectedClientId("");
+      setFilteredClientPacks([]);
+      setFilteredPacks([]);
+    }
+  }, [formData.client]);
+
+  useEffect(() => {
+    if (clientPackData && clientPackData.clientPack) {
+      setFilteredClientPacks(clientPackData.clientPack);
+      setFilteredPacks(clientPackData.clientPack.map(cp => cp.pack));
+      // Auto-select the first available client pack if any
+      if (clientPackData.clientPack.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          clientPack: clientPackData.clientPack[0]._id,
+          pack: clientPackData.clientPack[0].pack?._id || ''
+        }));
+      } else {
+        setFormData(prev => ({ ...prev, pack: '', clientPack: '' }));
+      }
+    } else {
+      setFilteredClientPacks([]);
+      setFilteredPacks([]);
+      setFormData(prev => ({ ...prev, pack: '', clientPack: '' }));
+    }
+  }, [clientPackData, selectedClientId]);
+
+  // Show toast for data fetching errors
+  useEffect(() => {
+    if (sessionsError) toast.error(sessionsError.message || 'Failed to load sessions');
+    if (usersLoading === false && usersData && usersData.success === false) toast.error('Failed to load users');
+    if (packsLoading === false && packsData && packsData.success === false) toast.error('Failed to load packs');
+    if (clientPackLoading === false && clientPackData && clientPackData.success === false) toast.error('Failed to load client packs');
+  }, [sessionsError, usersLoading, usersData, packsLoading, packsData, clientPackLoading, clientPackData]);
 
   // Improved helper functions for name lookups with better error handling and debugging
   const getClientName = (clientId) => {
@@ -235,108 +193,153 @@ export default function SessionsPage() {
     return 'Unknown Pack';
   }
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "scheduled":
+        return "bg-blue-500 hover:bg-blue-600";
+      case "completed":
+        return "bg-green-500 hover:bg-green-600";
+      case "pending":
+        return "bg-yellow-500 hover:bg-yellow-600";
+      case "cancelled":
+        return "bg-red-500 hover:bg-red-600";
+      default:
+        return "bg-gray-500 hover:bg-gray-600";
+    }
+  };
+
+  const getStatusTextColor = (status) => {
+    switch (status) {
+      case "scheduled":
+        return "text-blue-300";
+      case "completed":
+        return "text-green-300";
+      case "pending":
+        return "text-yellow-300";
+      case "cancelled":
+        return "text-red-300";
+      default:
+        return "text-gray-300";
+    }
+  };
+
+  const getStatusBackgroundColor = (status) => {
+    switch (status) {
+      case "scheduled":
+        return "bg-blue-900";
+      case "completed":
+        return "bg-green-900";
+      case "pending":
+        return "bg-yellow-900";
+      case "cancelled":
+        return "bg-red-900";
+      default:
+        return "bg-gray-900";
+    }
+  };
+
   const handleUpdateSession = async (e) => {
     e.preventDefault();
     try {
       if (!selectedSession) {
-        console.error('No session selected for update');
+        toast.error('No session selected for update');
         return;
       }
+      // Find the selected clientPack object
+      const selectedClientPackObj = filteredClientPacks.find(cp => (cp._id === (formData.clientPack?._id || formData.clientPack)));
+      const packId = selectedClientPackObj?.pack?._id || selectedClientPackObj?.pack;
 
-      // Prepare the update data (only send status, let backend sync sessionStatus)
       const updateData = {
         client: typeof formData.client === 'object' ? formData.client._id : formData.client,
         coach: typeof formData.coach === 'object' ? formData.coach._id : formData.coach,
-        pack: typeof formData.pack === 'object' ? formData.pack._id : formData.pack,
+        pack: packId,
+        clientPack: typeof formData.clientPack === 'object' ? formData.clientPack._id : formData.clientPack,
         sessionDate: formData.sessionDate,
         sessionTime: formData.sessionTime,
         location: formData.location,
-        duration: formData.duration,
+        duration: 60, // Default duration
         status: formData.status
       };
 
-      // Call the update mutation
       const result = await updateSession({
         id: selectedSession._id,
         ...updateData
       }).unwrap();
       
-      if (result.success && result.session) {
-        // Update the sessions array with the new data from backend
+      if (result.success) {
         setSessions(prevSessions => 
           prevSessions.map(session => 
             session._id === selectedSession._id 
-              ? result.session 
+              ? { ...session, ...updateData }
               : session
           )
         );
-
-        // Update the selected calendar session if it's the same session
         if (selectedCalendarSession?._id === selectedSession._id) {
-          setSelectedCalendarSession(result.session);
+          setSelectedCalendarSession(prev => ({
+            ...prev,
+            ...updateData
+          }));
         }
-
-        // Force a calendar refresh by updating the current week start
-        setCurrentWeekStart(new Date(currentWeekStart));
-
         setShowEditForm(false);
         setSelectedSession(null);
-        // Reset form data
         setFormData({
           client: "",
           coach: "",
-          pack: "",
-          sessionDate: new Date().toISOString().split('T')[0],
-          sessionTime: "09:00",
+          clientPack: "",
+          sessionDate: "",
+          sessionTime: "",
           location: "",
-          duration: 60,
+          duration: 60, // Default duration
           status: "scheduled"
         });
+        toast.success('Session updated successfully');
       }
     } catch (error) {
-      console.error('Error updating session:', error);
-      setError(error.message);
+      toast.error(error.message || 'Error updating session');
     }
   };
 
   const handleDeleteSession = async () => {
     try {
       if (!selectedSession?._id) {
-        throw new Error('No session selected for deletion')
+        toast.error('No session selected for deletion');
+        throw new Error('No session selected for deletion');
       }
-
-      await deleteSession(selectedSession._id);
-      
-      // Remove the deleted session from all relevant states
-      setSessions(prevSessions => prevSessions.filter(session => session._id !== selectedSession._id))
-      
-      // If the deleted session was being viewed in the calendar, clear it
+      const result = await deleteSession(selectedSession._id).unwrap();
+      if (result.success) {
+        setSessions(prevSessions => prevSessions.filter(session => session._id !== selectedSession._id));
       if (selectedCalendarSession?._id === selectedSession._id) {
-        setSelectedCalendarSession(null)
-        setShowSessionInfo(false)
+          setSelectedCalendarSession(null);
+          setShowSessionInfo(false);
+        }
+        setShowDeleteDialog(false);
+        setSelectedSession(null);
+        toast.success('Session deleted successfully');
       }
-      
-      // Close the delete dialog and clear selection
-      setShowDeleteDialog(false)
-      setSelectedSession(null)
-      setError(null)
     } catch (err) {
-      console.error('Error deleting session:', err)
-      setError(err.message)
+      toast.error(err.message || 'Error deleting session');
     }
-  }
+  };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "canceled":
-        return "text-red-500";
-      case "completed":
-        return "text-green-500";
-      case "scheduled":
-        return "text-blue-500";
-      default:
-        return "text-white";
-    }
+  const getSessionBackgroundColor = (session) => {
+    if (!session) return "hover:bg-[#1a1e2a]";
+    return getStatusColor(session.status);
+  };
+
+  const renderStatusBadge = (status) => {
+    return (
+      <div className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBackgroundColor(status)} ${getStatusTextColor(status)}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </div>
+    );
+  };
+
+  const renderStatusCell = (status) => {
+    return (
+      <div className={`p-4 text-sm ${getStatusTextColor(status)}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </div>
+    );
   };
 
   const formatDate = (dateString) => {
@@ -344,7 +347,6 @@ export default function SessionsPage() {
       const date = new Date(dateString)
       return date.toLocaleDateString()
     } catch (err) {
-      console.error("Error formatting date:", err)
       return "Invalid date"
     }
   }
@@ -369,16 +371,16 @@ export default function SessionsPage() {
   });
 
   // Count sessions by status
-  const scheduledCount = sessions.filter(session => session.status === 'scheduled').length
-  const completedCount = sessions.filter(session => session.status === 'completed').length
-  const canceledCount = sessions.filter(session => session.status === 'canceled').length
+  const scheduledCount = sessions.filter(session => session.status === 'scheduled').length;
+  const completedCount = sessions.filter(session => session.status === 'completed').length;
+  const canceledCount = sessions.filter(session => session.status === 'cancelled').length;
 
   // Get today's sessions
-  const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toISOString().split('T')[0];
   const todaySessions = sessions.filter(session => {
-    const sessionDate = new Date(session.sessionDate).toISOString().split('T')[0]
-    return sessionDate === today
-  })
+    const sessionDate = new Date(session.sessionDate).toISOString().split('T')[0];
+    return sessionDate === today;
+  });
 
   const goToNextWeek = () => {
     const nextWeek = new Date(currentWeekStart)
@@ -435,7 +437,6 @@ export default function SessionsPage() {
 
         return isSameDate && sessionHour === hour;
       } catch (error) {
-        console.error('Error processing session:', error);
         return false;
       }
     });
@@ -486,74 +487,84 @@ export default function SessionsPage() {
     return `${endHour}:00 ${endMeridian}`
   }
 
-  const getSessionBackgroundColor = (session) => {
-    if (!session) return "hover:bg-[#1a1e2a]";
-    
-    switch (session.status) {
-      case "canceled":
-        return "bg-[#3e2a2a]";
-      case "completed":
-        return "bg-green-400";
-      case "scheduled":
-        return "bg-blue-400";
-      default:
-        return "bg-[#223039]";
-    }
-  };
-
   const handleAddSession = async (e) => {
     e.preventDefault();
     try {
-      // Validate all required fields
-      if (!formData.client) {
-        throw new Error('Please select a client');
-      }
-      if (!formData.coach) {
-        throw new Error('Please select a coach');
-      }
-      if (!formData.pack) {
-        throw new Error('Please select a pack');
-      }
-      if (!formData.sessionDate) {
-        throw new Error('Please select a date');
-      }
-      if (!formData.sessionTime) {
-        throw new Error('Please select a time');
-      }
-      if (!formData.location) {
-        throw new Error('Please enter a location');
+      // Collect missing fields
+      const missingFields = [];
+      if (!formData.client) missingFields.push('client');
+      if (!formData.coach) missingFields.push('coach');
+      if (!formData.clientPack) missingFields.push('clientPack');
+      if (!formData.sessionDate) missingFields.push('date');
+      if (!formData.sessionTime) missingFields.push('time');
+      if (!formData.location) missingFields.push('location');
+      if (missingFields.length > 0) {
+        toast.error(`Please fill in: ${missingFields.join(', ')}`);
+        return;
       }
 
-      // Extract IDs from objects if they are objects
+      // Close the dialog immediately
+      setShowAddForm(false);
+
+      // Find the selected clientPack object
+      const selectedClientPackObj = filteredClientPacks.find(cp => (cp._id === (formData.clientPack?._id || formData.clientPack)));
+      const packId = selectedClientPackObj?.pack?._id || selectedClientPackObj?.pack;
+
       const newSession = {
-        ...formData,
         client: typeof formData.client === 'object' ? formData.client._id : formData.client,
         coach: typeof formData.coach === 'object' ? formData.coach._id : formData.coach,
-        pack: typeof formData.pack === 'object' ? formData.pack._id : formData.pack,
+        pack: packId,
+        clientPack: typeof formData.clientPack === 'object' ? formData.clientPack._id : formData.clientPack,
+        sessionDate: formData.sessionDate,
+        sessionTime: formData.sessionTime,
+        location: formData.location,
+        duration: 60, // Default duration
+        status: formData.status || "scheduled"
       };
 
       const result = await createSession(newSession).unwrap();
       if (result.success) {
-        setShowAddForm(false);
+        setSessions(prevSessions => [...prevSessions, result.session]);
         setFormData({
           client: "",
           coach: "",
-          pack: "",
-          sessionDate: new Date().toISOString().split('T')[0],
-          sessionTime: "09:00",
+          clientPack: "",
+          sessionDate: "",
+          sessionTime: "",
           location: "",
-          duration: 60,
+          duration: 60, // Default duration
           status: "scheduled"
         });
+        toast.success('Session added successfully');
       }
     } catch (error) {
-      console.error('Error creating session:', error);
-      setError(error.message || 'Failed to create session');
+      toast.error(error.message || 'Error creating session');
+    }
+  };
+
+  const handleCancelSession = async (sessionId) => {
+    try {
+      const result = await cancelSession(sessionId).unwrap();
+      if (result.success) {
+        toast.success('Session cancelled successfully');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Error canceling session');
+    }
+  };
+
+  const handleCompleteSession = async (sessionId) => {
+    try {
+      const result = await completeSession(sessionId).unwrap();
+      if (result.success) {
+        toast.success('Session completed successfully');
+      }
+    } catch (error) {
+      toast.error(error.message || 'Error completing session');
     }
   };
 
   const renderClientSelect = () => {
-    console.log('Rendering client select with clients:', clients);
     return (
       <Select 
         value={formData.client?._id || formData.client} 
@@ -580,7 +591,6 @@ export default function SessionsPage() {
   };
 
   const renderCoachSelect = () => {
-    console.log('Rendering coach select with coaches:', coaches);
     return (
       <Select 
         value={formData.coach?._id || formData.coach} 
@@ -606,26 +616,21 @@ export default function SessionsPage() {
     );
   };
 
-  const renderPackSelect = () => {
-    console.log('Rendering pack select with packs:', packs);
+  const renderClientPackSelect = () => {
     return (
       <Select 
-        value={formData.pack?._id || formData.pack} 
-        onValueChange={(value) => {
-          const selectedPack = packs.find(p => p._id === value);
-          setFormData({...formData, pack: selectedPack || value});
-        }}
+        value={typeof formData.clientPack === 'object' ? formData.clientPack._id : formData.clientPack}
+        onValueChange={(value) => setFormData({...formData, clientPack: value})}
         required
+        disabled={filteredClientPacks.length === 0}
       >
         <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-          <SelectValue placeholder="Select pack">
-            {formData.pack?.category?.[locale] || "Select pack"}
-          </SelectValue>
+          <SelectValue placeholder="Select client pack" />
         </SelectTrigger>
         <SelectContent className="border-white/10">
-          {packs.map((pack) => (
-            <SelectItem key={pack._id} value={pack._id}>
-              {pack.category?.[locale]}
+          {filteredClientPacks.map((clientPack) => (
+            <SelectItem key={clientPack._id} value={clientPack._id}>
+              {clientPack.pack?.category?.[locale] || clientPack.pack?.name}
             </SelectItem>
           ))}
         </SelectContent>
@@ -670,98 +675,115 @@ export default function SessionsPage() {
     );
   };
 
-  // Add a useEffect to handle session updates
-  useEffect(() => {
-    if (sessionsData) {
-      const sessionsArray = sessionsData.success ? sessionsData.sessions : [];
-      setSessions(Array.isArray(sessionsArray) ? sessionsArray : []);
-    }
-  }, [sessionsData]);
+  const renderDurationInput = () => {
+    return (
+      <Input
+        type="number"
+        value={60}
+        disabled
+        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+      />
+    );
+  };
 
-  // Add a useEffect to handle calendar updates
-  useEffect(() => {
-    if (sessions.length > 0) {
-      // Force calendar refresh when sessions change
-      setCurrentWeekStart(new Date(currentWeekStart));
+  const renderStatusSelect = () => {
+    return (
+      <Select 
+        value={formData.status} 
+        onValueChange={(value) => setFormData({...formData, status: value})}
+        required
+      >
+        <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+          <SelectValue placeholder="Select status" />
+        </SelectTrigger>
+        <SelectContent className="border-white/10">
+          <SelectItem value="scheduled">Scheduled</SelectItem>
+          <SelectItem value="completed">Completed</SelectItem>
+          <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
+        </SelectContent>
+      </Select>
+    );
+  };
+
+  function toTimeInputValue(timeStr) {
+    if (!timeStr) return '09:00';
+    // If already in HH:mm, return as is
+    if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
+    // If in H:mm, pad hour
+    if (/^\d{1}:\d{2}$/.test(timeStr)) return '0' + timeStr;
+    // If in 12-hour format with optional minutes and AM/PM
+    const match = timeStr.match(/^(\d{1,2}):?(\d{2})? ?([AP]M)$/i);
+    if (match) {
+      let [_, h, m, ampm] = match;
+      h = parseInt(h, 10);
+      m = m || '00';
+      if (ampm.toUpperCase() === 'PM' && h < 12) h += 12;
+      if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+      return (h < 10 ? '0' : '') + h + ':' + m;
     }
-  }, [sessions]);
+    // If just H or HH with AM/PM (e.g., 10AM, 2PM)
+    const matchSimple = timeStr.match(/^(\d{1,2}) ?([AP]M)$/i);
+    if (matchSimple) {
+      let [_, h, ampm] = matchSimple;
+      h = parseInt(h, 10);
+      if (ampm.toUpperCase() === 'PM' && h < 12) h += 12;
+      if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+      return (h < 10 ? '0' : '') + h + ':00';
+    }
+    // fallback
+    return '09:00';
+  }
 
   return (
-    <div className="flex">
-      <main className={`flex-1 transition-all duration-300 ease-in-out ${
-        state === "collapsed" ? "ml-40" : "ml-18"
-      }`}>
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-bold text-white">Sessions</h2>
-          </div>
+    <div className="flex flex-col min-h-screen w-full">
+      <main className="flex-1 w-full">
+        <div className="w-full px-2 sm:px-4 md:px-6">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-3 sm:mb-4 md:mb-6">Sessions</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card className="bg-gray-900 border-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 mb-3 sm:mb-6 w-full min-w-0">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white mt-2">Scheduled Sessions</CardTitle>
-                <Calendar className="h-4 w-4 text-blue-500" />
+                <CardTitle className="text-sm font-medium text-white mt-3">Scheduled Sessions</CardTitle>
+                <Calendar className="h-4 w-4 text-[#B4E90E]" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-white">{scheduledCount}</div>
               </CardContent>
             </Card>
-            <Card className="bg-gray-900 border-0">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white mt-2">Completed Sessions</CardTitle>
-                <CheckCircle className="h-4 w-4 text-green-500" />
+                <CardTitle className="text-sm font-medium text-white mt-3">Completed Sessions</CardTitle>
+                <CheckCircle className="h-4 w-4 text-[#B4E90E]" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-white">{completedCount}</div>
               </CardContent>
             </Card>
-            <Card className="bg-gray-900 border-0">
+            <Card className="bg-gray-900 border-gray-800 w-full min-w-0">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white mt-2">Today's Sessions</CardTitle>
-                <CalendarDays className="h-4 w-4 text-white" />
+                <CardTitle className="text-sm font-medium text-white mt-3">Cancelled Sessions</CardTitle>
+                <X className="h-4 w-4 text-[#B4E90E]" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-white">{todaySessions.length}</div>
+                <div className="text-2xl font-bold text-white">{canceledCount}</div>
               </CardContent>
             </Card>
           </div>
+          <div className="border-t border-white/10 my-6"></div>
 
-          <Card className="bg-gray-900 border-0 mb-6">
+          <Card className="bg-gray-900 border-0 w-full min-w-0">
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle className="text-white">Weekly Calendar</CardTitle>
-                  <CardDescription className="text-white mt-3">View and manage sessions in calendar format</CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={goToPreviousWeek}
-                    className="p-2 rounded-full hover:bg-gray-800 text-gray-300"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                  <button
-                    onClick={goToToday}
-                    className="px-3 py-1 text-sm bg-[#2a3142] text-[#B4E90E] rounded-md hover:bg-[#353e52]"
-                  >
-                    Current Week
-                  </button>
-                  <button
-                    onClick={goToNextWeek}
-                    className="p-2 rounded-full hover:bg-gray-800 text-gray-300"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              </div>
+              <CardTitle className="text-white mt-3">Weekly Calendar</CardTitle>
+              <CardDescription className="text-white/60">View and manage sessions in calendar format</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (
-                <div className="flex justify-center items-center h-64">
-                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
+                <div className="flex justify-center items-center h-32">
+                  <div className="text-white">Loading...</div>
                 </div>
               ) : error ? (
-                <div className="flex justify-center items-center h-64">
+                <div className="flex justify-center items-center h-32">
                   <div className="text-red-500">{error}</div>
                 </div>
               ) : (
@@ -840,27 +862,27 @@ export default function SessionsPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-900 border-0">
+          <Card className="bg-gray-900 border-0 mt-6">
             <CardHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                  <CardTitle className="text-white mt-6">All Sessions</CardTitle>
-                  <CardDescription className="text-white mt-3">Manage sessions, schedules, and appointments</CardDescription>
+                  <CardTitle className="text-white mt-3">All Sessions</CardTitle>
+                  <CardDescription className="text-white/60">Manage sessions, schedules, and appointments</CardDescription>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-white/50" />
+                <div className="flex flex-col sm:flex-row items-end justify-end gap-3 w-full sm:w-auto">
+                  <div className="relative w-full sm:w-[200px]">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
                     <Input 
                       type="search" 
                       placeholder="Search sessions..." 
-                      className="w-[200px] pl-8 bg-white border-0 text-black placeholder:text-black"
+                      className="w-full pl-8 bg-gray-300 border-0 text-black placeholder:text-black"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
                   <Button 
                     variant="outline" 
-                    className="bg-[#B4E90E] text-black hover:bg-[#B4E90E] cursor-pointer"
+                    className="bg-[#B4E90E] text-black hover:bg-[#B4E90E] cursor-pointer w-full sm:w-auto whitespace-nowrap"
                     onClick={() => setShowAddForm(true)}
                   >
                     Add New
@@ -878,101 +900,98 @@ export default function SessionsPage() {
                   <div className="text-red-500">{error}</div>
                 </div>
               ) : (
-                <div className="relative overflow-x-auto">
-                 <table className="w-full">
-  <thead className="sticky top-0 bg-gray-900 z-10">
-    <tr className="border-b border-white/10">
-      <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Client</th>
-      <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Coach</th>
-      <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Pack</th>
-      <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Date</th>
-      <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Time</th>
-      <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Location</th>
-      <th className="h-10 px-4 text-left text-sm font-medium text-white/60">Status</th>
-      <th className="h-10 px-4 text-right text-sm font-medium text-white/60">Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {filteredData.length === 0 ? (
-      <tr>
-        <td colSpan="8" className="p-4 text-center text-white">
-          No sessions found
-        </td>
-      </tr>
-    ) : (
-      filteredData.map((session) => (
-        <tr key={session._id} className="border-b border-white/10 hover:bg-white/5">
-          <td className="p-4 text-sm font-medium text-white">
-            {getClientName(session.client)}
-          </td>
-          <td className="p-4 text-sm text-white">
-            {getCoachName(session.coach)}
-          </td>
-          <td className="p-4 text-sm text-white">
-            {getPackName(session.pack)}
-          </td>
-          <td className="p-4 text-sm text-white">
-            {formatDate(session.sessionDate)}
-          </td>
-          <td className="p-4 text-sm text-white">
-            {session.sessionTime}
-          </td>
-          <td className="p-4 text-sm text-white">
-            {session.location}
-          </td>
-          <td className={`p-4 text-sm ${getStatusColor(session.status)}`}>
-            {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
-          </td>
-          <td className="p-4 text-right">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4 text-white" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[160px] bg-[#1F1F1F] border-white/10">
-                <DropdownMenuLabel className="text-white">Actions</DropdownMenuLabel>
-                <DropdownMenuItem 
-                  className="text-white"
-                  onClick={() => {
-                    if (!session) return;
-                    
-                    setSelectedSession(session);
-                    setFormData({
-                      client: session.client?._id || session.client,
-                      coach: session.coach?._id || session.coach,
-                      pack: session.pack?._id || session.pack,
-                      sessionDate: new Date(session.sessionDate).toISOString().split('T')[0],
-                      sessionTime: session.sessionTime,
-                      location: session.location,
-                      duration: session.duration,
-                      status: session.status
-                    });
-                    setShowEditForm(true);
-                  }}
-                >
-                  Edit session
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem 
-                  className="text-red-500"
-                  onClick={() => {
-                    setSelectedSession(session)
-                    setShowDeleteDialog(true)
-                  }}
-                >
-                  Delete session
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </td>
-        </tr>
-      ))
-    )}
-  </tbody>
-</table>
-
+                <div className="block w-full overflow-x-auto rounded-md">
+                  <table className="w-full min-w-full md:min-w-[700px] border-collapse text-xs sm:text-sm md:text-base">
+                    <thead className="sticky top-0 bg-gray-900 z-10">
+                      <tr className="border-b border-white/10">
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Client</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Coach</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Pack</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Date</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Time</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Location</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Status</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-right text-xs sm:text-sm font-medium text-white/60">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredData.length === 0 ? (
+                        <tr>
+                          <td colSpan="8" className="p-4 text-center text-white border-b border-white/10">
+                            No sessions found
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredData.map((session) => (
+                          <tr key={session._id} className="border-b border-white/10 hover:bg-white/5">
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm font-medium text-white border-r border-white/10">
+                              {getClientName(session.client)}
+                            </td>
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
+                              {getCoachName(session.coach)}
+                            </td>
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
+                              {getPackName(session.pack)}
+                            </td>
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
+                              {formatDate(session.sessionDate)}
+                            </td>
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
+                              {session.sessionTime}
+                            </td>
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
+                              {session.location}
+                            </td>
+                            <td className={`px-2 py-2 sm:px-4 sm:py-3 text-sm border-r border-white/10 ${getStatusTextColor(session.status)}`}>
+                              {renderStatusCell(session.status)}
+                            </td>
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Open menu</span>
+                                    <MoreHorizontal className="h-4 w-4 text-white" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-[160px] bg-[#1F1F1F] border-white/10">
+                                  <DropdownMenuLabel className="text-white">Actions</DropdownMenuLabel>
+                                  <DropdownMenuItem 
+                                    className="text-white"
+                                    onClick={() => {
+                                      setSelectedSession(session);
+                                      setFormData({
+                                        client: session.client?._id || session.client,
+                                        coach: session.coach?._id || session.coach,
+                                        clientPack: session.clientPack?._id || session.clientPack,
+                                        sessionDate: session.sessionDate ? new Date(session.sessionDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                                        sessionTime: session.sessionTime || '09:00',
+                                        location: session.location || '',
+                                        duration: session.duration || 60,
+                                        status: session.status || 'scheduled'
+                                      });
+                                      setShowEditForm(true);
+                                    }}
+                                  >
+                                    Edit session
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator className="bg-white/10" />
+                                  <DropdownMenuItem 
+                                    className="text-red-500"
+                                    onClick={() => {
+                                      setSelectedSession(session)
+                                      setShowDeleteDialog(true)
+                                    }}
+                                  >
+                                    Delete session
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </CardContent>
@@ -982,7 +1001,7 @@ export default function SessionsPage() {
 
       {/* Session Info Dialog */}
       <Dialog open={showSessionInfo} onOpenChange={setShowSessionInfo}>
-        <DialogContent className="bg-[#1F1F1F] text-white">
+        <DialogContent className="bg-gray-900 text-white w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden p-2 sm:p-6">
           <DialogHeader>
             <DialogTitle>Session Details</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -998,81 +1017,8 @@ export default function SessionsPage() {
                     {getClientName(selectedCalendarSession.client)}
                   </h3>
                 </div>
-                <div className="flex items-center gap-2">
-                  {/* Only show the sessionStatus badge if it is a valid value */}
-                  {['upcoming', 'pending', 'finished'].includes(selectedCalendarSession.sessionStatus) && (
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold
-                        ${selectedCalendarSession.sessionStatus === 'upcoming' ? 'bg-blue-900 text-blue-300' : ''}
-                        ${selectedCalendarSession.sessionStatus === 'pending' ? 'bg-yellow-900 text-yellow-300' : ''}
-                        ${selectedCalendarSession.sessionStatus === 'finished' ? 'bg-green-900 text-green-300' : ''}
-                      `}
-                    >
-                      {selectedCalendarSession.sessionStatus === 'upcoming' && 'Upcoming'}
-                      {selectedCalendarSession.sessionStatus === 'pending' && 'Pending'}
-                      {selectedCalendarSession.sessionStatus === 'finished' && 'Finished'}
-                    </span>
-                  )}
-                  <Select 
-                    value={selectedCalendarSession.sessionStatus || ''} 
-                    onValueChange={async (value) => {
-                      // Optimistically update the badge
-                      setSelectedCalendarSession(prev => ({
-                        ...prev,
-                        sessionStatus: value
-                      }));
-                      try {
-                        const newStatus = value === 'finished' ? 'completed' : 'scheduled';
-                        const result = await updateSession({
-                          id: selectedCalendarSession._id,
-                          sessionStatus: value,
-                          status: newStatus
-                        }).unwrap();
-                        // Update sessions and selectedCalendarSession with backend data
-                        if (result && result.session) {
-                          setSessions(prevSessions =>
-                            prevSessions.map(session =>
-                              session._id === result.session._id ? result.session : session
-                            )
-                          );
-                          setSelectedCalendarSession(prev => ({
-                            ...prev,
-                            ...result.session,
-                            // Fallback: if backend does not return sessionStatus, use the selected value
-                            sessionStatus: result.session.sessionStatus || value
-                          }));
-                        } else {
-                          // Fallback: ensure badge updates even if backend does not return session
-                          setSelectedCalendarSession(prev => ({
-                            ...prev,
-                            sessionStatus: value
-                          }));
-                        }
-                      } catch (error) {
-                        console.error('Error updating session status:', error);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className={`w-[140px] font-bold text-white ${
-                      selectedCalendarSession.sessionStatus === "upcoming" ? "bg-blue-900" :
-                      selectedCalendarSession.sessionStatus === "finished" ? "bg-green-900" :
-                      selectedCalendarSession.sessionStatus === "pending" ? "bg-yellow-900 text-yellow-300" :
-                      "bg-gray-800 text-gray-300"
-                    }`}>
-                      {/* Always show placeholder, not the value */}
-                      <span className="text-white font-bold">Change status</span>
-                    </SelectTrigger>
-                    <SelectContent className="border-white/10">
-                      <SelectItem value="upcoming">Upcoming</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="finished">Finished</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {selectedCalendarSession.status === 'canceled' && (
-                    <div className="px-3 py-1 bg-red-900 text-red-300 rounded-full text-sm">
-                      Canceled
-                    </div>
-                  )}
+                <div className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBackgroundColor(selectedCalendarSession.status)} ${getStatusTextColor(selectedCalendarSession.status)}`}>
+                  {selectedCalendarSession.status.charAt(0).toUpperCase() + selectedCalendarSession.status.slice(1)}
                 </div>
               </div>
 
@@ -1119,37 +1065,6 @@ export default function SessionsPage() {
                     <p className="text-sm">{getPackName(selectedCalendarSession.pack)}</p>
                   </div>
                 </div>
-
-                <div className="pt-3 border-t border-gray-700">
-                  <p className="text-xs text-gray-400 mb-2">Client Details</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-400">Age</p>
-                      <p className="text-sm">{selectedCalendarSession.client?.age || "N/A"}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Weight</p>
-                      <p className="text-sm">{selectedCalendarSession.client?.weight || "N/A"} kg</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Height</p>
-                      <p className="text-sm">{selectedCalendarSession.client?.height || "N/A"} cm</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Language</p>
-                      <p className="text-sm">{selectedCalendarSession.client?.preferredLanguage || "N/A"}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedCalendarSession.client?.diseases?.length > 0 && (
-                  <div className="pt-3 border-t border-gray-700">
-                    <p className="text-xs text-gray-400 mb-1">Health Notes</p>
-                    <p className="text-sm italic text-gray-300">
-                      {selectedCalendarSession.client.diseases.join(", ")}
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -1158,7 +1073,7 @@ export default function SessionsPage() {
 
       {/* Edit Form Dialog */}
       <Dialog open={showEditForm} onOpenChange={setShowEditForm}>
-        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="bg-gray-900 text-white w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden p-2 sm:p-6">
           <DialogHeader>
             <DialogTitle>Edit Session</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -1171,7 +1086,13 @@ export default function SessionsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="edit-client">Client</Label>
-                    {renderClientSelect()}
+                    <Select value={formData.client?._id || formData.client} disabled>
+                      <SelectTrigger className="bg-gray-800 border-white/10">
+                        <SelectValue>
+                          {formData.client?.firstName ? `${formData.client.firstName} ${formData.client.lastName}` : getClientName(formData.client)}
+                        </SelectValue>
+                      </SelectTrigger>
+                    </Select>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="edit-coach">Coach</Label>
@@ -1179,8 +1100,8 @@ export default function SessionsPage() {
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-pack">Pack</Label>
-                  {renderPackSelect()}
+                  <Label htmlFor="edit-clientPack">Client Pack</Label>
+                  {renderClientPackSelect()}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
@@ -1199,32 +1120,11 @@ export default function SessionsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="edit-duration">Duration (minutes)</Label>
-                    <Input
-                      id="edit-duration"
-                      type="number"
-                      value={formData.duration}
-                      onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value)})}
-                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                      min="15"
-                      step="15"
-                      required
-                    />
+                    {renderDurationInput()}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="edit-status">Status</Label>
-                    <Select 
-                      value={formData.status} 
-                      onValueChange={(value) => setFormData({...formData, status: value})}
-                    >
-                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent className="border-white/10">
-                        <SelectItem value="scheduled">Scheduled</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="canceled">Canceled</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {renderStatusSelect()}
                   </div>
                 </div>
               </div>
@@ -1243,36 +1143,35 @@ export default function SessionsPage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="bg-gray-900 text-white w-full max-w-xs sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Session</DialogTitle>
             <DialogDescription className="text-white/60">
               Are you sure you want to delete this session? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="overflow-y-auto pr-2 max-h-[calc(90vh-140px)]">
-            <DialogFooter className="mt-4 border-t border-white/10 pt-4">
-              <Button
-                variant="ghost"
-                onClick={() => setShowDeleteDialog(false)}
-                className="hover:bg-gray-800 text-white"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleDeleteSession}
-                className="bg-red-500 hover:bg-red-600 text-white transition-colors"
-              >
-                Delete Session
-              </Button>
-            </DialogFooter>
-          </div>
+          <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+            <Button
+              variant="ghost"
+              onClick={() => setShowDeleteDialog(false)}
+              className="hover:bg-gray-800"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteSession}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Delete
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Add Form Dialog */}
       <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
-        <DialogContent className="bg-gray-900 text-white max-w-3xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="bg-gray-900 text-white w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-hidden p-2 sm:p-6">
           <DialogHeader>
             <DialogTitle>Add New Session</DialogTitle>
             <DialogDescription className="text-white/60">
@@ -1293,8 +1192,11 @@ export default function SessionsPage() {
                   </div>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="pack">Pack</Label>
-                  {renderPackSelect()}
+                  <Label htmlFor="clientPack">Client Pack</Label>
+                  {renderClientPackSelect()}
+                  {filteredClientPacks.length === 0 && (
+                    <div className="text-red-400 text-xs mt-1">This client has no active packs. Please assign a pack first.</div>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
@@ -1313,44 +1215,24 @@ export default function SessionsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="duration">Duration (minutes)</Label>
-                    <Input
-                      id="duration"
-                      type="number"
-                      value={formData.duration}
-                      onChange={(e) => setFormData({...formData, duration: parseInt(e.target.value)})}
-                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
-                      min="15"
-                      step="15"
-                      required
-                    />
+                    {renderDurationInput()}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="status">Status</Label>
-                    <Select 
-                      value={formData.status} 
-                      onValueChange={(value) => setFormData({...formData, status: value})}
-                    >
-                      <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent className="border-white/10">
-                        <SelectItem value="scheduled">Scheduled</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
-                        <SelectItem value="canceled">Canceled</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {renderStatusSelect()}
                   </div>
                 </div>
               </div>
+              <DialogFooter className="mt-4 border-t border-white/10 pt-4">
+                <Button 
+                  type="submit"
+                  className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors"
+                  disabled={filteredClientPacks.length === 0}
+                >
+                  Add Session
+                </Button>
+              </DialogFooter>
             </form>
-            <DialogFooter className="mt-4 border-t border-white/10 pt-4">
-              <Button 
-                onClick={handleAddSession}
-                className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors"
-              >
-                Add Session
-              </Button>
-            </DialogFooter>
           </div>
         </DialogContent>
       </Dialog>

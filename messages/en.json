@@ -67,6 +67,7 @@
         "contact": "Contact Us",
         "services": "Services",
         "trainers": "Our Trainers",
+        "terms": "Terms & Conditions",
         "faq": "FAQ"
       },
       "connect": {
@@ -157,7 +158,6 @@
     "preferred": "Preferred",
     "nationality": "Nationality",
     "profile": "Profile",
-    "cancel": "Cancel",
     "save": "Save",
     "firstName": "First Name",
     "lastName": "Last Name",
@@ -205,14 +205,16 @@
     "completed": "Completed",
     "coach": "Coach",
     "sessionStatus": {
-      "upcoming": "Upcoming",
-      "pending": "Pending",
-      "finished": "Finished"
+      "scheduled": "scheduled",
+      "pending": "pending",
+      "completed": "completed",
+      "cancelled": "cancelled"
     },
-    "confirmFinishSession": "Confirm Session Completion",
+    "confirmCompleted": "Confirm Session Completion",
     "confirmFinishSessionMessage": "Are you sure you want to mark this session as completed?",
     "keepSessionOpen": "Keep Session Open",
-    "confirmFinish": "Yes, Complete Session"
+    "confirmFinish": "Yes, Complete Session",
+    "noSessionsRemaining": "No sessions remaining in your active packages"
   },
   "BookingPage": {
     "title": "Book a Session",
@@ -230,7 +232,8 @@
     "selectTime": "Select Time",
     "confirm": "Confirm",
     "sessionBookedSuccessfully": "Session booked successfully!",
-    "noCoachesAvailable": "No coaches available"
+    "noCoachesAvailable": "No coaches available",
+    "loadingCoaches": "Loading coaches..."
   },
   "BookingCalendar": {
     "membershipRequired": "Membership Required",
@@ -321,7 +324,11 @@
     "invalidCoupon": "Invalid coupon code",
     "errorApplyingCoupon": "Error applying coupon",
     "couponApplied": "Coupon applied successfully",
-    "off": "off"
+    "off": "off",
+    "noPendingPurchase": "No pack choose's yet ",
+    "pleaseSelectPackFirst": "Please select a pack first in home page",
+    "goToHomePage": "Back Home"
+    
   },
   "FAQ": {
     "faqtitle": "Frequently Asked Questions",
@@ -345,5 +352,93 @@
     "title": "Unlock Your Potential",
     "description": "Join expert coaching designed to elevate your skills and transform your life. Your first session is completely FREE — start your journey today!",
     "button": "Start Training Now"
+  },
+  "AboutUs": {
+    "headertitle": "About ",
+    "headertitle_span": "STAY FIT",
+    "headerdescription": "Your Journey with Mobile Training: Our Vision, Mission, and the Team Driving Your Transformation",
+    "title": "Who We Are",
+    "description": "We are the first Saudi app that offers you the experience of mobile personal training, providing you with professional trainers who come to you wherever you are, at a time that suits you.",
+    "vision": "Our Vision",
+    "visionDescription": "We strive to be the first choice in the field of personal training in the Kingdom by offering innovative and personalized services that meet our clients needs and enhance their quality of life.",
+    "mission": "Our Mission",
+    "missionDescription": "We aim to empower individuals to achieve their health and fitness goals in a comfortable and safe environment, becoming your partner in the journey to becoming the best version of yourself. We are here to inspire and support you every step of the way toward improvement and growth."
+  },
+  "TermsAndConditions": {
+    "pageTitle": "Terms & {highlight}Conditions{highlightClose}",
+    "pageSubtitle": "Please read the following terms and conditions carefully.",
+
+    "ptSwimmingSection": {
+      "title": "Terms and Conditions for Personal Training and Swimming Personal Training Program (Men & Women)",
+      "attendanceTitle": "1. Attendance Signing :",
+      "attendancePoint1": "The member must sign attendance for each training session at its scheduled time.",
+      "attendancePoint2": "Signing for any completed training session cannot be postponed, and attendance must be confirmed via the website.",
+      "completionTitle": "2. Session Completion :",
+      "completionDesc": "All training sessions must be completed before the expiration of the contract period specified according to the following:",
+      "validity1Session": "{highlight}1 Session:{highlightClose} Valid for 15 days.",
+      "validity6Sessions": "{highlight}6 Sessions:{highlightClose} Valid for 30 days.",
+      "validity12Sessions": "{highlight}12 Sessions:{highlightClose} Valid for 2 months (60 days).",
+      "validity24Sessions": "{highlight}24 Sessions:{highlightClose} Valid for 3 months (90 days).",
+      "validity50Sessions": "{highlight}50 Sessions:{highlightClose} Valid for 6 months (180 days).",
+      "contractTitle": "3. Contract Signing:",
+      "contractPoint1": "A new contract must be signed for each training package.",
+      "contractPoint2": "The maximum limit for each contract is 50 training sessions.",
+      "notesTitle": "Additional Notes :",
+      "notesPoint1": "It is recommended to adhere to the scheduled times to ensure full benefit from the program.",
+      "notesPoint2": "If you have any questions, please contact us.",
+      "notesPoint3": "Stay Fit cannot provide female trainers for male members."
+    },
+
+    "generalPtSection": {
+      "title": "General Terms and Conditions for Personal Training Program",
+      "point1Title": "Provision of Substitute Trainer :",
+      "point1Desc": "\"Stay Fit\" reserves the right to provide a substitute trainer if the original trainer is unavailable for any reason. The member has no right to object or claim any compensation.",
+      "point2Title": "Session Cancellation :",
+      "point2Desc": "If the member wishes to cancel any training session, they must inform the responsible trainer or the sports manager at the center at least 12 hours before the scheduled session time.",
+      "point3Title": "Fees and Payments :",
+      "point3Desc": "Fees paid by the member to \"Stay Fit\" for the requested training sessions are non-refundable, and the member has no right to object or claim compensation.",
+      "point4Title": "Session Duration :",
+      "point4Desc": "The duration of each training session is 60 minutes, unless specified otherwise. The member has no right to request an extension of the session for any reason.",
+      "point5Title": "Compliance with Regulations :",
+      "point5Desc": "By signing this contract, the member agrees to comply with all regulations and policies of \"Stay Fit\", which may be amended without the need for written notice to the member.",
+      "point6Title": "Adherence to Schedule :",
+      "point6Desc": "The member must adhere to the scheduled times for training sessions. \"Stay Fit\" bears no responsibility for the member's delay in attending any session or failing to cancel according to the terms."
+    },
+
+    "declarationsSection": {
+      "title": "Member Declarations and Undertakings",
+      "point1": "The member declares they are in good health and there is no health reason preventing them from participating in sports activities.",
+      "point2": "The member declares they have not received any medical advice regarding their health condition before signing the contract.",
+      "point3": "The member undertakes to consult with their physician about their health condition before using the training program services.",
+      "point4": "If \"Stay Fit\" discovers any incorrect information provided by the member, it reserves the right to cancel the contract and demand payment of all outstanding amounts from the member.",
+      "point5": "The member acknowledges they have read and understood the terms and conditions of this contract and agrees to abide by them without objection."
+    },
+
+    "freezeSection": {
+      "title": "Package Freezing",
+      "intro": "We understand that there may be times when you need to temporarily pause your package due to unexpected circumstances such as illness, injury, or travel.",
+      "conditionsTitle": "Package Freezing Conditions :",
+      "condition1": "The package can be suspended for reasons specific to the client without proof for a period of two weeks (14 days).",
+      "condition2": "If there is a document proving the validity of the suspension (such as a medical report or travel ticket), Stay Fit respects and appreciates this and agrees to the freeze according to the document for the duration mentioned therein.",
+      "condition3Title": "Non-Extendable :",
+      "condition3Desc": "The freeze period cannot be extended or divided into multiple periods after it has been granted.",
+      "howtoTitle": "How to Apply for Package Freezing :",
+      "howtoDescPart1": "To freeze your package, please email us via your registered email address at:",
+      "howtoDescLinkText": "info@stayfit.com",
+      "howtoDescPart2": ". You must provide us with the following information:",
+      "howtoPoint1": "The reason you wish to freeze your account.",
+      "howtoPoint2": "Proof of the stated reason (e.g., flight ticket, medical report, etc.), if the requested period exceeds two weeks or if requested.",
+      "confirmationTitle": "Freeze Confirmation :",
+      "confirmationDesc": "Customer service will contact you within two working days to confirm whether the freeze request has been approved.",
+      "reactivationTitle": "Package Reactivation:",
+      "reactivationDesc": "Your package will be automatically reactivated after the specified freeze period ends.",
+      "notesTitle": "Additional Notes :",
+      "notesFreezePoint1": "During the freeze period, you will not be able to use the temporarily suspended package.",
+      "notesFreezePoint2": "If your trainer is traveling during your subscription period, you will have two options :",
+      "notesFreezeOption1": "Freeze your subscription until their return.",
+      "notesFreezeOption2": "Continue training using your active package with a substitute trainer."
+    },
+
+    "finalConfirmation": "By signing the contract or using our services, you confirm that you have read and understood all the terms and conditions mentioned above, and you agree to abide by them."
   }
 }

@@ -44,7 +44,7 @@ export default function ClientPacksPage() {
     client: "",
     pack: "",
     packPrice: 0,
-    totalPrice: 0,
+    finalPrice: 0,
     expirationDate: "",
     remainingSessions: 0,
     purchaseState: "pending"
@@ -166,7 +166,7 @@ export default function ClientPacksPage() {
         client: formData.client,
         pack: formData.pack,
         packPrice: formData.packPrice || 0,
-        totalPrice: formData.totalPrice || formData.packPrice || 0,
+        finalPrice: formData.finalPrice || 0,
         remainingSessions: formData.remainingSessions || 0,
         purchaseState: formData.purchaseState || 'pending',
         expirationDate: formData.expirationDate ? new Date(formData.expirationDate).toISOString() : new Date().toISOString(),
@@ -245,7 +245,7 @@ export default function ClientPacksPage() {
       client: "",
       pack: "",
       packPrice: 0,
-      totalPrice: 0,
+      finalPrice: 0,
       expirationDate: "",
       remainingSessions: 0,
       purchaseState: "pending"
@@ -259,7 +259,7 @@ export default function ClientPacksPage() {
         pack.clientName?.toLowerCase() || '',
         getPackDisplayInfo(pack.pack)?.toLowerCase() || '',
         String(pack.packPrice).toLowerCase(),
-        String(pack.totalPrice || pack.packPrice).toLowerCase(),
+        String(pack.finalPrice || pack.packPrice).toLowerCase(),
         pack.purchaseState?.toLowerCase() || '',
       ];
       const query = searchQuery.toLowerCase();
@@ -365,7 +365,7 @@ export default function ClientPacksPage() {
                         <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Client</th>
                         <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Package</th>
                         <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Package Price</th>
-                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Total Price</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">finalprice</th>
                         <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Sessions Left</th>
                         <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Status</th>
                         <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Purchase Date</th>
@@ -393,7 +393,7 @@ export default function ClientPacksPage() {
                               ${pack.packPrice}
                             </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
-                              ${pack.totalPrice || pack.packPrice}
+                              ${pack.finalPrice || pack.packPrice}
                             </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                               {pack.remainingSessions}
@@ -432,7 +432,7 @@ export default function ClientPacksPage() {
                                         client: pack.client,
                                         pack: packId,
                                         packPrice: pack.packPrice,
-                                        totalPrice: pack.totalPrice || pack.packPrice,
+                                        finalPrice: pack.finalPrice || pack.packPrice,
                                         expirationDate: new Date(pack.expirationDate).toISOString().split('T')[0],
                                         remainingSessions: pack.remainingSessions,
                                         purchaseState: pack.purchaseState
@@ -515,7 +515,7 @@ export default function ClientPacksPage() {
                           ...formData,
                           pack: value,
                           packPrice: firstSession.price || 0,
-                          totalPrice: firstSession.price || 0,
+                          finalPrice: firstSession.price || 0,
                           remainingSessions: firstSession.sessionCount || 0
                         });
                       }
@@ -545,7 +545,7 @@ export default function ClientPacksPage() {
                         setFormData({
                           ...formData, 
                           packPrice: newPackPrice,
-                          totalPrice: newPackPrice
+                          finalPrice: newPackPrice
                         });
                       }}
                       className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
@@ -553,12 +553,12 @@ export default function ClientPacksPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="totalPrice">Total Price</Label>
+                    <Label htmlFor="finalPrice">Total Price</Label>
                     <Input
-                      id="totalPrice"
+                      id="finalPrice"
                       type="number"
-                      value={formData.totalPrice}
-                      onChange={(e) => setFormData({...formData, totalPrice: parseFloat(e.target.value)})}
+                      value={formData.finalPrice}
+                      onChange={(e) => setFormData({...formData, finalPrice: parseFloat(e.target.value)})}
                       className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
                       required
                     />
@@ -642,7 +642,7 @@ export default function ClientPacksPage() {
                         setFormData({
                           ...formData, 
                           packPrice: newPackPrice,
-                          totalPrice: newPackPrice
+                          finalPrice: newPackPrice
                         });
                       }}
                       className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
@@ -650,12 +650,12 @@ export default function ClientPacksPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="totalPrice">Total Price</Label>
+                    <Label htmlFor="finalPrice">Total Price</Label>
                     <Input
-                      id="totalPrice"
+                      id="finalPrice"
                       type="number"
-                      value={formData.totalPrice}
-                      onChange={(e) => setFormData({...formData, totalPrice: parseFloat(e.target.value)})}
+                      value={formData.finalPrice}
+                      onChange={(e) => setFormData({...formData, finalPrice: parseFloat(e.target.value)})}
                       className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
                       required
                     />

@@ -7,15 +7,33 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { format } from 'date-fns'
+import { useGetPacksQuery } from "@/redux/services/pack.service"
+import { useGetUserQuery } from "@/redux/services/user.service"
+import { useGetSessionsQuery } from "@/redux/services/session.service"
+import { useGetReviewsQuery } from "@/redux/services/review.service"
+import { 
+  useGetCouponsQuery,
+  useCreateCouponMutation,
+  useUpdateCouponMutation,
+  useDeleteCouponMutation
+} from "@/redux/services/coupon.service"
+import { toast } from "sonner"
 
 export default function AdminDashboard() {
   const [monthlyData, setMonthlyData] = useState([])
   const [performanceData, setPerformanceData] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [coupons, setCoupons] = useState([])
   const [newCoupon, setNewCoupon] = useState({ name: '', percentage: '', expiryDate: '' })
   const [editingCoupon, setEditingCoupon] = useState(null)
+
+  // RTK Query hooks for data
+  const { data: packsData, isLoading: packsLoading, error: packsError } = useGetPacksQuery()
+  const { data: usersData, isLoading: usersLoading, error: usersError } = useGetUserQuery()
+  const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } = useGetSessionsQuery()
+  const { data: reviewsData, isLoading: reviewsLoading, error: reviewsError } = useGetReviewsQuery()
+  const { data: couponsData, isLoading: couponsLoading, error: couponsError } = useGetCouponsQuery()
+  const [createCoupon] = useCreateCouponMutation()
+  const [updateCoupon] = useUpdateCouponMutation()
+  const [deleteCoupon] = useDeleteCouponMutation()
 
   // Helper function to safely format dates
   const formatExpiryDate = (dateString) => {
@@ -33,38 +51,17 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        setIsLoading(true)
-        // Fetch all necessary data in parallel
-        const [usersResponse, packsResponse, sessionsResponse, reviewsResponse, couponsResponse] = await Promise.all([
-          fetch('/api/users'),
-          fetch('/api/packs'),
-          fetch('/api/session'),
-          fetch('/api/review'),
-          fetch('/api/coupon')
-        ])
-
-        if (!usersResponse.ok || !packsResponse.ok || !sessionsResponse.ok || !reviewsResponse.ok || !couponsResponse.ok) {
-          throw new Error('Failed to fetch dashboard data')
-        }
-
-        const [usersData, packsData, sessionsData, reviewsData, couponsData] = await Promise.all([
-          usersResponse.json(),
-          packsResponse.json(),
-          sessionsResponse.json(),
-          reviewsResponse.json(),
-          couponsResponse.json()
-        ])
-
-        // Process users data
-        const clients = usersData.filter(user => user.role === 'client')
-        const coaches = usersData.filter(user => user.role === 'coach')
+        toast.loading('Loading dashboard data...')
+        
+        // Process users data from Redux
+        const clients = usersData?.users?.filter(user => user.role === 'client') || []
 
         // Process sessions data for monthly chart
         const currentMonth = new Date().getMonth()
         const monthlySessions = Array(12).fill(0)
         
-        // Handle sessions data (direct array response)
-        const sessions = Array.isArray(sessionsData) ? sessionsData : []
+        // Handle sessions data from Redux
+        const sessions = sessionsData?.sessions || []
         sessions.forEach(session => {
           if (session.sessionDate) {
             const sessionMonth = new Date(session.sessionDate).getMonth()
@@ -72,112 +69,112 @@ export default function AdminDashboard() {
           }
         })
 
-        // Process coupons data
-        setCoupons(couponsData.data || [])
-
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
         const processedMonthlyData = months.map((month, index) => ({
           name: month,
           sessions: monthlySessions[index]
         }))
 
-        // Process reviews data
-        const reviews = reviewsData.data || []
+        // Process reviews data from Redux
+        const reviews = reviewsData?.data || []
 
         // Process performance data
         const processedPerformanceData = [
           { name: "Clients", value: clients.length, count: `${clients.length} active clients` },
-          { name: "Client Packs", value: packsData.length, count: `${packsData.length} total packs` },
+          { name: "Client Packs", value: packsData?.packs?.length || 0, count: `${packsData?.packs?.length || 0} total packs` },
           { name: "Sessions", value: sessions.length, count: `${sessions.length} this month` },
           { name: "Reviews", value: reviews.length, count: `${reviews.length} total reviews` }
         ]
 
         setMonthlyData(processedMonthlyData)
         setPerformanceData(processedPerformanceData)
+        toast.dismiss()
       } catch (err) {
-        setError(err.message)
-        console.error('Error fetching dashboard data:', err)
-      } finally {
-        setIsLoading(false)
+        toast.error(err.message || 'Failed to fetch dashboard data')
       }
     }
 
-    fetchDashboardData()
-  }, [])
+    // Only fetch data if we have all Redux data
+    if (packsData && usersData && sessionsData && reviewsData) {
+      fetchDashboardData()
+    }
+  }, [packsData, usersData, sessionsData, reviewsData])
+
+  // Handle errors from Redux queries
+  useEffect(() => {
+    const errors = [packsError, usersError, sessionsError, reviewsError, couponsError].filter(Boolean)
+    if (errors.length > 0) {
+      const errorMessage = errors[0].message || 'Failed to load dashboard data'
+      toast.error(errorMessage)
+    }
+  }, [packsError, usersError, sessionsError, reviewsError, couponsError])
 
   const handleAddCoupon = async () => {
     try {
-      const response = await fetch('/api/coupon', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: newCoupon.name,
-          percentage: parseInt(newCoupon.percentage),
-          expiryDate: newCoupon.expiryDate,
-          status: 'active'
-        }),
-      })
+      if (!newCoupon.name || !newCoupon.percentage || !newCoupon.expiryDate) {
+        toast.error('Please fill in all coupon fields')
+        return
+      }
 
-      if (!response.ok) throw new Error('Failed to add coupon')
+      const loadingToast = toast.loading('Adding coupon...')
+      const result = await createCoupon({
+        name: newCoupon.name,
+        percentage: parseInt(newCoupon.percentage),
+        expiryDate: newCoupon.expiryDate,
+        status: 'active'
+      }).unwrap()
 
-      const result = await response.json()
-      setCoupons([...coupons, result.coupon])
-      setNewCoupon({ name: '', percentage: '', expiryDate: '' })
+      toast.dismiss(loadingToast)
+      if (result.success) {
+        setNewCoupon({ name: '', percentage: '', expiryDate: '' })
+        toast.success('Coupon added successfully')
+      } else {
+        toast.error(result.message || 'Failed to add coupon')
+      }
     } catch (error) {
-      console.error('Error adding coupon:', error)
+      toast.error(error.message || 'Failed to add coupon')
     }
   }
 
   const handleUpdateCoupon = async (couponId) => {
     try {
-      const response = await fetch(`/api/coupon?id=${couponId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editingCoupon),
-      })
+      if (!editingCoupon.name || !editingCoupon.percentage || !editingCoupon.expiryDate) {
+        toast.error('Please fill in all coupon fields')
+        return
+      }
 
-      if (!response.ok) throw new Error('Failed to update coupon')
+      const loadingToast = toast.loading('Updating coupon...')
+      const result = await updateCoupon({
+        id: couponId,
+        ...editingCoupon
+      }).unwrap()
 
-      const result = await response.json()
-      setCoupons(coupons.map(c => c._id === couponId ? result.coupon : c))
-      setEditingCoupon(null)
+      toast.dismiss(loadingToast)
+      if (result.success) {
+        setEditingCoupon(null)
+        toast.success('Coupon updated successfully')
+      } else {
+        toast.error(result.message || 'Failed to update coupon')
+      }
     } catch (error) {
-      console.error('Error updating coupon:', error)
+      toast.error(error.message || 'Failed to update coupon')
     }
   }
 
   const handleDeleteCoupon = async (couponId) => {
     try {
-      const response = await fetch(`/api/coupon?id=${couponId}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) throw new Error('Failed to delete coupon')
-
-      setCoupons(coupons.filter(c => c._id !== couponId))
+      const loadingToast = toast.loading('Deleting coupon...')
+      const result = await deleteCoupon(couponId).unwrap()
+      
+      toast.dismiss(loadingToast)
+      if (result.success) {
+        toast.success('Coupon deleted successfully')
+      } else {
+        toast.error(result.message || 'Failed to delete coupon')
+      }
     } catch (error) {
-      console.error('Error deleting coupon:', error)
+      toast.error(error.message || 'Failed to delete coupon')
     }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0d111a] text-white">
-        <div>Loading dashboard data...</div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0d111a] text-red-500">
-        <div>Error: {error}</div>
-      </div>
-    )
   }
 
   return (
@@ -358,7 +355,7 @@ export default function AdminDashboard() {
                       placeholder="Coupon Name"
                       value={newCoupon.name}
                       onChange={(e) => setNewCoupon({ ...newCoupon, name: e.target.value })}
-                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      className="bg-gray-800 border-white/10 text-white focus:ring-[#B4E90E] focus:border-[#B4E90E]"
                     />
                   </div>
                   <div>
@@ -367,7 +364,7 @@ export default function AdminDashboard() {
                       placeholder="Discount Percentage"
                       value={newCoupon.percentage}
                       onChange={(e) => setNewCoupon({ ...newCoupon, percentage: e.target.value })}
-                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      className="bg-gray-800 border-white/10 text-white focus:ring-[#B4E90E] focus:border-[#B4E90E]"
                     />
                   </div>
                   <div>
@@ -375,7 +372,7 @@ export default function AdminDashboard() {
                       type="date"
                       value={newCoupon.expiryDate}
                       onChange={(e) => setNewCoupon({ ...newCoupon, expiryDate: e.target.value })}
-                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      className="bg-gray-800 border-white/10 text-white focus:ring-[#B4E90E] focus:border-[#B4E90E]"
                     />
                   </div>
                   <Button
@@ -395,26 +392,26 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {coupons.map((coupon) => (
+                  {couponsData?.data?.map((coupon) => (
                     <div key={coupon._id} className="flex flex-col space-y-2 pb-3 border-b border-gray-800 last:border-0">
                       {editingCoupon && editingCoupon._id === coupon._id ? (
                         <>
                           <Input
                             value={editingCoupon.name}
                             onChange={(e) => setEditingCoupon({ ...editingCoupon, name: e.target.value })}
-                            className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                            className="bg-gray-800 border-white/10 text-white focus:ring-[#B4E90E] focus:border-[#B4E90E]"
                           />
                           <Input
                             type="number"
                             value={editingCoupon.percentage}
                             onChange={(e) => setEditingCoupon({ ...editingCoupon, percentage: e.target.value })}
-                            className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                            className="bg-gray-800 border-white/10  text-white focus:ring-[#B4E90E] focus:border-[#B4E90E]"
                           />
                           <Input
                             type="date"
                             value={editingCoupon.expiryDate}
                             onChange={(e) => setEditingCoupon({ ...editingCoupon, expiryDate: e.target.value })}
-                            className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                            className="bg-gray-800 border-white/10 text-white focus:ring-[#B4E90E] focus:border-[#B4E90E]"
                           />
                           <div className="flex gap-2">
                             <Button
@@ -462,7 +459,7 @@ export default function AdminDashboard() {
                       )}
                     </div>
                   ))}
-                  {coupons.length === 0 && (
+                  {couponsData?.data?.length === 0 && (
                     <div className="text-gray-400 text-center py-4">No active coupons</div>
                   )}
                 </div>

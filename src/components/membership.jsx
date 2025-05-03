@@ -10,178 +10,87 @@ import {
   AlertCircle,
   ChevronRight,
   Info,
+  Check,
+  CheckCircle,
+  MapPin,
 } from "lucide-react";
 import { useAuth } from "@/context/authContext";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { useGetClientPackByClientIdQuery } from "@/redux/services/clientpack.service";
+import {
+  useCancelSessionMutation,
+  useCompleteSessionMutation,
+  useGetSessionsByClientIdQuery,
+} from "@/redux/services/session.service";
+import { useUpdateClientPackMutation } from "@/redux/services/clientpack.service";
 
 const Membership = ({ setActiveTab }) => {
   const { mongoUser } = useAuth();
   const [memberships, setMemberships] = useState([]);
   const [upcomingSessions, setUpcomingSessions] = useState([]);
+  const [finishedSessions, setFinishedSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [sessionLoading, setSessionLoading] = useState(false);
   const [hasActiveMemberships, setHasActiveMemberships] = useState(false);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [sessionToCancel, setSessionToCancel] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [showErrorModal, setShowErrorModal] = useState(false);
+  const [finishModalOpen, setFinishModalOpen] = useState(false);
+  const [sessionToFinish, setSessionToFinish] = useState(null);
   const t = useTranslations("MembershipPage");
   const locale = useLocale();
-
-  // Function to update pack active status when sessions reach 0
-  const updatePackActiveStatus = async (packId) => {
-    try {
-      const response = await fetch(
-        `http://localhost:3000/api/client-pack?id=${packId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ isActive: false }),
-        }
+  const {
+    data: clientPack,
+    isLoading: clientPackLoading,
+    refetch: refetchClientPack,
+  } = useGetClientPackByClientIdQuery(mongoUser?._id, {
+    skip: !mongoUser?._id,
+  });
+  const {
+    data: sessions,
+    isLoading: sessionsLoading,
+    refetch: refetchSessions,
+  } = useGetSessionsByClientIdQuery(mongoUser?._id, {
+    skip: !mongoUser?._id,
+  });
+  const [cancelSession, { isLoading: cancelLoading }] =
+    useCancelSessionMutation();
+  const [completeSession, { isLoading: completeLoading }] =
+    useCompleteSessionMutation();
+  const [updateClientPack, { isLoading: updateClientPackLoading }] =
+    useUpdateClientPackMutation();
+  console.log("sessions", sessions);
+  useEffect(() => {
+    if (sessions?.sessions) {
+      const completedSessions = sessions.sessions.filter(
+        (session) => session.status === "completed"
       );
-
-      if (!response.ok) {
-        console.error("Failed to update pack active status");
-      }
-    } catch (error) {
-      console.error("Error updating pack active status:", error);
+      setFinishedSessions(completedSessions);
     }
-  };
+  }, [sessions]);
+  useEffect(() => {
+    if (sessions?.sessions) {
+      const scheduledSessions = sessions.sessions.filter(
+        (session) => session.status === "scheduled"
+      );
+      console.log("scheduledSessions", scheduledSessions);
+      setUpcomingSessions(scheduledSessions);
+    }
+  }, [sessions, sessionsLoading]);
 
   useEffect(() => {
-    if (mongoUser?._id) {
-      const fetchMembershipInfo = async () => {
-        try {
-          const response = await fetch(
-            `http://localhost:3000/api/client-pack?clientId=${mongoUser._id}`
-          );
-          if (!response.ok) {
-            throw new Error("Failed to fetch membership info");
-          }
-          const data = await response.json();
-
-          const currentDate = new Date();
-
-          // Check and update membership status if remainingSessions is 0
-          for (const pack of data) {
-            if (pack.remainingSessions === 0 && pack.isActive) {
-              await updatePackActiveStatus(pack._id);
-              pack.isActive = false;
-            }
-          }
-
-          // Filter for active memberships (completed purchase, not expired, and isActive true)
-          const activeMemberships = data.filter(
-            (pack) =>
-              pack.purchaseState === "completed" &&
-              new Date(pack.expirationDate) > currentDate &&
-              pack.isActive === true
-          );
-
-          setHasActiveMemberships(activeMemberships.length > 0);
-          setMemberships(activeMemberships);
-          setLoading(false);
-
-          if (activeMemberships.length > 0) {
-            fetchUpcomingSessions();
-          }
-        } catch (error) {
-          console.error("Error fetching membership info:", error);
-          setLoading(false);
-        }
-      };
-
-      fetchMembershipInfo();
-    } else {
+    if (!clientPackLoading) {
       setLoading(false);
-    }
-  }, [mongoUser]);
 
-  const fetchUpcomingSessions = async () => {
-    if (!mongoUser?._id) return;
-
-    setSessionLoading(true);
-    try {
-      const response = await fetch(`/api/session?clientId=${mongoUser._id}`);
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch upcoming sessions: ${response.statusText}`
-        );
+      if (clientPack) {
+        setHasActiveMemberships(clientPack?.clientPack?.length > 0);
+        setMemberships(clientPack?.clientPack);
       }
-      const data = await response.json();
-
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-      const upcomingAndScheduledSessions = Array.isArray(data)
-        ? data
-            .filter((session) => {
-              if (
-                !session ||
-                typeof session !== "object" ||
-                (session.status !== "scheduled" &&
-                  session.status !== "confirmed")
-              ) {
-                return false;
-              }
-
-              // Ensure we have valid sessionDate and sessionTime
-              if (!session.sessionDate || !session.sessionTime) {
-                console.warn(
-                  `Missing date/time info for session ${session._id}`
-                );
-                return false;
-              }
-
-              let sessionDateObj;
-              try {
-                sessionDateObj = new Date(session.sessionDate);
-                if (isNaN(sessionDateObj.getTime())) {
-                  console.warn(
-                    `Invalid sessionDate format found: ${session.sessionDate} for session ${session._id}`
-                  );
-                  return false;
-                }
-              } catch (e) {
-                console.error(
-                  `Error parsing sessionDate ${session.sessionDate} for session ${session._id}:`,
-                  e
-                );
-                return false;
-              }
-
-              const sessionStartOfDay = new Date(
-                sessionDateObj.getFullYear(),
-                sessionDateObj.getMonth(),
-                sessionDateObj.getDate()
-              );
-              return sessionStartOfDay >= today;
-            })
-            .sort((a, b) => {
-              // Sort by date and time
-              const dateA = new Date(a.sessionDate);
-              const dateB = new Date(b.sessionDate);
-
-              if (dateA.getTime() !== dateB.getTime()) {
-                return dateA - dateB;
-              }
-
-              // If same date, sort by time
-              return a.sessionTime.localeCompare(b.sessionTime);
-            })
-        : [];
-
-      setUpcomingSessions(upcomingAndScheduledSessions);
-    } catch (error) {
-      console.error("Error fetching upcoming sessions:", error);
-      setUpcomingSessions([]);
-    } finally {
-      setSessionLoading(false);
     }
-  };
+  }, [clientPack, clientPackLoading]);
+
+  // Move the actual finish logic to a new function
 
   // Helper function to normalize time string for better parsing
   const normalizeTimeString = (timeStr) => {
@@ -451,64 +360,73 @@ const Membership = ({ setActiveTab }) => {
   };
 
   const handleCancelSession = async () => {
-    if (!sessionToCancel) return;
+    console.log("sessionToCancel", sessionToCancel);
+    await cancelSession(sessionToCancel._id).unwrap();
+    toast.success("Session cancelled successfully");
+    refetchSessions();
+    setCancelModalOpen(false);
+    setSessionToCancel(null);
+    setShowErrorModal(false);
+    setErrorMessage(null);
+  };
 
+  const handleCompleteSession = async (session) => {
     try {
-      const response = await fetch(
-        `http://localhost:3000/api/session?id=${sessionToCancel._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status: "cancelled" }),
-        }
-      );
+      console.log("sessionToComplete", session);
 
-      if (!response.ok) {
-        throw new Error("Failed to cancel session");
-      }
-
-      setUpcomingSessions((prev) =>
-        prev.filter((session) => session._id !== sessionToCancel._id)
-      );
-
-      // Check if this action affects any membership's remaining sessions
-      // This happens if the session belongs to a package and is returned to the client's account
-      if (sessionToCancel.packId) {
-        // Fetch the latest client pack data
-        const packResponse = await fetch(
-          `http://localhost:3000/api/client-pack?id=${sessionToCancel.packId}`
+      // Find the client pack associated with this session
+      const packId = session.clientPack;
+      if (!packId) {
+        console.error("No client pack ID found in session");
+        toast.error(
+          "Session could not be completed. Missing client pack information."
         );
-
-        if (packResponse.ok) {
-          const packData = await packResponse.json();
-
-          // If cancellation causes sessions to return to 0, update isActive status
-          if (packData.remainingSessions === 0) {
-            await updatePackActiveStatus(sessionToCancel.packId);
-
-            // Update local state to reflect changes
-            setMemberships((prev) =>
-              prev.filter(
-                (membership) => membership._id !== sessionToCancel.packId
-              )
-            );
-
-            // Check if we have any active memberships left
-            if (memberships.length <= 1) {
-              setHasActiveMemberships(false);
-            }
-          }
-        }
+        return;
       }
 
-      setCancelModalOpen(false);
-      setSessionToCancel(null);
+      // Complete the session first
+      await completeSession(session._id).unwrap();
+
+      // Find the client pack from our state
+      const clientPackToUpdate = memberships.find(
+        (pack) => pack._id === packId
+      );
+      if (!clientPackToUpdate) {
+        console.error("Could not find client pack with ID:", packId);
+        toast.error(
+          "Session marked as completed, but failed to update remaining sessions count."
+        );
+        refetchSessions();
+        refetchClientPack();
+        return;
+      }
+
+      // Calculate new remaining sessions count
+      const newRemainingSessionsCount = Math.max(
+        0,
+        clientPackToUpdate.remainingSessions - 1
+      );
+      const updateData = {
+        id: packId,
+        remainingSessions: newRemainingSessionsCount,
+      };
+
+      // If this was the last session, set isActive to false
+      if (newRemainingSessionsCount === 0) {
+        updateData.isActive = false;
+      }
+
+      // Update the client pack
+      await updateClientPack(updateData).unwrap();
+
+      toast.success("Session completed successfully and package updated");
+      refetchSessions();
+      refetchClientPack();
     } catch (error) {
-      console.error("Error cancelling session:", error);
-      setErrorMessage(t("failedCancelSession"));
-      setShowErrorModal(true);
+      console.error("Error completing session:", error);
+      toast.error("An error occurred while completing the session");
+      refetchSessions();
+      refetchClientPack();
     }
   };
 
@@ -533,6 +451,89 @@ const Membership = ({ setActiveTab }) => {
         minute: "2-digit",
       }),
     };
+  };
+
+  // Function to check if session time has passed by at least 1 hour
+  const isSessionPastDueByOneHour = (sessionDate, sessionTime) => {
+    try {
+      if (!sessionDate || !sessionTime) return false;
+
+      // Normalize time string for better parsing
+      const normalizedTime = normalizeTimeString(sessionTime);
+      if (!normalizedTime) return false;
+
+      // Create a date object by combining date and time
+      const sessionDateTime = new Date(sessionDate);
+
+      // Handle different time formats (both 12h and 24h)
+      let hours, minutes;
+
+      if (normalizedTime.includes("AM") || normalizedTime.includes("PM")) {
+        // Handle 12-hour format (e.g., "9:00 AM")
+        const parts = normalizedTime.split(" ");
+        const timePart = parts[0];
+        const period = parts.length > 1 ? parts[1] : null;
+
+        if (!timePart || !period) return false;
+
+        const timePieces = timePart.split(":");
+
+        // Handle hour-only formats
+        if (timePieces.length === 1) {
+          hours = parseInt(timePieces[0], 10);
+          minutes = 0;
+        } else if (timePieces.length >= 2) {
+          hours = parseInt(timePieces[0], 10);
+          minutes = parseInt(timePieces[1], 10);
+        } else {
+          return false;
+        }
+
+        if (isNaN(hours) || isNaN(minutes)) return false;
+
+        // Convert to 24-hour format
+        if (period === "PM" && hours < 12) {
+          hours += 12;
+        } else if (period === "AM" && hours === 12) {
+          hours = 0;
+        }
+      } else {
+        // Handle 24-hour format (e.g., "09:00" or "14:30")
+        const parts = normalizedTime.split(":");
+
+        if (parts.length === 1) {
+          hours = parseInt(parts[0], 10);
+          minutes = 0;
+        } else if (parts.length >= 2) {
+          hours = parseInt(parts[0], 10);
+          minutes = parseInt(parts[1], 10);
+        } else {
+          return false;
+        }
+
+        if (isNaN(hours) || isNaN(minutes)) return false;
+      }
+
+      // Set the time part of the date
+      sessionDateTime.setHours(hours, minutes, 0, 0);
+
+      // Get current time
+      const now = new Date();
+
+      // Calculate time difference in hours
+      const timeDifferenceInHours = (now - sessionDateTime) / (1000 * 60 * 60);
+
+      // Session is past due if it's at least 1 hour in the past
+      return timeDifferenceInHours >= 1;
+    } catch (error) {
+      console.error(
+        "Error calculating if session is past due:",
+        error,
+        "for time:",
+        sessionTime
+      );
+      return false;
+    }
   };
 
   return (
@@ -637,21 +638,30 @@ const Membership = ({ setActiveTab }) => {
               {t("upcomingSessions")}
             </h3>
 
-            {sessionLoading ? (
+            {sessionsLoading ? (
               <div className="text-center py-8">{t("loadingSessions")}</div>
             ) : upcomingSessions.length > 0 ? (
               <div className="space-y-4">
-                {upcomingSessions.map((session, idx) => {
+                {upcomingSessions.map((session) => {
                   const { date } = formatDateTime(session.sessionDate);
                   const formattedTime = formatTime(session.sessionTime);
                   const isCancellable = isSessionCancellable(
                     session.sessionDate,
                     session.sessionTime
                   );
+                  const isPastDueByOneHour = isSessionPastDueByOneHour(
+                    session.sessionDate,
+                    session.sessionTime
+                  );
+
+                  // Generate a unique key using session properties if _id is not available
+                  const sessionKey =
+                    session._id ||
+                    `${session.sessionDate}-${session.sessionTime}-${session.coach?._id || "nocoach"}`;
 
                   return (
                     <div
-                      key={session._id || idx}
+                      key={sessionKey}
                       className="bg-[#0d111a] p-4 sm:p-6 rounded-lg border border-[#161c2a] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                     >
                       <div className="flex-1">
@@ -661,6 +671,21 @@ const Membership = ({ setActiveTab }) => {
                           </div>
                           <span className="font-semibold">{date}</span>
                           <span className="font-medium">{formattedTime}</span>
+
+                          {/* Show session status */}
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              session.status === "scheduled"
+                                ? "bg-blue-400/10 text-blue-400"
+                                : session.status === "pending"
+                                  ? "bg-yellow-400/10 text-yellow-400"
+                                  : session.status === "completed"
+                                    ? "bg-green-400/10 text-green-400"
+                                    : "bg-red-400/10 text-red-400"
+                            }`}
+                          >
+                            {t(`sessionStatus.${session.status}`)}
+                          </span>
 
                           {!isCancellable && (
                             <span className="text-xs text-amber-400 bg-amber-400/10 px-2 py-1 rounded-full">
@@ -678,28 +703,50 @@ const Membership = ({ setActiveTab }) => {
                             {session.coach?.lastName || "" || "Not assigned"}
                           </span>
                         </div>
+
+                        <div className="flex items-center gap-3 mt-3">
+                          <div className="p-2 bg-[#161c2a] rounded-full">
+                            <MapPin size={18} className="text-[#B4E90E]" />
+                          </div>
+                          <span>{session.location || "unknown location"}</span>
+                        </div>
                       </div>
 
-                      <button
-                        onClick={() => handleCancelButtonClick(session)}
-                        className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 self-end sm:self-center ${
-                          isCancellable
-                            ? "bg-red-500/10 hover:bg-red-500/20 text-red-400"
-                            : "bg-gray-500/10 text-gray-400 cursor-not-allowed"
-                        }`}
-                        disabled={!isCancellable}
-                        title={
-                          !isCancellable
-                            ? t(
-                                "session12HourRule",
-                                "Sessions can only be cancelled at least 12 hours before start time"
-                              )
-                            : ""
-                        }
-                      >
-                        <X size={16} />
-                        {t("cancelSession")}
-                      </button>
+                      <div className="flex gap-2">
+                        {/* For sessions past due by 1 hour, show confirm button */}
+                        {isPastDueByOneHour &&
+                        session.status === "scheduled" ? (
+                          <button
+                            onClick={() => handleCompleteSession(session)}
+                            className="px-4 py-2 rounded-lg transition-colors flex items-center gap-2 self-end sm:self-center bg-green-500/10 hover:bg-green-500/20 text-green-400"
+                          >
+                            <CheckCircle size={16} />
+                            {t("confirmCompleted", "Confirm Completed")}
+                          </button>
+                        ) : (
+                          /* Otherwise show cancel button */
+                          <button
+                            onClick={() => handleCancelButtonClick(session)}
+                            className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 self-end sm:self-center ${
+                              isCancellable
+                                ? "bg-red-500/10 hover:bg-red-500/20 text-red-400"
+                                : "bg-gray-500/10 text-gray-400 cursor-not-allowed"
+                            }`}
+                            disabled={!isCancellable}
+                            title={
+                              !isCancellable
+                                ? t(
+                                    "session12HourRule",
+                                    "Sessions can only be cancelled at least 12 hours before start time"
+                                  )
+                                : ""
+                            }
+                          >
+                            <X size={16} />
+                            {t("cancelSession")}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -710,54 +757,81 @@ const Membership = ({ setActiveTab }) => {
                   <Calendar size={36} className="text-gray-400" />
                 </div>
                 <p className="text-gray-400">{t("noUpcomingSessions")}</p>
+              </div>
+            )}
+          </motion.div>
 
-                {/* Check if there are active memberships with sessions remaining */}
-                {memberships.some(
-                  (membership) =>
-                    membership.isActive && membership.remainingSessions > 0
-                ) ? (
-                  <button
-                    className="mt-6 bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-2 px-6 rounded-lg transition-colors inline-flex items-center gap-2"
-                    onClick={() => {
-                      // Double check that we have valid packages before navigating
-                      if (
-                        memberships.some(
-                          (m) => m.isActive && m.remainingSessions > 0
-                        )
-                      ) {
-                        setActiveTab("book");
-                      } else {
-                        // If somehow the state is inconsistent, show an error
-                        toast.error(
-                          t(
-                            "noRemainingSessionsError",
-                            "No active sessions available. Please purchase a new package."
-                          )
-                        );
-                      }
-                    }}
-                  >
-                    <Calendar size={18} />
-                    {t("bookASession")}
-                  </button>
-                ) : (
-                  <div className="mt-6">
-                    <p className="text-amber-400 mb-3">
-                      <Info size={18} className="inline mr-2" />
-                      {t(
-                        "noSessionsRemaining",
-                        "No sessions remaining in your active packages"
-                      )}
-                    </p>
-                    <button
-                      className="bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-2 px-6 rounded-lg transition-colors inline-flex items-center gap-2"
-                      onClick={() => (window.location.href = `/${locale}/`)}
+          {/* Finished Sessions Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-[#0a0e15] p-6 sm:p-8 rounded-lg border border-[#161c2a] mt-8"
+          >
+            <h3 className="text-xl sm:text-2xl font-bold mb-6 flex items-center">
+              <CheckCircle className="mr-3 text-[#B4E90E]" />
+              {t("finishedSessions", "Finished Sessions")}
+            </h3>
+
+            {sessionsLoading ? (
+              <div className="text-center py-8">{t("loadingSessions")}</div>
+            ) : finishedSessions.length > 0 ? (
+              <div className="space-y-4">
+                {finishedSessions.map((session) => {
+                  const { date } = formatDateTime(session.sessionDate);
+                  const formattedTime = formatTime(session.sessionTime);
+
+                  // Generate a unique key using session properties if _id is not available
+                  const sessionKey =
+                    session._id ||
+                    `${session.sessionDate}-${session.sessionTime}-${session.coach?._id || "nocoach"}-finished`;
+
+                  return (
+                    <div
+                      key={sessionKey}
+                      className="bg-[#0d111a] p-4 sm:p-6 rounded-lg border border-[#161c2a] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                     >
-                      <ShoppingCart size={18} />
-                      {t("buyAPackage")}
-                    </button>
-                  </div>
-                )}
+                      <div className="flex-1">
+                        <div className="flex flex-wrap items-center gap-3 mb-2">
+                          <div className="p-2 bg-[#161c2a] rounded-full">
+                            <Calendar size={18} className="text-[#B4E90E]" />
+                          </div>
+                          <span className="font-semibold">{date}</span>
+                          <span className="font-medium">{formattedTime}</span>
+                          <span className="text-xs px-2 py-1 rounded-full bg-green-400/10 text-green-400">
+                            {t("completed", "Completed")}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 mt-3">
+                          <div className="p-2 bg-[#161c2a] rounded-full">
+                            <User size={18} className="text-[#B4E90E]" />
+                          </div>
+                          <span>
+                            {t("coach", "Coach")}: {session.coach?.firstName}{" "}
+                            {session.coach?.lastName || ""}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-3 mt-3">
+                          <div className="p-2 bg-[#161c2a] rounded-full">
+                            <MapPin size={18} className="text-[#B4E90E]" />
+                          </div>
+                          <span>{session.location || "unknown location"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-[#0d111a] p-6 rounded-lg border border-[#161c2a] text-center">
+                <div className="flex justify-center mb-4">
+                  <CheckCircle size={36} className="text-gray-400" />
+                </div>
+                <p className="text-gray-400">
+                  {t("noFinishedSessions", "No finished sessions yet")}
+                </p>
               </div>
             )}
           </motion.div>

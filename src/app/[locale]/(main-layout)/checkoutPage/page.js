@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Apple, CreditCard, CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,7 +11,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/authContext";
 import { useLocale, useTranslations } from "next-intl";
+import {
+  useGetClientPackByIdQuery,
+  useUpdateClientPackMutation,
+} from "@/redux/services/clientpack.service";
+import { useGetCouponsQuery } from "@/redux/services/coupon.service";
+import { toast } from "sonner";
+
 export default function CheckoutPage() {
+  const router = useRouter();
   const t = useTranslations("CheckoutPage");
   const locale = useLocale();
   const [paymentMethod, setPaymentMethod] = useState("card");
@@ -29,212 +36,95 @@ export default function CheckoutPage() {
     isAuthenticated,
     isLoading: authLoading,
   } = useAuth();
-  const router = useRouter(); // Initialize router
-  console.log(mongoUser);
+  const id = mongoUser?._id;
+  const {
+    data,
+    isLoading: isQueryLoading,
+    isError,
+    error,
+  } = useGetClientPackByIdQuery(id, { skip: !id });
 
-  // Fetch client pack when mongoUser is available
+  const { data: couponsData, isLoading: isCouponsLoading } = useGetCouponsQuery();
+
+  const [
+    updateClientPack,
+    { isSuccess: isUpdateSuccess, isError: isUpdateError, error: updateError },
+  ] = useUpdateClientPackMutation();
+
   useEffect(() => {
-    const fetchClientPack = async () => {
-      if (mongoUser && mongoUser._id) {
-        try {
-          setIsLoading(true);
-          const response = await fetch(
-            `/api/client-pack?clientId=${mongoUser._id}`
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            setClientPack(data);
-          } else {
-            console.error("Failed to fetch client pack:", response.status);
-          }
-        } catch (error) {
-          console.error("Error fetching client pack:", error);
-        } finally {
-          setIsLoading(false);
-        }
+    setClientPack(data?.clientPack);
+    if (data?.clientPack?.length > 0) {
+      const pendingPacks = data.clientPack.filter(
+        (pack) => pack.purchaseState === "pending"
+      );
+      if (pendingPacks.length > 0) {
+        const lastPendingPack = [...pendingPacks].sort(
+          (a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate)
+        )[0];
+        setPackDetails(lastPendingPack);
       }
-    };
-
-    fetchClientPack();
-  }, [mongoUser]);
-
-  // Get the most recent client pack (if there are multiple packs)
-  function getLastClientPack(clientPacks) {
-    if (!Array.isArray(clientPacks) || clientPacks.length === 0) {
-      return null;
     }
+  }, [data]);
 
-    const sortedClientPacks = clientPacks.sort(
-      (a, b) => new Date(b.purchaseDate) - new Date(a.purchaseDate)
-    );
-    return sortedClientPacks[0];
-  }
-
-  // Use the most recent client pack for the session
-  const selectedPack = clientPack ? getLastClientPack(clientPack) : null;
-  console.log(selectedPack);
-
-  // Fetch pack details when selectedPack is available
+  // Add effect to handle successful update
   useEffect(() => {
-    const fetchPackDetails = async () => {
-      if (selectedPack && selectedPack.pack) {
-        try {
-          setIsLoading(true);
-          const response = await fetch(
-            `/api/packs?id=${selectedPack.pack._id}`
-          );
-
-          if (response.ok) {
-            const data = await response.json();
-            setPackDetails(data);
-          } else {
-            console.log(response);
-          }
-        } catch (error) {
-          console.error("Error fetching pack details:", error);
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchPackDetails();
-  }, [selectedPack]);
-
-  // Calculate days left until expiration
-  const getDaysLeft = (expirationDate) => {
-    if (!expirationDate) return 0;
-
-    const expDate = new Date(expirationDate);
-    const today = new Date();
-    const diffTime = expDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    return diffDays > 0 ? diffDays : 0;
-  };
+    if (isUpdateSuccess) {
+      router.push(`/${locale}/client-profile`);
+    }
+    if (isUpdateError) {
+      toast.error("An error occurred while updating your purchase. Please try again.");
+    }
+  }, [isUpdateSuccess, isUpdateError, updateError, router, locale]);
 
   const handleCancel = async () => {
-    if (selectedPack && selectedPack._id) {
-      try {
-        const response = await fetch(
-          `/api/client-pack?id=${selectedPack._id}`,
-          {
-            method: "PATCH",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ purchaseState: "cancelled" }),
-          }
-        );
-
-        if (response.ok) {
-          router.push("/"); // Navigate to home after cancellation
-        } else {
-          console.error("Failed to cancel client pack:", response.status);
-        }
-      } catch (error) {
-        console.error("Error cancelling client pack:", error);
-      }
+    try {
+      await updateClientPack({
+        id: packDetails?._id,
+        purchaseState: "cancelled",
+      });
+    } catch (err) {
+      toast.error("Failed to cancel your purchase. Please try again.");
     }
   };
 
   const handleCompletePurchase = async () => {
-    // Simulate a fake payment process
-    setIsLoading(true);
-    setTimeout(async () => {
       try {
-        if (selectedPack && selectedPack._id) {
           const finalPrice = appliedCoupon 
-            ? Number((selectedPack.packPrice * (1 - (appliedCoupon.percentage || 0) / 100)).toFixed(2))
-            : selectedPack.packPrice;
+        ? Number((packDetails?.packPrice * (1 - (appliedCoupon.percentage || 0) / 100)).toFixed(2))
+        : packDetails?.packPrice;
 
-          const response = await fetch(
-            `/api/client-pack?id=${selectedPack._id}`,
-            {
-              method: "PATCH",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ 
+      await updateClientPack({
+        id: packDetails?._id,
                 purchaseState: "completed",
                 coupon: appliedCoupon?._id,
-                totalPrice: finalPrice
-              }),
-            }
-          );
-
-          if (response.ok) {
-            router.push(`/${locale}/client-profile`); // Navigate to home after completion
-          } else {
-            console.error("Failed to complete purchase:", response.status);
-          }
-        }
-      } catch (error) {
-        console.error("Error completing purchase:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 2000); // Simulate a 2-second payment processing time
+        finalPrice: finalPrice
+      });
+    } catch (err) {
+      toast.error("Failed to complete your purchase. Please try again.");
+    }
   };
 
-  // Debug useEffect to track state changes
-  useEffect(() => {
-    console.log('Coupon State Changed:', {
-      couponCode,
-      appliedCoupon,
-      isEditingCoupon
-    });
-  }, [couponCode, appliedCoupon, isEditingCoupon]);
-
-  const handleApplyCoupon = async () => {
+  const handleApplyCoupon = () => {
     if (!couponCode.trim()) {
       setCouponError(t('pleaseEnterCoupon'));
+      toast.info(t('pleaseEnterCoupon'));
       return;
     }
 
-    try {
-      setIsLoading(true);
-      setCouponError("");
-      // Clear previous coupon
-      setAppliedCoupon(null);
-      
-      // Add random value and timestamp to prevent caching
-      const timestamp = new Date().getTime();
-      const random = Math.random();
-      
-      // First, get all coupons
-      const response = await fetch(
-        `/api/coupon?t=${timestamp}&r=${random}`,
-        {
-          method: 'GET',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        }
-      );
+    if (!couponsData?.data) {
+      setCouponError(t('errorApplyingCoupon'));
+      toast.error(t('errorApplyingCoupon'));
+      return;
+    }
 
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-
-      const result = await response.json();
-      console.log('All Coupons Response:', result); // Debug log
-
-      if (result.success && result.data) {
-        // Find the coupon with matching name (case insensitive)
-        const coupons = Array.isArray(result.data) ? result.data : [result.data];
+    const coupons = Array.isArray(couponsData.data) ? couponsData.data : [couponsData.data];
         const matchingCoupon = coupons.find(
           c => c.name && c.name.toLowerCase() === couponCode.trim().toLowerCase()
         );
 
-        console.log('Found Coupon:', matchingCoupon); // Debug log
-
         if (!matchingCoupon) {
-          console.log('No matching coupon found'); // Debug log
           setCouponError(t('invalidCoupon'));
+          toast.error(t('invalidCoupon'));
           setAppliedCoupon(null);
           setIsEditingCoupon(true);
           return;
@@ -242,13 +132,13 @@ export default function CheckoutPage() {
 
         if (matchingCoupon.status === 'expired') {
           setCouponError(t('couponExpired'));
+          toast.error(t('couponExpired'));
           setAppliedCoupon(null);
           setIsEditingCoupon(true);
         } else {
-          // Ensure percentage is a number and create new coupon data
           const percentage = Number(matchingCoupon.percentage);
           if (isNaN(percentage)) {
-            console.error('Invalid percentage value:', matchingCoupon.percentage);
+            toast.error('The coupon discount value is invalid. Please try another coupon.');
             setCouponError(t('errorApplyingCoupon'));
             return;
           }
@@ -260,80 +150,42 @@ export default function CheckoutPage() {
             timestamp: new Date().getTime()
           };
 
-          console.log('Setting new coupon with percentage:', percentage); // Debug log
           setAppliedCoupon(newCouponData);
-          setCouponCode(""); // Clear input
+      setCouponCode("");
           setCouponError("");
           setIsEditingCoupon(false);
-
-          // Debug log for price calculation
-          if (selectedPack?.packPrice) {
-            const discount = (selectedPack.packPrice * percentage) / 100;
-            console.log('Price calculation preview:', {
-              originalPrice: selectedPack.packPrice,
-              percentage: percentage,
-              discount: discount,
-              finalPrice: selectedPack.packPrice - discount
-            });
-          }
-        }
-      } else {
-        console.log('Invalid API response:', result); // Debug log
-        setCouponError(t('invalidCoupon'));
-        setAppliedCoupon(null);
-        setIsEditingCoupon(true);
-      }
-    } catch (error) {
-      console.error('Error applying coupon:', error);
-      setCouponError(t('errorApplyingCoupon'));
-      setAppliedCoupon(null);
-      setIsEditingCoupon(true);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const handleCancelCoupon = () => {
-    console.log('Cancelling coupon'); // Debug log
     setAppliedCoupon(null);
     setCouponCode("");
     setCouponError("");
     setIsEditingCoupon(true);
+    toast.info('Coupon removed.');
   };
-
-  // Memoize the final price calculation with more detailed logging
-  const finalPrice = useMemo(() => {
-    console.log('Recalculating final price with:', {
-      packPrice: selectedPack?.packPrice,
-      coupon: appliedCoupon
-    });
-
-    if (!selectedPack?.packPrice) return selectedPack?.packPrice;
-    
-    if (appliedCoupon?.percentage) {
-      const discount = (selectedPack.packPrice * appliedCoupon.percentage) / 100;
-      const discountedPrice = selectedPack.packPrice - discount;
-      console.log('Final price calculation:', {
-        originalPrice: selectedPack.packPrice,
-        percentage: appliedCoupon.percentage,
-        discount: discount,
-        finalPrice: discountedPrice
-      });
-      return discountedPrice.toFixed(2);
-    }
-    
-    return selectedPack.packPrice;
-  }, [selectedPack?.packPrice, appliedCoupon]);
-
-  if (!selectedPack || !packDetails) {
-    return <div>Loading...</div>; // Display loading if clientPack or packDetails is not available
-  }
 
   const handleUpdateCoupon = () => {
     setIsEditingCoupon(true);
     setCouponError("");
   };
 
+  // Memoize the final price calculation
+  const finalPrice = useMemo(() => {
+    if (!packDetails?.packPrice) return packDetails?.packPrice;
+    
+    if (appliedCoupon?.percentage) {
+      const discount = (packDetails.packPrice * appliedCoupon.percentage) / 100;
+      const discountedPrice = packDetails.packPrice - discount;
+      return discountedPrice.toFixed(2);
+    }
+    
+    return packDetails.packPrice;
+  }, [packDetails?.packPrice, appliedCoupon]);
+
+  if (isQueryLoading) {
+    return <div>Loading...</div>;
+  }
   return (
     <div className="min-h-screen text-white md:mt-16 lg:mt-22 p-2 md:p-6">
       <div className="container mx-auto py-8 px-4">
@@ -341,12 +193,27 @@ export default function CheckoutPage() {
           {t("checkout")}
         </h1>
 
+        {!packDetails ? (
+          <div className="bg-[#161a26] border-[#2a2f3d] p-6 rounded-lg text-center">
+            <h2 className="text-2xl text-[#B4E90E] font-semibold mb-4">
+              {t("noPendingPurchase")}
+            </h2>
+            <p className="text-gray-300 mb-6">{t("pleaseSelectPackFirst")}</p>
+            <Button
+              onClick={() => router.push(`/${locale}`)}
+              className="bg-[#B4E90E] hover:bg-[#a3d00d] text-[#0d111a] font-bold py-3 px-6"
+            >
+              {t("goToHomePage")}
+            </Button>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Client Information - Left Side */}
           <div>
-           
             <Card className="bg-[#161a26] border-[#2a2f3d] p-6 mb-6">
-            <h2 className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
+                <h2
+                  className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === "ar" ? "text-right" : ""}`}
+                >
               {t("yourInformation")}
             </h2>
               <div className="space-y-4">
@@ -359,7 +226,7 @@ export default function CheckoutPage() {
                     <Input
                       id="firstName"
                       placeholder="John"
-                      className="bg-[#0d111a] border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
+                      className="bg-[#0d111a] text-white border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
                     />
                   </div>
                   <div className="space-y-2">
@@ -369,7 +236,7 @@ export default function CheckoutPage() {
                     <Input
                       id="lastName"
                       placeholder="Doe"
-                      className="bg-[#0d111a] border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
+                      className="bg-[#0d111a] text-white border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
                     />
                   </div>
                 </div>
@@ -382,7 +249,7 @@ export default function CheckoutPage() {
                     id="email"
                     type="email"
                     placeholder="john@example.com"
-                    className="bg-[#0d111a] border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
+                    className="bg-[#0d111a] text-white border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
                   />
                 </div>
 
@@ -393,7 +260,7 @@ export default function CheckoutPage() {
                   <Input
                     id="address"
                     placeholder="123 Main St"
-                    className="bg-[#0d111a] border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
+                    className="bg-[#0d111a] text-white border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
                   />
                 </div>
 
@@ -405,7 +272,7 @@ export default function CheckoutPage() {
                     <Input
                       id="city"
                       placeholder="New York"
-                      className="bg-[#0d111a] border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
+                      className="bg-[#0d111a] text-white border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
                     />
                   </div>
                   <div className="space-y-2">
@@ -415,7 +282,7 @@ export default function CheckoutPage() {
                     <Input
                       id="zipCode"
                       placeholder="10001"
-                      className="bg-[#0d111a] border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
+                      className="bg-[#0d111a] text-white border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
                     />
                   </div>
                 </div>
@@ -423,40 +290,61 @@ export default function CheckoutPage() {
             </Card>
 
             {/* Selected Package Information */}
-            
             <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
-            <h2 className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
+                <h2
+                  className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === "ar" ? "text-right" : ""}`}
+                >
               {t("yourSelectedPackage")}
             </h2>
-              <div className=" p-4 bg-[#0d111a] rounded-lg border border-[#2a2f3d]">
+                <div className="p-4 bg-[#0d111a] rounded-lg border border-[#2a2f3d]">
                 <div className="flex justify-between items-center mb-2">
-                  <span className={`font-medium text-[#B4E90E] ${locale === 'ar' ? 'order-2' : ''}`}>
-                    {packDetails.category?.[locale]}
+                    <span
+                      className={`font-medium text-[#B4E90E] ${locale === "ar" ? "order-2" : ""}`}
+                    >
+                      {packDetails?.pack?.category?.[locale] || "Package Name"}
                   </span>
-                  <div className={`bg-[#B4E90E] text-[#0d111a] px-3 py-1 rounded-full text-sm font-medium ${locale === 'ar' ? 'order-1' : ''}`}>
-                    {selectedPack?.remainingSessions} {t('sessions')}
+                    <div
+                      className={`bg-[#B4E90E] text-[#0d111a] px-3 py-1 rounded-full text-sm font-medium ${locale === "ar" ? "order-1" : ""}`}
+                    >
+                      {packDetails?.remainingSessions || 0} {t("sessions")}
+                    </div>
                   </div>
+                  <div
+                    className={`flex gap-1 text-sm text-gray-300 mb-2 ${locale === "ar" ? "flex-row-reverse" : ""}`}
+                  >
+                    <span>{t("price")}</span>
+                    <span>{packDetails?.packPrice || 0}</span> {t("currency")}
                 </div>
-                <div className={`flex gap-1 text-sm text-gray-300 mb-2 ${locale === 'ar' ? 'flex-row-reverse' : ''}`}>
-                  <span>{t('price')} </span>
-                  <span> {selectedPack?.packPrice}</span> {t('currency')}
-                </div>
-                <div className={`text-sm text-gray-300 ${locale === 'ar' ? 'text-right' : ''}`}>
-                  {t('expiresIn')} {getDaysLeft(selectedPack?.expirationDate)} {t('days')}
+                  <div
+                    className={`text-sm text-gray-300 ${locale === "ar" ? "text-right" : ""}`}
+                  >
+                    {t("expiresIn")} {packDetails?.daysBeforeExpiring || 0}{" "}
+                    {t("days")}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <h3 className={`text-[#B4E90E] font-medium mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
-                    {t('packageFeatures')}
+                  <h3
+                    className={`text-[#B4E90E] font-medium mb-2 ${locale === "ar" ? "text-right" : ""}`}
+                  >
+                    {t("packageFeatures")}
                 </h3>
                 <ul className="space-y-2">
-                  {packDetails.features[locale].map((feature, index) => (
-                    <li key={index} className={`flex items-start ${locale === 'ar' ? 'flex-row-reverse' : ''}`}>
-                      <CheckCircle className={`h-5 w-5 text-[#B4E90E] flex-shrink-0 mt-0.5 ${locale === 'ar' ? 'ml-2' : 'mr-2'}`} />
-                      <span className="text-gray-300 text-sm">{feature}</span>
+                    {packDetails?.pack?.features?.[locale]?.map(
+                      (feature, index) => (
+                        <li
+                          key={index}
+                          className={`flex items-start ${locale === "ar" ? "flex-row-reverse" : ""}`}
+                        >
+                          <CheckCircle
+                            className={`h-5 w-5 text-[#B4E90E] flex-shrink-0 mt-0.5 ${locale === "ar" ? "ml-2" : "mr-2"}`}
+                          />
+                          <span className="text-gray-300 text-sm">
+                            {feature}
+                          </span>
                     </li>
-                  ))}
+                      )
+                    )}
                 </ul>
               </div>
             </Card>
@@ -464,10 +352,11 @@ export default function CheckoutPage() {
 
           {/* Payment Information - Right Side */}
           <div>
-           
             <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
-              <h2 className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === 'ar' ? 'text-right' : ''}`}>
-                {t('paymentMethod')}
+                <h2
+                  className={`text-[#B4E90E] font-semibold text-xl mb-2 ${locale === "ar" ? "text-right" : ""}`}
+                >
+                  {t("paymentMethod")}
               </h2>
               <RadioGroup
                 value={paymentMethod}
@@ -486,7 +375,7 @@ export default function CheckoutPage() {
                       className="text-gray-300 flex items-center"
                     >
                       <CreditCard className="mr-2 h-4 w-4" />
-                      {t('creditCard')}
+                        {t("creditCard")}
                     </Label>
                   </div>
 
@@ -501,7 +390,7 @@ export default function CheckoutPage() {
                       className="text-gray-300 flex items-center"
                     >
                       <Apple className="mr-2 h-4 w-4" />
-                      {t('applePay')}
+                        {t("applePay")}
                     </Label>
                   </div>
                 </div>
@@ -511,35 +400,35 @@ export default function CheckoutPage() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="cardName" className="text-gray-300">
-                      {t('nameOnCard')}
+                        {t("nameOnCard")}
                     </Label>
                     <Input
                       id="cardName"
                       placeholder="John Doe"
-                      className="bg-[#0d111a] border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
+                      className="bg-[#0d111a] text-white border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="cardNumber" className="text-gray-300">
-                      {t('cardNumber')}
+                        {t("cardNumber")}
                     </Label>
                     <Input
                       id="cardNumber"
                       placeholder="1234 5678 9012 3456"
-                      className="bg-[#0d111a] border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
+                      className="bg-[#0d111a] text-white border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="expiry" className="text-gray-300">
-                        {t('expiryDate')}
+                          {t("expiryDate")}
                       </Label>
                       <Input
                         id="expiry"
                         placeholder="MM/YY"
-                        className="bg-[#0d111a] border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
+                        className="bg-[#0d111a] text-white border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
                       />
                     </div>
                     <div className="space-y-2">
@@ -549,7 +438,7 @@ export default function CheckoutPage() {
                       <Input
                         id="cvc"
                         placeholder="123"
-                        className="bg-[#0d111a] border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
+                        className="bg-[#0d111a] text-white border-[#2a2f3d] focus:border-[#B4E90E] focus:ring-[#B4E90E]"
                       />
                     </div>
                   </div>
@@ -558,36 +447,52 @@ export default function CheckoutPage() {
                 <div className="flex justify-center">
                   <Button className="w-full py-6 bg-black hover:bg-gray-900 text-white border border-gray-700 flex items-center justify-center">
                     <Apple className="mr-2 h-5 w-5" />
-                    {t('applePay')}
+                      {t("applePay")}
                   </Button>
                 </div>
               )}
             </Card>
-
             <div className="mt-16">
               <Card className="bg-[#161a26] border-[#2a2f3d] p-6">
-                <h3 className={`text-[#B4E90E] font-medium mb-4 ${locale === 'ar' ? 'text-right' : ''}`}>
-                  {t('orderSummary')}
+                  <h3
+                    className={`text-[#B4E90E] font-medium mb-4 ${locale === "ar" ? "text-right" : ""}`}
+                  >
+                    {t("orderSummary")}
                 </h3>
 
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-gray-300">
-                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('packName')}</span>
-                    <span className={locale === 'ar' ? 'order-1' : ''}>{packDetails.category?.[locale]}</span>
+                      <span className={locale === "ar" ? "order-2" : ""}>
+                        {t("packName")}
+                      </span>
+                      <span className={locale === "ar" ? "order-1" : ""}>
+                        {packDetails?.pack?.category?.[locale] ||
+                          "Premium Pack"}
+                      </span>
                   </div>
                   <div className="flex justify-between text-gray-300">
-                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('sessions')}</span>
-                    <span className={locale === 'ar' ? 'order-1' : ''}>{selectedPack?.remainingSessions}</span>
+                      <span className={locale === "ar" ? "order-2" : ""}>
+                        {t("sessions")}
+                      </span>
+                      <span className={locale === "ar" ? "order-1" : ""}>
+                        {packDetails?.remainingSessions || 0}
+                      </span>
                   </div>
                   <div className="flex justify-between text-gray-300">
-                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('validity')}</span>
-                    <span className={locale === 'ar' ? 'order-1' : ''}>
-                      {getDaysLeft(selectedPack?.expirationDate)} {t('days')}
+                      <span className={locale === "ar" ? "order-2" : ""}>
+                        {t("validity")}
+                      </span>
+                      <span className={locale === "ar" ? "order-1" : ""}>
+                        {packDetails?.daysBeforeExpiring || 0} {t("days")}
                     </span>
                   </div>
                   <div className="flex justify-between text-gray-300">
-                    <span className={locale === 'ar' ? 'order-2' : ''}>{t('packPrice')}</span>
-                    <span className={locale === 'ar' ? 'order-1' : ''}>{selectedPack?.packPrice} RS</span>
+                      <span className={locale === "ar" ? "order-2" : ""}>
+                        {t("packPrice")}
+                      </span>
+                      <span className={locale === "ar" ? "order-1" : ""}>
+                        {packDetails?.packPrice || 0} {t("currency")}
+                      </span>
                   </div>
 
                   {/* Coupon Input */}
@@ -636,9 +541,11 @@ export default function CheckoutPage() {
                 <Separator className="my-4 bg-[#2a2f3d]" />
 
                 <div className="flex justify-between text-gray-300 font-bold">
-                  <span className={locale === 'ar' ? 'order-2' : ''}>{t('total')}</span>
-                  <span className={locale === 'ar' ? 'order-1' : ''}>
-                    {finalPrice} {t('currency')}
+                    <span className={locale === "ar" ? "order-2" : ""}>
+                      {t("total")}
+                    </span>
+                    <span className={locale === "ar" ? "order-1" : ""}>
+                      {finalPrice} {t("currency")}
                   </span>
                 </div>
               </Card>
@@ -648,18 +555,19 @@ export default function CheckoutPage() {
                   onClick={handleCancel}
                   className="w-1/2 bg-red-500 hover:bg-red-500 text-white font-bold py-3"
                 >
-                  {t('cancel')}
+                    {t("cancel")}
                 </Button>
                 <Button
                   onClick={handleCompletePurchase}
                   className="w-1/2 bg-[#B4E90E] hover:bg-[#a3d00d] text-[#0d111a] font-bold py-3"
                 >
-                  {t('completePurchase')}
+                    {t("completePurchase")}
                 </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

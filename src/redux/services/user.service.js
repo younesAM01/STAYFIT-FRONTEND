@@ -14,22 +14,12 @@ export const userApi = createApi({
   endpoints: (builder) => ({
     getUser: builder.query({
       query: () => "/users",
-      transformResponse: (response) => {
-        if (response && response.success) {
-          return response.users;
-        }
-        return [];
-      },
+      
       providesTags: ['User']
     }),
     getUserById: builder.query({
       query: (id) => `/users/${id}`,
-      transformResponse: (response) => {
-        if (response && response.success) {
-          return response.user;
-        }
-        return null;
-      },
+      
       providesTags: (result, error, id) => [{ type: 'User', id }]
     }),
     getUserBySupabaseId: builder.query({
@@ -48,18 +38,7 @@ export const userApi = createApi({
         method: "PUT",
         body: userData
       }),
-      transformResponse: (response) => {
-        if (response && response.success) {
-          return response;
-        }
-        throw new Error(response.message || 'Failed to update user');
-      },
-      transformErrorResponse: (response) => {
-        return {
-          status: response.status,
-          data: response.data?.message || 'An error occurred while updating the user'
-        };
-      },
+     
       invalidatesTags: (result, error, { id }) => [{ type: 'User', id }]
     }),
     deleteUser: builder.mutation({
@@ -67,12 +46,7 @@ export const userApi = createApi({
         url: `/users/${id}`,
         method: "DELETE"
       }),
-      transformResponse: (response) => {
-        if (response && response.success) {
-          return response;
-        }
-        throw new Error(response.message || 'Failed to delete user');
-      },
+     
       invalidatesTags: ['User']
     })
   })
