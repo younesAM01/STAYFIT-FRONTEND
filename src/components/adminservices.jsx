@@ -43,12 +43,6 @@ export default function ServicesPage() {
 
   const services = servicesResponse?.services || []
 
-  useEffect(() => {
-    console.log('Component mounted');
-    console.log('Services response:', servicesResponse);
-    console.log('Loading state:', isLoading);
-    console.log('Error state:', queryError);
-  }, [servicesResponse, isLoading, queryError]);
 
   const handleImageUpload = async (file) => {
     try {

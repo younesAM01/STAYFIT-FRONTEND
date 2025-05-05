@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import React, { useState, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
+import { useRouter, usePathname } from 'next/navigation';
 
 const AboutUs = () => {
   const vid = "https://res.cloudinary.com/dkjx65vc7/video/upload/v1745094824/homevid_n5g9hc.mp4";
@@ -9,7 +10,8 @@ const AboutUs = () => {
   const locale = useLocale();
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef(null);
-
+  const router = useRouter();
+  const pathname = usePathname();
   const handlePlayPause = () => {
     if (videoRef.current) {
       if (isPlaying) {
@@ -21,6 +23,40 @@ const AboutUs = () => {
     }
   };
 
+  useEffect(() => {
+    if (pathname === `/${locale}` && typeof window !== "undefined") {
+      // Check for hash in URL
+      if (window.location.hash === '#packs') {
+        const scrollToPacks = () => {
+          const packsSection = document.getElementById("packs");
+          if (packsSection) {
+            const offset = 100; // Adjust this value based on your header height
+            const elementPosition = packsSection.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+            
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: "smooth"
+            });
+          }
+        };
+
+        // Try scrolling multiple times
+        scrollToPacks();
+        setTimeout(scrollToPacks, 500);
+        setTimeout(scrollToPacks, 1000);
+      }
+    }
+  }, [pathname, locale]);
+  const scrollToPacks = () => {
+    if (pathname === `/${locale}`) {
+      // If already on home page, use hash-based navigation
+      window.location.hash = 'packs';
+    } else {
+      // If not on home page, navigate to home page with hash
+      router.push(`/${locale}#packs`);
+    }
+  };
   // Determine text alignment based on locale and mobile view
   const textAlign = locale === 'ar' ? 'text-right' : 'text-left';
   const mobileTextAlign = 'text-center'; // Center text on mobile

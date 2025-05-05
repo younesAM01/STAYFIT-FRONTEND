@@ -122,7 +122,8 @@ export default function Footer() {
                 href="#"
                 className="text-gray-400 hover:text-[#B4E90E] transition-colors"
               >
-                {t("quickLinks.faq")}
+                {t("quickLinks.terms")}
+
               </Link>
             </nav>
           </div>

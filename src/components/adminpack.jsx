@@ -83,9 +83,7 @@ export default function PacksPage() {
   const packageCount = packsArray.filter(pack => pack.category?.en === 'Body Package').length;
   const nutritionCount = packsArray.filter(pack => pack.category?.en === 'Pack Nutrition').length;
 
-  useEffect(() => {
-    // No need to fetch packs manually anymore
-  }, [])
+
 
   const handleAddPack = async (e) => {
     e.preventDefault()

@@ -7,7 +7,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { format } from 'date-fns'
-import { useGetPacksQuery } from "@/redux/services/pack.service"
+import { useGetClientPacksQuery } from "@/redux/services/clientpack.service"
 import { useGetUserQuery } from "@/redux/services/user.service"
 import { useGetSessionsQuery } from "@/redux/services/session.service"
 import { useGetReviewsQuery } from "@/redux/services/review.service"
@@ -24,9 +24,11 @@ export default function AdminDashboard() {
   const [performanceData, setPerformanceData] = useState([])
   const [newCoupon, setNewCoupon] = useState({ name: '', percentage: '', expiryDate: '' })
   const [editingCoupon, setEditingCoupon] = useState(null)
+  const [clientPacksCount, setClientPacksCount] = useState(0)
+  const [clientsCount, setClientsCount] = useState(0)
 
   // RTK Query hooks for data
-  const { data: packsData, isLoading: packsLoading, error: packsError } = useGetPacksQuery()
+  const { data: response = { success: false, clientPacks: [] }, isLoading: clientPacksLoading, error: clientPacksError } = useGetClientPacksQuery()
   const { data: usersData, isLoading: usersLoading, error: usersError } = useGetUserQuery()
   const { data: sessionsData, isLoading: sessionsLoading, error: sessionsError } = useGetSessionsQuery()
   const { data: reviewsData, isLoading: reviewsLoading, error: reviewsError } = useGetReviewsQuery()
@@ -34,6 +36,21 @@ export default function AdminDashboard() {
   const [createCoupon] = useCreateCouponMutation()
   const [updateCoupon] = useUpdateCouponMutation()
   const [deleteCoupon] = useDeleteCouponMutation()
+
+  // Process client packs data
+  useEffect(() => {
+    if (response?.clientPacks) {
+      setClientPacksCount(response.clientPacks.length)
+    }
+  }, [response])
+
+  // Process clients data
+  useEffect(() => {
+    if (usersData?.users) {
+      const clients = usersData.users.filter(user => user.role === 'client')
+      setClientsCount(clients.length)
+    }
+  }, [usersData])
 
   // Helper function to safely format dates
   const formatExpiryDate = (dateString) => {
@@ -51,11 +68,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        toast.loading('Loading dashboard data...')
+        // Only show loading if we're actually fetching data
+        if (!sessionsData || !reviewsData) {
+          toast.loading('Loading dashboard data...')
+        }
         
-        // Process users data from Redux
-        const clients = usersData?.users?.filter(user => user.role === 'client') || []
-
         // Process sessions data for monthly chart
         const currentMonth = new Date().getMonth()
         const monthlySessions = Array(12).fill(0)
@@ -80,8 +97,8 @@ export default function AdminDashboard() {
 
         // Process performance data
         const processedPerformanceData = [
-          { name: "Clients", value: clients.length, count: `${clients.length} active clients` },
-          { name: "Client Packs", value: packsData?.packs?.length || 0, count: `${packsData?.packs?.length || 0} total packs` },
+          { name: "Clients", value: clientsCount, count: `${clientsCount} active clients` },
+          { name: "Client Packs", value: clientPacksCount, count: `${clientPacksCount} total client packs` },
           { name: "Sessions", value: sessions.length, count: `${sessions.length} this month` },
           { name: "Reviews", value: reviews.length, count: `${reviews.length} total reviews` }
         ]
@@ -94,20 +111,20 @@ export default function AdminDashboard() {
       }
     }
 
-    // Only fetch data if we have all Redux data
-    if (packsData && usersData && sessionsData && reviewsData) {
+    // Only fetch data if we have all the necessary data
+    if (sessionsData && reviewsData) {
       fetchDashboardData()
     }
-  }, [packsData, usersData, sessionsData, reviewsData])
+  }, [sessionsData, reviewsData, clientPacksCount, clientsCount])
 
   // Handle errors from Redux queries
   useEffect(() => {
-    const errors = [packsError, usersError, sessionsError, reviewsError, couponsError].filter(Boolean)
+    const errors = [clientPacksError, usersError, sessionsError, reviewsError, couponsError].filter(Boolean)
     if (errors.length > 0) {
       const errorMessage = errors[0].message || 'Failed to load dashboard data'
       toast.error(errorMessage)
     }
-  }, [packsError, usersError, sessionsError, reviewsError, couponsError])
+  }, [clientPacksError, usersError, sessionsError, reviewsError, couponsError])
 
   const handleAddCoupon = async () => {
     try {

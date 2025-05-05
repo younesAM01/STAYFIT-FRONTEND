@@ -3,27 +3,23 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 export const userApi = createApi({
   reducerPath: "userApi",
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: BACKEND_URL,
-    prepareHeaders: (headers) => {
-      headers.set('Content-Type', 'application/json');
-      return headers;
-    }
-  }),
-  tagTypes: ['User'],
+  baseQuery: fetchBaseQuery({ baseUrl: BACKEND_URL }),
   endpoints: (builder) => ({
     getUser: builder.query({
       query: () => "/users",
-      
-      providesTags: ['User']
+      providesTags: ["User"],
     }),
     getUserById: builder.query({
       query: (id) => `/users/${id}`,
-      
-      providesTags: (result, error, id) => [{ type: 'User', id }]
+      providesTags: ["User"],
     }),
     getUserBySupabaseId: builder.query({
       query: (supabaseId) => `/users/supabase/${supabaseId}`,
+      providesTags: ["User"],
+    }),
+    getCoach: builder.query({
+      query: () => "/users/coach",
+      providesTags: ["User"],
     }),
     createUser: builder.mutation({
       query: (user) => ({
@@ -31,32 +27,32 @@ export const userApi = createApi({
         method: "POST",
         body: user,
       }),
+      invalidatesTags: ["User"],
     }),
     updateUser: builder.mutation({
-      query: ({ id, ...userData }) => ({
+      query: ({ id, user }) => ({
         url: `/users/${id}`,
         method: "PUT",
-        body: userData
+        body: user,
       }),
-     
-      invalidatesTags: (result, error, { id }) => [{ type: 'User', id }]
+      invalidatesTags: ["User"],
     }),
     deleteUser: builder.mutation({
       query: (id) => ({
         url: `/users/${id}`,
-        method: "DELETE"
+        method: "DELETE",
       }),
-     
-      invalidatesTags: ['User']
-    })
-  })
+      invalidatesTags: ["User"],
+    }),
+  }),
+  tagTypes: ["User"],
 });
-
 export const {
   useGetUserQuery,
   useGetUserByIdQuery,
   useGetUserBySupabaseIdQuery,
   useCreateUserMutation,
   useUpdateUserMutation,
-  useDeleteUserMutation
+  useDeleteUserMutation,
+  useGetCoachQuery,
 } = userApi;

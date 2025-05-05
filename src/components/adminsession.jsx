@@ -155,13 +155,16 @@ export default function SessionsPage() {
   }, [sessionsError, usersLoading, usersData, packsLoading, packsData, clientPackLoading, clientPackData]);
 
   // Improved helper functions for name lookups with better error handling and debugging
-  const getClientName = (clientId) => {
-    if (!clientId) return 'No Client';
-    if (typeof clientId === 'object' && clientId.firstName && clientId.lastName) {
-      return `${clientId.firstName} ${clientId.lastName}`;
+  const getClientName = (client) => {
+    if (!client) return 'No Client';
+    // If client is an object with firstName/lastName
+    if (typeof client === 'object' && client.firstName && client.lastName) {
+      return `${client.firstName} ${client.lastName}`;
     }
-    const client = clients.find(c => c._id === clientId);
-    return client ? `${client.firstName} ${client.lastName}` : 'Unknown Client';
+    // If client is an object with _id or just an ID string
+    const clientId = typeof client === 'object' ? client._id : client;
+    const found = clients.find(c => c._id === clientId);
+    return found ? `${found.firstName} ${found.lastName}` : 'Unknown Client';
   }
 
   const getCoachName = (coachId) => {
@@ -567,16 +570,19 @@ export default function SessionsPage() {
   const renderClientSelect = () => {
     return (
       <Select 
-        value={formData.client?._id || formData.client} 
+        value={formData.client} 
         onValueChange={(value) => {
-          const selectedClient = clients.find(c => c._id === value);
-          setFormData({...formData, client: selectedClient || value});
+          setFormData({...formData, client: value});
         }}
         required
       >
         <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
           <SelectValue placeholder="Select client">
-            {formData.client?.firstName ? `${formData.client.firstName} ${formData.client.lastName}` : "Select client"}
+            {
+              clients.find(c => c._id === formData.client)
+                ? `${clients.find(c => c._id === formData.client).firstName} ${clients.find(c => c._id === formData.client).lastName}`
+                : "Select client"
+            }
           </SelectValue>
         </SelectTrigger>
         <SelectContent className="border-white/10">
@@ -776,6 +782,37 @@ export default function SessionsPage() {
             <CardHeader>
               <CardTitle className="text-white mt-3">Weekly Calendar</CardTitle>
               <CardDescription className="text-white/60">View and manage sessions in calendar format</CardDescription>
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="bg-[#B4E90E] border-white/10 hover:bg-gray-700"
+                    onClick={goToPreviousWeek}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="bg-[#B4E90E] border-white/10 hover:bg-gray-700"
+                    onClick={goToToday}
+                  >
+                    Today
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="bg-[#B4E90E] border-white/10 hover:bg-gray-700"
+                    onClick={goToNextWeek}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="text-white font-medium">
+                  {currentWeekStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -1086,13 +1123,7 @@ export default function SessionsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="edit-client">Client</Label>
-                    <Select value={formData.client?._id || formData.client} disabled>
-                      <SelectTrigger className="bg-gray-800 border-white/10">
-                        <SelectValue>
-                          {formData.client?.firstName ? `${formData.client.firstName} ${formData.client.lastName}` : getClientName(formData.client)}
-                        </SelectValue>
-                      </SelectTrigger>
-                    </Select>
+                    {renderClientSelect()}
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="edit-coach">Coach</Label>

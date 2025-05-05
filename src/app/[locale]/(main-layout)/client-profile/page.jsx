@@ -27,7 +27,9 @@ import MemberShip from "@/components/membership";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useGetClientPackByClientIdQuery } from "@/redux/services/clientpack.service";
-import { useUpdateUserMutation } from "@/redux/services/user.service";
+import { useUpdateUserMutation, useGetCoachQuery } from "@/redux/services/user.service";
+import { useGetReviewsQuery, useCreateReviewMutation, useUpdateReviewMutation, useDeleteReviewMutation } from "@/redux/services/review.service";
+import { toast } from "sonner";
 
 export default function ClientProfile() {
   const { mongoUser, isLoading: authLoading } = useAuth();
@@ -59,7 +61,7 @@ export default function ClientProfile() {
     }
     if (isError) {
       setLoading(false);
-      console.log(clientPackError);
+      if (clientPackError) toast.error(clientPackError.message || "Error loading client pack");
     }
   }, [isSuccess, isError, clientPackError]);
   const [
@@ -176,12 +178,13 @@ export default function ClientProfile() {
 
       const data = await response.json();
       if (data && data.secure_url) {
+        toast.success("Image uploaded successfully!");
         return data.secure_url;
       } else {
         throw new Error("Failed to get image URL from Cloudinary");
       }
     } catch (err) {
-      console.error("Error details:", err);
+      toast.error(err.message || "Failed to upload image");
       throw new Error(`Failed to upload image: ${err.message}`);
     } finally {
       setUploadingImage(false);
@@ -210,12 +213,9 @@ export default function ClientProfile() {
         profilePic: imageUrl,
       }));
 
-      console.log("Image uploaded successfully:", imageUrl);
-      console.log("Updated formData:", { ...formData, profilePic: imageUrl });
-
       setError(null);
     } catch (err) {
-      console.error("Upload error:", err);
+      toast.error(err.message || "Failed to upload image. Please try again.");
       setError(err.message || "Failed to upload image. Please try again.");
     }
   };
@@ -245,7 +245,6 @@ export default function ClientProfile() {
     );
 
     if (!hasChanges || !mongoUser?._id) {
-      console.log("No changes detected or no user ID found");
       setIsEditModalOpen(false);
       return;
     }
@@ -261,8 +260,9 @@ export default function ClientProfile() {
         id: mongoUser._id,
         user: dataToSubmit,
       });
+      toast.success("Profile updated successfully!");
     } catch (error) {
-      console.error("An error occurred while updating:", error);
+      toast.error(error.message || "An error occurred while updating");
     } finally {
       setIsEditModalOpen(false);
     }
@@ -308,7 +308,7 @@ export default function ClientProfile() {
           <MemberShip setActiveTab={setActiveTab} />
         )}
 
-        {activeTab === "reviews" && <Reviews userId={mongoUser?._id} />}
+        {activeTab === "reviews" && <Reviews />}
 
         {activeTab === "book" && (
           <motion.div {...fadeIn} className="mx-auto">
@@ -659,7 +659,6 @@ function EditProfileModal({
                   value={formData.firstName}
                   onChange={handleInputChange}
                   className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
-                  required
                 />
               </div>
 
@@ -673,7 +672,6 @@ function EditProfileModal({
                   value={formData.lastName}
                   onChange={handleInputChange}
                   className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
-                  required
                 />
               </div>
 
@@ -687,7 +685,6 @@ function EditProfileModal({
                   value={formData.email}
                   onChange={handleInputChange}
                   className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
-                  required
                 />
               </div>
 
@@ -889,88 +886,67 @@ function DeleteConfirmationModal({ isOpen, onClose, onConfirm, t }) {
   );
 }
 
-function Reviews({ userId }) {
-  const [reviews, setReviews] = useState([]);
+function Reviews() {
   const [isAddReviewModalOpen, setIsAddReviewModalOpen] = useState(false);
   const [isEditReviewModalOpen, setIsEditReviewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [reviewToDelete, setReviewToDelete] = useState(null);
   const [selectedReview, setSelectedReview] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [filteredReviews, setFilteredReviews] = useState([]);
   const t = useTranslations("ProfilePage");
+  const { mongoUser } = useAuth();
 
   // Get current locale
   const locale = useParams().locale || "en";
 
-  // Fetch user's reviews
-  const fetchUserReviews = useCallback(async () => {
-    if (!userId) return;
+  // Redux hooks for reviews (no userId argument, just like adminreview.jsx)
+  const { data: reviewsData, isLoading: reviewsLoading, refetch: refetchReviews } = useGetReviewsQuery();
+  const [createReview] = useCreateReviewMutation();
+  const [updateReview] = useUpdateReviewMutation();
+  const [deleteReview] = useDeleteReviewMutation();
 
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/review`);
-      if (!response.ok) throw new Error("Failed to fetch reviews");
-      const data = await response.json();
-      console.log("Fetched reviews:", data); // Debug log
+  // Redux hook for coaches
+  const { data: coachesData, isLoading: coachesLoading } = useGetCoachQuery();
+  const [coaches, setCoaches] = useState([]);
 
-      // Filter reviews where the userId matches, handling both populated and unpopulated cases
-      const userReviews = data.data.filter((review) => {
-        // Handle both cases: populated (review.userId._id) and unpopulated (review.userId)
-        const reviewUserId = review.userId?._id || review.userId;
-        return reviewUserId === userId;
-      });
-
-      console.log("Filtered reviews:", userReviews); // Debug log
-      setReviews(userReviews);
-    } catch (error) {
-      console.error("Error fetching reviews:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
-
-  // Initial fetch of reviews
+  // Update coaches when data changes
   useEffect(() => {
-    fetchUserReviews();
-  }, [fetchUserReviews]);
+    if (coachesData) {
+      const activeCoaches = coachesData.coach.filter(coach => coach.coachActive === true);
+      setCoaches(activeCoaches);
+    }
+  }, [coachesData]);
+
+  // Update filtered reviews when reviewsData or mongoUser changes
+  useEffect(() => {
+    const allReviews = reviewsData?.data || [];
+    if (mongoUser) {
+      setFilteredReviews(allReviews.filter(r => (r.userId?._id || r.userId) === mongoUser._id));
+    } else {
+      setFilteredReviews([]);
+    }
+  }, [reviewsData, mongoUser]);
 
   const handleAddReview = async (reviewData) => {
     try {
-      const response = await fetch("/api/review", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(reviewData),
-      });
-
-      if (!response.ok) throw new Error("Failed to add review");
-
-      await fetchUserReviews();
+      await createReview(reviewData).unwrap();
+      await refetchReviews();
       setIsAddReviewModalOpen(false);
+      toast.success("Review added successfully!");
     } catch (error) {
-      console.error("Error adding review:", error);
+      toast.error(error.message || "Error adding review");
     }
   };
 
   const handleUpdateReview = async (reviewId, updatedData) => {
     try {
-      const response = await fetch(`/api/review?id=${reviewId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedData),
-      });
-
-      if (!response.ok) throw new Error("Failed to update review");
-
-      // Fetch only user's reviews after updating
-      await fetchUserReviews();
+      await updateReview({ id: reviewId, ...updatedData }).unwrap();
+      await refetchReviews();
       setIsEditReviewModalOpen(false);
       setSelectedReview(null);
+      toast.success("Review updated successfully!");
     } catch (error) {
-      console.error("Error updating review:", error);
+      toast.error(error.message || "Error updating review");
     }
   };
 
@@ -983,22 +959,17 @@ function Reviews({ userId }) {
     if (!reviewToDelete) return;
 
     try {
-      const response = await fetch(`/api/review?id=${reviewToDelete._id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) throw new Error("Failed to delete review");
-
-      // Filter out the deleted review locally
-      setReviews(reviews.filter((review) => review._id !== reviewToDelete._id));
+      await deleteReview(reviewToDelete._id).unwrap();
+      await refetchReviews();
       setIsDeleteModalOpen(false);
       setReviewToDelete(null);
+      toast.success("Review deleted successfully!");
     } catch (error) {
-      console.error("Error deleting review:", error);
+      toast.error(error.message || "Error deleting review");
     }
   };
 
-  if (loading) {
+  if (reviewsLoading) {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B4E90E]"></div>
@@ -1022,17 +993,17 @@ function Reviews({ userId }) {
         </button>
       </div>
 
-      {loading ? (
+      {reviewsLoading ? (
         <div className="flex items-center justify-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B4E90E]"></div>
         </div>
-      ) : reviews.length === 0 ? (
+      ) : filteredReviews.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-gray-400">{t("noReviews")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {reviews.map((review) => (
+          {filteredReviews.map((review) => (
             <div
               key={review._id}
               className="bg-[#0a0e15] p-6 rounded-lg border border-[#161c2a]"
@@ -1109,7 +1080,7 @@ function Reviews({ userId }) {
         <ReviewModal
           onClose={() => setIsAddReviewModalOpen(false)}
           onSubmit={handleAddReview}
-          userId={userId}
+          userId={mongoUser?._id || null}
         />
       )}
 
@@ -1122,7 +1093,7 @@ function Reviews({ userId }) {
           }}
           onSubmit={(data) => handleUpdateReview(selectedReview._id, data)}
           initialData={selectedReview}
-          userId={userId}
+          userId={mongoUser?._id || null}
           isEdit
         />
       )}
@@ -1151,31 +1122,19 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
     },
     coachId: initialData?.coachId || "",
   });
-  const [coaches, setCoaches] = useState([]);
-  const [loading, setLoading] = useState(true);
   const t = useTranslations("ProfilePage");
 
-  // Modified coaches fetch to use the correct endpoint
-  useEffect(() => {
-    const fetchCoaches = async () => {
-      try {
-        const response = await fetch("/api/coach");
-        if (!response.ok) throw new Error("Failed to fetch coaches");
-        const data = await response.json();
-        // Filter only active coaches
-        const activeCoaches = data.filter(
-          (coach) => coach.coachActive === true
-        );
-        setCoaches(activeCoaches);
-      } catch (error) {
-        console.error("Error fetching coaches:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Get coaches from user service
+  const { data: coachesData, isLoading: coachesLoading } = useGetCoachQuery();
+  const [coaches, setCoaches] = useState([]);
 
-    fetchCoaches();
-  }, []);
+  // Update coaches when data changes
+  useEffect(() => {
+    if (coachesData) {
+      const activeCoaches = coachesData.coach.filter(coach => coach.coachActive === true);
+      setCoaches(activeCoaches);
+    }
+  }, [coachesData]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -1210,7 +1169,7 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
               <label className="block text-sm font-medium text-gray-400 mb-1">
                 {t("selectCoach")}
               </label>
-              {loading ? (
+              {coachesLoading ? (
                 <div className="flex items-center justify-center p-2">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[#B4E90E]"></div>
                 </div>
@@ -1221,7 +1180,6 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
                     setFormData({ ...formData, coachId: e.target.value })
                   }
                   className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
-                  required
                 >
                   <option value="">{t("selectCoach")}</option>
                   {coaches &&
@@ -1273,7 +1231,6 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
               }
               className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
               rows={4}
-              required
             />
           </div>
 
@@ -1291,7 +1248,6 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
               }
               className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
               rows={4}
-              required
               dir="rtl"
             />
           </div>

@@ -3,43 +3,54 @@ import { useTranslations, useLocale } from 'next-intl';
 import React, { useState, useEffect } from 'react';
 import { Star, StarHalf, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from '@/context/authContext';
+import { useGetReviewsQuery } from '@/redux/services/review.service';
 
 const TestimonialSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [reviews, setReviews] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const t = useTranslations('HomePage');
   const locale = useLocale();
   const { loading } = useAuth();
   
-  useEffect(() => {
-    // Fetch reviews from the backend
-    const fetchReviews = async () => {
-      try {
-        setIsLoading(true);
-        const response = await fetch('/api/review');
-        const data = await response.json();
-        
-        if (data.success) {
-          setReviews(data.data);
-        } else {
-          console.error('Failed to fetch reviews:', data.error);
-        }
-      } catch (error) {
-        console.error('Error fetching reviews:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchReviews();
-  }, []);
+  const { data, isLoading: isReviewsLoading, isSuccess: isReviewsSuccess, isError: isReviewsError } = useGetReviewsQuery();
 
-  // Add loading state check
+  useEffect(() => {
+    if (isReviewsSuccess && data) {
+      setReviews(data.data);
+    }
+  }, [data, isReviewsSuccess]);
+
+  useEffect(() => {
+    if (reviews.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prevIndex) => 
+          prevIndex === reviews.length - 1 ? 0 : prevIndex + 1
+        );
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [reviews.length]);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center my-8 py-8">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
+      </div>
+    );
+  }
+
+  if (isReviewsLoading) {
+    return (
+      <div className="flex justify-center items-center my-8 py-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
+      </div>
+    );
+  }
+
+  if (isReviewsError) {
+    return (
+      <div className="text-white text-center py-16">
+        Error fetching reviews
       </div>
     );
   }
@@ -65,15 +76,6 @@ const TestimonialSlider = () => {
   const goToSlide = (index) => {
     setCurrentIndex(index);
   };
-
-  useEffect(() => {
-    if (reviews.length > 0) {
-      const interval = setInterval(() => {
-        nextSlide();
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [currentIndex, reviews.length]);
 
   const renderStars = (rating) => {
     const stars = [];
@@ -107,7 +109,7 @@ const TestimonialSlider = () => {
           </h2>
         </div>
 
-        {isLoading ? (
+        {isReviewsLoading ? (
           <div className="flex justify-center items-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
           </div>

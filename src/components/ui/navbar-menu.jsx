@@ -369,13 +369,7 @@ const Navbar = () => {
           isMobile={isMobile}
         />
         {/* Contact Us button that handles navigation + scrolling */}
-        <MenuItem
-          setActive={setActive}
-          active={active}
-          item={t("contact us")}
-          isMobile={isMobile}
-          onClick={scrollToContact}
-        />
+       
       </DesktopMenu>
 
       {/* Mobile Menu */}

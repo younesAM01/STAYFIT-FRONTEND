@@ -45,7 +45,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLocale } from "next-intl";
-import { useGetUserQuery, useUpdateUserMutation, useDeleteUserMutation } from "@/redux/services/user.service";
+import { useGetUserQuery, useUpdateUserMutation, useDeleteUserMutation, useGetCoachQuery } from "@/redux/services/user.service";
 import { toast } from "sonner";
 
 export default function UsersPage() {
@@ -89,11 +89,46 @@ export default function UsersPage() {
   });
   const [roleFilter, setRoleFilter] = useState("all");
 
-  const { data: usersResponse, isLoading, error: fetchError, refetch } = useGetUserQuery();
+  const { data: Response, isLoading: isLoadingUsers, error: fetchError, refetch } = useGetUserQuery();
+  const { data: coachesResponse, isLoading: isLoadingCoaches } = useGetCoachQuery();
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
+  const [users, setUsers] = useState([]);
+  const [coaches, setCoaches] = useState([]);
 
-  const users = usersResponse || [];
+  useEffect(() => {
+    console.log('Users Response:', Response);
+    if (Response) {
+      // Handle different response formats
+      let usersData = [];
+      if (Array.isArray(Response)) {
+        usersData = Response;
+      } else if (Response.data) {
+        usersData = Response.data;
+      } else if (Response.users) {
+        usersData = Response.users;
+      }
+      console.log('Processed Users Data:', usersData);
+      setUsers(usersData);
+    }
+  }, [Response]);
+
+  useEffect(() => {
+    console.log('Coaches Response:', coachesResponse);
+    if (coachesResponse) {
+      // Handle different response formats
+      let coachesData = [];
+      if (Array.isArray(coachesResponse)) {
+        coachesData = coachesResponse;
+      } else if (coachesResponse.data) {
+        coachesData = coachesResponse.data;
+      } else if (coachesResponse.coaches) {
+        coachesData = coachesResponse.coaches;
+      }
+      console.log('Processed Coaches Data:', coachesData);
+      setCoaches(coachesData);
+    }
+  }, [coachesResponse]);
 
   const handleUpdateUser = async (e) => {
     e.preventDefault();
@@ -102,7 +137,7 @@ export default function UsersPage() {
         throw new Error("No user selected for update");
       }
 
-      // Prepare the update data according to the User model
+      // Prepare the update data
       const updateData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -127,9 +162,11 @@ export default function UsersPage() {
         hoverImage: formData.hoverImage
       };
 
+      console.log('Updating user with data:', updateData);
+
       const result = await updateUser({
         id: selectedUser._id,
-        ...updateData
+        user: updateData
       }).unwrap();
 
       if (!result.success) {
@@ -171,86 +208,33 @@ export default function UsersPage() {
   const handleEditClick = (user) => {
     setSelectedUser(user);
     
-    // Initialize base form data with all common fields
-    const baseFormData = {
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
+    // Initialize form data with user's current data
+    setFormData({
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      email: user.email || "",
       phoneNumber: user.phoneNumber || "",
       address: user.address || "",
-      role: user.role,
+      role: user.role || "client",
       preferredLanguage: user.preferredLanguage || "",
       nationality: user.nationality || "",
-      age: user.age || "",
-      city: user.city || "",
-      profilePic: user.profilePic || "",
-      rating: user.rating || 0,
-      reviews: user.reviews || 0
-    };
-
-    // Add role-specific fields
-    if (user.role === "client") {
-      setFormData({
-        ...baseFormData,
-        // Client specific fields
-        weight: user.weight || "",
-        height: user.height || "",
-        goals: user.goals || [],
-        diseases: user.diseases || [],
-        // Reset coach-specific fields
-        coachActive: false,
-        specialties: [],
-        certifications: [],
-        aboutContent: { 
-          paragraphs: { en: [], ar: [] },
-          languages: [] 
-        },
-        title: { en: "", ar: "" },
-        available: { en: "", ar: "" },
-        hoverImage: ""
-      });
-    } else if (user.role === "coach") {
-      setFormData({
-        ...baseFormData,
-        // Reset client-specific fields
-        weight: "",
-        height: "",
-        goals: [],
-        diseases: [],
-        // Set coach-specific fields
-        coachActive: user.coachActive || false,
-        specialties: user.specialties || [],
-        certifications: user.certifications || [],
-        aboutContent: user.aboutContent || { 
-          paragraphs: { en: [], ar: [] },
-          languages: [] 
-        },
-        title: user.title || { en: "", ar: "" },
-        available: user.available || { en: "", ar: "" },
-        hoverImage: user.hoverImage || ""
-      });
-    } else {
-      // For admin or other roles, reset all role-specific fields
-      setFormData({
-        ...baseFormData,
-        // Reset client-specific fields
-        weight: "",
-        height: "",
-        goals: [],
-        diseases: [],
-        // Reset coach-specific fields
-        coachActive: false,
-        specialties: [],
-        certifications: [],
-        aboutContent: { 
-          paragraphs: { en: [], ar: [] },
-          languages: [] 
-        },
-        title: { en: "", ar: "" },
-        available: { en: "", ar: "" },
-        hoverImage: ""
-      });
-    }
+      // Client specific fields
+      weight: user.weight || "",
+      height: user.height || "",
+      goals: user.goals || [],
+      diseases: user.diseases || [],
+      // Coach specific fields
+      coachActive: user.coachActive || false,
+      specialties: user.specialties || [],
+      certifications: user.certifications || [],
+      aboutContent: user.aboutContent || { 
+        paragraphs: { en: [], ar: [] },
+        languages: [] 
+      },
+      title: user.title || { en: "", ar: "" },
+      available: user.available || { en: "", ar: "" },
+      hoverImage: user.hoverImage || ""
+    });
     
     setShowEditForm(true);
   };
@@ -280,8 +264,14 @@ export default function UsersPage() {
     }
   };
 
-  const filteredData = users.filter((user) => {
-    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+  // Combine users and coaches based on role filter
+  const allUsers = [...users, ...coaches];
+  console.log('All Users:', allUsers);
+
+  const filteredData = allUsers.filter((user) => {
+    if (!user) return false;
+    
+    const fullName = `${user.firstName || ''} ${user.lastName || ''}`.toLowerCase();
     const email = user.email ? user.email.toLowerCase() : "";
     const role = user.role ? user.role.toLowerCase() : "";
     const phoneNumber = user.phoneNumber ? user.phoneNumber.toLowerCase() : "";
@@ -304,7 +294,7 @@ export default function UsersPage() {
   ).length;
 
   // Add loading states to the UI
-  if (isLoading) {
+  if (isLoadingUsers || isLoadingCoaches) {
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-white">Loading users...</div>
@@ -313,6 +303,7 @@ export default function UsersPage() {
   }
 
   if (fetchError) {
+    console.error('Fetch Error:', fetchError);
     return (
       <div className="flex justify-center items-center h-screen">
         <div className="text-red-500">Error loading users: {fetchError.message}</div>

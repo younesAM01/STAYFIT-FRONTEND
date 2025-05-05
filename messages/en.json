@@ -5,6 +5,7 @@
     "about": "At STAY FIT, we are dedicated to providing personalized fitness coaching sessions that empower our clients to achieve their health and wellness goals. Our experienced coaches understand that every individual is unique, and we tailor our programs to meet the specific needs of each client, ensuring a supportive and effective fitness journey. Join us to experience a holistic approach to fitness that combines expert guidance with a community of like-minded individuals.",
     "aboutbtn": "FREE CONSULTATION",
     "home": "Home",
+    "view": "View More",
     "our coaches": "Our Coaches",
     "services": "Services",
     "about us": "About Us",
@@ -67,8 +68,7 @@
         "contact": "Contact Us",
         "services": "Services",
         "trainers": "Our Trainers",
-        "terms": "Terms & Conditions",
-        "faq": "FAQ"
+        "terms": "Terms & Conditions"
       },
       "connect": {
         "title": "Connect With Us",
@@ -114,6 +114,10 @@
       "specialties": {
         "title": "Specialties"
       },
+      "languages": {
+        "title": "Languages"
+      },
+
       "certifications": {
         "title": "Certifications"
       }
@@ -232,8 +236,7 @@
     "selectTime": "Select Time",
     "confirm": "Confirm",
     "sessionBookedSuccessfully": "Session booked successfully!",
-    "noCoachesAvailable": "No coaches available",
-    "loadingCoaches": "Loading coaches..."
+    "noCoachesAvailable": "No coaches available"
   },
   "BookingCalendar": {
     "membershipRequired": "Membership Required",
@@ -324,11 +327,7 @@
     "invalidCoupon": "Invalid coupon code",
     "errorApplyingCoupon": "Error applying coupon",
     "couponApplied": "Coupon applied successfully",
-    "off": "off",
-    "noPendingPurchase": "No pack choose's yet ",
-    "pleaseSelectPackFirst": "Please select a pack first in home page",
-    "goToHomePage": "Back Home"
-    
+    "off": "off"
   },
   "FAQ": {
     "faqtitle": "Frequently Asked Questions",

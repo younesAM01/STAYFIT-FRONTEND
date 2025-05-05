@@ -24,7 +24,7 @@ export default async function Home() {
       <TrainerShowcase />
       <TestimonialSlider /> 
       <MembershipPlans />
-      <ContactForm /> 
+      {/* <ContactForm />  */}
       <FAQ />
       </div>
     </main>
