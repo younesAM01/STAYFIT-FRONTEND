@@ -1,6 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { useTranslations, useLocale } from 'next-intl';
+import Link from 'next/link';
 
 const HeroSection = () => {
   const t = useTranslations('Hero');
@@ -36,12 +37,15 @@ const HeroSection = () => {
         <p className="text-xl md:text-2xl mb-8 text-center max-w-2xl">
           {t('description')}
         </p>
-        <button className="relative inline-flex h-12 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50">
+        <Link
+          href={`/${locale}/pricing`}
+          className="relative inline-flex h-12 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+        >
           <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#E2CBFF_0%,#393BB2_50%,#E2CBFF_100%)]" />
           <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-[#B4E90E] px-4 py-1 text-md font-medium text-black backdrop-blur-3xl">
             {t('button')}
           </span>
-        </button>
+        </Link>
       </div>
     </div>
   );

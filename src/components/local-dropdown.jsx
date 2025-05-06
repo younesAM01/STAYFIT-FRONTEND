@@ -36,17 +36,25 @@ export default function LocaleDropdown() {
       <button
         className="flex items-center p-2 bg-transparent text-[#B4E90E] cursor-pointer hover:text-[#c2fe02]/80"
         onClick={toggleDropdown}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          toggleDropdown();
+        }}
       >
         <Globe className="w-5 h-5" />
       </button>
 
       {isDropdownOpen && (
-        <div className="absolute right-0 mt-2 w-26 bg-[#B4E90E] rounded-md shadow-lg z-10">
+        <div className="absolute right-0 mt-2 w-26 bg-[#B4E90E] rounded-md shadow-lg z-50">
           {routing.locales.map((locale) => (
             <button
               key={locale}
               onClick={() => handleLocaleChange(locale)}
-              className="block w-full text-left px-4 py-2 text-[#0d111a] hover:bg-[#9bcf0e]"
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleLocaleChange(locale);
+              }}
+              className="block w-full text-left px-4 py-2 text-[#0d111a] hover:bg-[#9bcf0e] active:bg-[#9bcf0e]"
             >
               {locale === 'en' ? 'ENGLISH' : locale === 'ar' ? 'العربية' : locale.toUpperCase()}
             </button>

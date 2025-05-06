@@ -277,7 +277,6 @@ const Navbar = () => {
   const t = useTranslations("HomePage");
   const locale = useLocale();
   const pathname = usePathname();
-  const router = useRouter();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -295,45 +294,8 @@ const Navbar = () => {
   const toggleMobileSubmenu = (item) =>
     setMobileSubmenu(mobileSubmenu === item ? null : item);
 
-  // Function to scroll to contact section with navigation handling
-  const scrollToContact = () => {
-    if (isHomePage) {
-      // If already on home page, just scroll
-      const contactSection = document.getElementById("contact-section");
-      if (contactSection) {
-        contactSection.scrollIntoView({ behavior: "smooth" });
-      }
-    } else {
-      // If not on home page, navigate to home page with a query parameter
-      router.push(`/${locale}?scrollTo=contact`);
-    }
-  };
-
-  // Effect to handle scrolling after navigation
-  useEffect(() => {
-    // Check if we should scroll to contact section after navigation
-    if (isHomePage && typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      const scrollTarget = urlParams.get("scrollTo");
-
-      if (scrollTarget === "contact") {
-        // Remove the query parameter from URL without triggering a page reload
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname
-        );
-
-        // Scroll to contact section after a short delay to ensure the page is fully loaded
-        setTimeout(() => {
-          const contactSection = document.getElementById("contact-section");
-          if (contactSection) {
-            contactSection.scrollIntoView({ behavior: "smooth" });
-          }
-        }, 500);
-      }
-    }
-  }, [pathname, isHomePage]);
+  // Function to scroll to pricing section with navigation handling
+  
 
   return (
     <div className="w-full">
@@ -368,8 +330,13 @@ const Navbar = () => {
           href={`/${locale}/aboutus`}
           isMobile={isMobile}
         />
-        {/* Contact Us button that handles navigation + scrolling */}
-       
+        <MenuItem
+          setActive={setActive}
+          active={active}
+          item={t("pricing")}
+          href={`/${locale}/pricing`}
+          isMobile={isMobile}
+        />
       </DesktopMenu>
 
       {/* Mobile Menu */}
@@ -445,12 +412,13 @@ const Navbar = () => {
           </Link>
 
           {/* Mobile contact us - changed to button for scrolling */}
-          <button
-            className="text-lg font-medium text-white hover:text-[#b4e90e] text-left"
-            onClick={scrollToContact}
+          <Link
+            href={`/${locale}/pricing`}
+            className="text-lg font-medium text-white hover:text-[#b4e90e]"
+            onClick={() => setIsMenuOpen(false)}
           >
-            {t("contact us")}
-          </button>
+            {t("pricing")}
+          </Link>
 
           {/* Mobile Auth Buttons */}
           <div className="pt-4 border-t border-[#b4e90e]/20">

@@ -8,30 +8,46 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
 import { useLocale, useTranslations } from 'next-intl'
+import { useGetCoachQuery } from "@/redux/services/user.service";
 
 export default function CoachSelection({ onSelect }) {  
   const [coaches, setCoaches] = useState([]);
   const t = useTranslations('BookingPage')
   const locale = useLocale();
 
-  useEffect(() => {
-    const fetchCoaches = async () => {
-      try {
-        const response = await fetch('/api/coach');
-        if (!response.ok) {
-          throw new Error('Failed to fetch coaches');
-        }
-        const data = await response.json();
-        // Filter coaches to only show active ones
-        const activeCoaches = data.filter(coach => coach.coachActive === true);
-        setCoaches(activeCoaches);
-      } catch (error) {
-        console.error(error);
-      }
-    };
+  const {
+    data,
+    isLoading,
+    error,
+    isSuccess
+  } = useGetCoachQuery();
 
-    fetchCoaches();
-  }, []);
+  useEffect(() => {
+    if (isSuccess) {
+      // Filter coaches to only show active ones
+      const activeCoaches = data.filter(coach => coach.coachActive === true);
+      setCoaches(activeCoaches);
+    }
+  }, [data, isSuccess]);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-16">
+        <div className="text-white">Loading coaches...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center py-16">
+        <div className="text-white">
+          Error: {error?.data?.message || "An error occurred while loading coaches"}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {coaches.map((coach) => (

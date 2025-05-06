@@ -77,8 +77,11 @@ export default function SessionsPage() {
   useEffect(() => {
     if (usersData?.success) {
       const users = usersData.users || [];
+      console.log('All users:', users);
+      const activeCoaches = users.filter(u => u.role === 'coach' && u.coachActive === true);
+      console.log('Active coaches:', activeCoaches);
       setClients(users.filter(u => u.role === 'client'));
-      setCoaches(users.filter(u => u.role === 'coach'));
+      setCoaches(activeCoaches);
     }
   }, [usersData]);
 
@@ -597,11 +600,16 @@ export default function SessionsPage() {
   };
 
   const renderCoachSelect = () => {
+    console.log('Current coaches state:', coaches);
+    console.log('Current formData.coach:', formData.coach);
+    
     return (
       <Select 
-        value={formData.coach?._id || formData.coach} 
+        value={typeof formData.coach === 'object' ? formData.coach._id : formData.coach} 
         onValueChange={(value) => {
+          console.log('Selected coach value:', value);
           const selectedCoach = coaches.find(c => c._id === value);
+          console.log('Found coach:', selectedCoach);
           setFormData({...formData, coach: selectedCoach || value});
         }}
         required
@@ -612,11 +620,15 @@ export default function SessionsPage() {
           </SelectValue>
         </SelectTrigger>
         <SelectContent className="border-white/10">
-          {coaches.map((coach) => (
-            <SelectItem key={coach._id} value={coach._id}>
-              {coach.firstName} {coach.lastName}
-            </SelectItem>
-          ))}
+          {coaches.length > 0 ? (
+            coaches.map((coach) => (
+              <SelectItem key={coach._id} value={coach._id}>
+                {coach.firstName} {coach.lastName}
+              </SelectItem>
+            ))
+          ) : (
+            <SelectItem value="" disabled>No coaches available</SelectItem>
+          )}
         </SelectContent>
       </Select>
     );

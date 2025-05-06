@@ -71,7 +71,7 @@ const MembershipPlans = () => {
   const handleGetStarted = async (pack) => {
     try {
       if (!isAuthenticated) {
-        router.push(`/${locale}/login?redirect=/membership-plans`);
+        router.push(`/${locale}/auth/login?redirect=/membership-plans`);
         return;
       }
 
@@ -215,8 +215,8 @@ const MembershipPlans = () => {
                   >
                     {pack.sessions.map((session) => (
                       <option key={session._id} value={session._id}>
-                        {t("sessions", "Sessions")} {session.sessionCount} -{" "}
-                        {formatPrice(session.price)} {t("currency", "RS")}
+                    {t("sessions", "Sessions")} {session.sessionCount} - {formatPrice(session.price)} {t("currency", "SR")}
+                    {session.price > 1000 && session.upsell ? ` (${locale === 'ar' ? 'ت.ح' : 'PS'} ${session.upsell} ${t("currency", "SR") })` : ""}
                       </option>
                     ))}
                   </select>
