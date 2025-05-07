@@ -127,11 +127,9 @@ const MembershipPlan = () => {
       };
 
       await createClientPackMutation(clientPackData);
-      toast.success(t("Membershipcreated ")); 
       setIsNavigating(true);
       router.push(`/${locale}/checkoutPage`);
     } catch (error) {
-      console.error("Error creating client pack:", error);
       toast.error(t("Failedtocreate"));
     } finally {
       setSubmitting(false);

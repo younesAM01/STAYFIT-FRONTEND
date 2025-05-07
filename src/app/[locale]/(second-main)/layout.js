@@ -29,7 +29,7 @@ export default function SecondMainLayout({ children }) {
               </div>
 
               <main className="flex-1 subtle-brand-background">
-                <div className="p-8 pt-24 md:pt-8 ">{children}</div>
+                <div className="p-8 pt-24 md:pt-8">{children}</div>
               </main>
             </SidebarInset>
           </SidebarProvider>

@@ -508,7 +508,7 @@ export default function CheckoutPage() {
                         <Button
                           onClick={handleApplyCoupon}
                           disabled={isLoading}
-                          className="bg-[#B4E90E] hover:bg-[#a3d00d] text-[#0d111a] font-bold whitespace-nowrap"
+                          className="bg-[#B4E90E] hover:bg-[#a3d00d] text-[#0d111a] font-bold whitespace-nowrap cursor-pointer"
                         >
                           {t('apply')}
                         </Button>
@@ -521,7 +521,7 @@ export default function CheckoutPage() {
                         </div>
                         <Button
                           onClick={handleCancelCoupon}
-                          className="bg-red-500 hover:bg-red-600 text-white"
+                          className="bg-red-500 hover:bg-red-600 text-white cursor-pointer"
                         >
                           {t('cancel')}
                         </Button>
@@ -553,13 +553,13 @@ export default function CheckoutPage() {
               <div className="flex justify-between gap-4 mt-6">
                 <Button
                   onClick={handleCancel}
-                  className="w-1/2 bg-red-500 hover:bg-red-500 text-white font-bold py-3"
+                  className="w-1/2 bg-red-500 hover:bg-red-500 text-white font-bold py-3 cursor-pointer"
                 >
                     {t("cancel")}
                 </Button>
                 <Button
                   onClick={handleCompletePurchase}
-                  className="w-1/2 bg-[#B4E90E] hover:bg-[#a3d00d] text-[#0d111a] font-bold py-3"
+                  className="w-1/2 bg-[#B4E90E] hover:bg-[#a3d00d] text-[#0d111a] font-bold py-3 cursor-pointer"
                 >
                     {t("completePurchase")}
                 </Button>

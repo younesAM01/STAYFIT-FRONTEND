@@ -9,10 +9,40 @@ const HeroSection = () => {
 
   useEffect(() => {
     const videoElement = document.getElementById("hero-video");
-    if (videoElement) {
-      videoElement.loop = true;
-      videoElement.play();
-    }
+    let playAttempts = 0;
+    const maxAttempts = 3;
+
+    const attemptPlay = async () => {
+      try {
+        if (videoElement) {
+          videoElement.loop = true;
+          await videoElement.play();
+        }
+      } catch (error) {
+        console.log('Video playback error:', error);
+        if (playAttempts < maxAttempts) {
+          playAttempts++;
+          // Wait a bit before retrying
+          setTimeout(attemptPlay, 1000);
+        }
+      }
+    };
+
+    // Initial play attempt
+    attemptPlay();
+
+    // Add event listener for visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        attemptPlay();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   return (

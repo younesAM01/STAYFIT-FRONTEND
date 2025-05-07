@@ -5,7 +5,7 @@
     "about": "At STAY FIT, we are dedicated to providing personalized fitness coaching sessions that empower our clients to achieve their health and wellness goals. Our experienced coaches understand that every individual is unique, and we tailor our programs to meet the specific needs of each client, ensuring a supportive and effective fitness journey. Join us to experience a holistic approach to fitness that combines expert guidance with a community of like-minded individuals.",
     "aboutbtn": "FREE CONSULTATION",
     "home": "Home",
-    "view": "View More",
+    "View": "View More",
     "our coaches": "Our Coaches",
     "services": "Services",
     "about us": "About Us",
@@ -331,7 +331,10 @@
     "invalidCoupon": "Invalid coupon code",
     "errorApplyingCoupon": "Error applying coupon",
     "couponApplied": "Coupon applied successfully",
-    "off": "off"
+    "off": "off",
+    "noPendingPurchase": "No pending purchase",
+    "pleaseSelectPackFirst": "Please select a pack first",
+    "goToHomePage": "Go to Home Page"
   },
   "FAQ": {
     "faqtitle": "Frequently Asked Questions",
