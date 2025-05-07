@@ -36,6 +36,7 @@
     "sessions": "Sessions",
     "expiry": "Expiration time",
     "days": "Day",
+    "View": "View More",
 
     "ContactPage": {
       "title": "CONTACT US",
@@ -115,7 +116,10 @@
       },
       "certifications": {
         "title": "Certifications"
-      }
+      },
+      "languages": {
+      "title": "Languages"
+    }
     },
     "cta": {
       "title": "Ready to Transform Your Fitness?",
@@ -124,6 +128,7 @@
     },
     "coach": "Coach",
     "welcome": "Welcome to Stay Fit"
+    
   },
   "ProfilePage": {
     "title": "Profile Page",

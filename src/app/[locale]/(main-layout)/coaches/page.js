@@ -8,6 +8,8 @@ import Link from "next/link";
 import { useGetCoachQuery } from "@/redux/services/user.service";
 // Import motion components and hooks from framer-motion
 import { motion, useAnimation, useInView } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { usePathname, useRouter } from "next/navigation";
 
 // Reusable animation variants for fade-in-up effect
 const fadeInUp = {
@@ -22,20 +24,10 @@ const fadeInUp = {
   },
 };
 
-// Reusable animation variants for simple fade-in effect
-const fadeIn = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 0.8,
-      ease: "easeOut",
-    },
-  },
-};
-
 export default function FitnessCoaching() {
   const [coaches, setCoaches] = useState([]);
+  const pathname = usePathname();
+  const router = useRouter();
   const t = useTranslations("COACHEPAGE");
   const locale = useLocale();
   const {
@@ -44,7 +36,6 @@ export default function FitnessCoaching() {
     isSuccess: isCoachesSuccess,
     isError: isCoachesError,
   } = useGetCoachQuery();
-
   // --- Animation Hooks Setup ---
   // Controls for managing animations programmatically
   const heroControls = useAnimation();
@@ -56,6 +47,41 @@ export default function FitnessCoaching() {
   const coachesSectionRef = useRef(null);
   const coachesGridRef = useRef(null);
 
+  useEffect(() => {
+    if (pathname === `/${locale}` && typeof window !== "undefined") {
+      // Check for hash in URL
+      if (window.location.hash === "#packs") {
+        const scrollToPacks = () => {
+          const packsSection = document.getElementById("packs");
+          if (packsSection) {
+            const offset = 100; // Adjust this value based on your header height
+            const elementPosition = packsSection.getBoundingClientRect().top;
+            const offsetPosition =
+              elementPosition + window.pageYOffset - offset;
+
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: "smooth",
+            });
+          }
+        };
+
+        // Try scrolling multiple times
+        scrollToPacks();
+        setTimeout(scrollToPacks, 500);
+        setTimeout(scrollToPacks, 1000);
+      }
+    }
+  }, [pathname, locale]);
+  const scrollToPacks = () => {
+    if (pathname === `/${locale}`) {
+      // If already on home page, use hash-based navigation
+      window.location.hash = "packs";
+    } else {
+      // If not on home page, navigate to home page with hash
+      router.push(`/${locale}#packs`);
+    }
+  };
   // Hooks to detect if the refs are in view
   // REMOVED 'once: true' to allow animation on scroll back
   const isHeroInView = useInView(heroRef, { margin: "-100px 0px" });
@@ -162,7 +188,10 @@ export default function FitnessCoaching() {
               {t("paragraph")}
             </p>
             <div className={`flex justify-center gap-4`}>
-              <Button className="bg-[#B4E90E] text-[#0d111a] hover:bg-[#a3d40c] px-8 py-6 text-lg font-semibold transition-transform hover:scale-105 duration-200 ease-in-out">
+              <Button
+                onClick={scrollToPacks}
+                className="bg-[#B4E90E] text-[#0d111a] hover:bg-[#a3d40c] px-8 py-6 text-lg font-semibold transition-transform hover:scale-105 duration-200 ease-in-out"
+              >
                 {" "}
                 {/* Added subtle scale on hover */}
                 {t("boutton")}
@@ -204,7 +233,7 @@ export default function FitnessCoaching() {
       {/* Coaches Grid - Apply animation to the grid container */}
       <motion.div
         ref={coachesGridRef} // Attach ref for viewport detection
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center md:justify-items-normal container mx-auto px-4 pb-16" // Added container/padding here
+        className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 justify-items-center md:justify-items-normal container mx-auto px-4 pb-16" // Added container/padding here
         initial="hidden"
         animate={coachesGridControls} // Control animation based on scroll
         variants={{
@@ -234,11 +263,11 @@ export default function FitnessCoaching() {
           <motion.div
             key={coach._id} // Key should be on the outermost motion element in the map
             variants={fadeInUp} // Each card uses the fade-in-up effect for enter/exit
-            // No initial/animate needed here, controlled by parent stagger/visibility
             layout // Keeps smooth transitions if list order changes
+            className="md:max-w-[360px] min-w-[360px]"
           >
             <Card
-              className="bg-gray-800 border-none overflow-hidden h-full flex flex-col group" // Added group for parent hover effects
+              className="bg-gray-800 border-none overflow-hidden h-full flex flex-col group p-2" // Added group for parent hover effects
             >
               <div className="relative min-h-80 overflow-hidden flex-shrink-0">
                 <Image
@@ -250,18 +279,80 @@ export default function FitnessCoaching() {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>{" "}
                 {/* Gradient overlay on hover */}
               </div>
-              <CardContent
-                className={`py-4 px-6 ${textAlign} flex flex-col flex-grow min-w-[320px]`}
-              >
+              <CardContent className={`py-4 ${textAlign} flex flex-col  `}>
                 <div className="flex-grow">
-                  <h3 className="text-xl font-bold text-amber-50 mb-1">
-                    {coach.firstName} {coach.lastName}
-                  </h3>
-                  <p className="text-gray-300 mb-1">{coach.title?.[locale]}</p>
+                  <div className="text-xl font-bold text-amber-50 mb-1">
+                    {locale === "ar" ? (
+                      <>
+                        <span className="text-[#B4E90E]">
+                          {coach?.coachnamearabic || ""}
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-[#B4E90E]">
+                          {coach?.firstName || ""}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {/* About Content */}
+                  {coach.aboutContent?.paragraphs[locale]?.length > 0 && (
+                    <div className="space-y-2 text-gray-300">
+                      {coach.aboutContent.paragraphs[locale]?.map(
+                        (paragraph, pIndex) => (
+                          <p key={pIndex} className="text-sm ">
+                            {paragraph}
+                          </p>
+                        )
+                      )}
+                    </div>
+                  )}
                   <p className="text-gray-400 mb-2 text-sm">
                     {coach.available?.[locale] ||
                       (locale === "ar" ? "متاح للجميع" : "Available for all")}
                   </p>
+
+                  {/* Specialties */}
+                  <div
+                    className="flex flex-wrap gap-2"
+                    dir={locale === "ar" ? "rtl" : "ltr"} // <-- Add this line
+                  >
+                    {coach.specialties &&
+                      coach.specialties.map((specialty, index) => (
+                        <Badge
+                          key={index}
+                          className="bg-transparent border border-[#B4E90E] text-[#B4E90E] hover:bg-[#B4E90E] hover:text-[#0d111a] transition-colors duration-300"
+                        >
+                          {specialty?.title?.[locale]}
+                        </Badge>
+                      ))}
+                  </div>
+
+                  {/* Certifications */}
+                  {coach.certifications?.length > 0 && (
+                    <div
+                      dir={locale === "ar" ? "rtl" : "ltr"} // <-- Add this line
+                    >
+                      <h4 className="text-sm font-semibold text-[#B4E90E] mb-2 mt-2">
+                        {locale === "ar" ? " الشهادات :" : "Certifications :"}
+                      </h4>
+                      <div className="space-y-1">
+                        {coach.certifications.map((cert, index) => (
+                          <div
+                            key={index}
+                            className="text-xs text-gray-300 flex items-center gap-1"
+                            dir={locale === "ar" ? "rtl" : "ltr"} // <-- Add this line
+                          >
+                            <span className="text-white font-medium">
+                              {cert?.title?.[locale]}
+                            </span>
+                            <span className="text-gray-400">- {cert.org}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div
                   className={`flex gap-2 mt-4 ${locale === "ar" ? "justify-start" : "justify-start"}`}

@@ -1,7 +1,8 @@
 'use client';
 import { motion } from 'framer-motion';
 import ActivityCard from './services-card';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 const TimelineItem = ({ activity, index, position = 'right' }) => {
   const isLeft = position === 'left';
@@ -63,6 +64,7 @@ const TimelineItem = ({ activity, index, position = 'right' }) => {
 
 const Timeline = () => {
   const t = useTranslations('HomePage');
+  const locale = useLocale();
   const activities = [
     {
       title: t('General Fitness'),  // Translated title
@@ -111,6 +113,26 @@ const Timeline = () => {
           />
         ))}
       </div>
+
+       {/* View More Button */}
+       <motion.div 
+        className="flex justify-center mt-12"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, type: "spring", stiffness: 50 }}
+      >
+        <Link  
+          href={`/${locale}/services`}
+          className="group relative px-8 py-4 bg-[#B4E90E] text-black font-semibold rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-[#B4E90E]/20"
+        >
+          <span className="relative z-10">{t('View')}</span>
+          <motion.div 
+            className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"
+            initial={false}
+          />
+        </Link>
+      </motion.div>
     </div>
   );
 };

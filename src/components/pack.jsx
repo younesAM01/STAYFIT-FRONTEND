@@ -131,6 +131,7 @@ const MembershipPlans = () => {
 
   return (
     <div
+    id="packs"
       className="flex flex-col items-center justify-center py-16 px-4 relative w-full bg-cover bg-center"
       style={{
         backgroundImage:

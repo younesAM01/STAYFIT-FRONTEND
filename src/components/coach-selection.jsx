@@ -9,29 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Star } from "lucide-react";
 import { useLocale, useTranslations } from 'next-intl'
 
-export default function CoachSelection({ onSelect }) {  
-  const [coaches, setCoaches] = useState([]);
+export default function CoachSelection({ onSelect , coaches }) {  
   const t = useTranslations('BookingPage')
   const locale = useLocale();
 
-  useEffect(() => {
-    const fetchCoaches = async () => {
-      try {
-        const response = await fetch('/api/coach');
-        if (!response.ok) {
-          throw new Error('Failed to fetch coaches');
-        }
-        const data = await response.json();
-        // Filter coaches to only show active ones
-        const activeCoaches = data.filter(coach => coach.coachActive === true);
-        setCoaches(activeCoaches);
-      } catch (error) {
-        console.error(error);
-      }
-    };
 
-    fetchCoaches();
-  }, []);
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {coaches.map((coach) => (

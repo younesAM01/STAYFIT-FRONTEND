@@ -31,15 +31,18 @@ export default function BookingSection({
   const [sessionLocation, setSessionLocation] = useState(""); // New state for session location
   const [coaches, setCoaches] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [refreshSessionsFunction, setRefreshSessionsFunction] = useState(null);
+  const [setRefreshSessionsFunction] = useState(null);
   const t = useTranslations("BookingPage");
   const [createSession, { isLoading }] = useCreateSessionMutation();
-  const { data, isLoading: isLoadingCoaches , isSuccess } = useGetCoachQuery();
+  const { data, isLoading: isLoadingCoaches, isSuccess } = useGetCoachQuery();
 
   useEffect(() => {
     if (isSuccess) {
       console.log("data", data);
-      setCoaches(data.coach);
+      const activeCoaches = data.coach.filter(
+        (coach) => coach.coachActive === true
+      );
+      setCoaches(activeCoaches);
     }
   }, [data, isSuccess]);
 
@@ -60,7 +63,6 @@ export default function BookingSection({
     setSelectedDate(date);
     setSelectedTime(time);
     setSessionLocation(location);
-    setRefreshSessionsFunction(() => refetchCoachSessions);
     setStep("confirmation");
   };
 
@@ -130,7 +132,6 @@ export default function BookingSection({
       setSelectedDate(null);
       setSelectedTime(null);
       setSessionLocation("");
-      setRefreshSessionsFunction(null);
     } catch (error) {
       console.error("Error creating session:", error);
       toast.error("Failed to book session. Please try again.");
@@ -180,7 +181,7 @@ export default function BookingSection({
                 <span className="ml-3 text-white">{t("loadingCoaches")}</span>
               </div>
             ) : coaches.length > 0 ? (
-              <CoachSelection onSelect={handleCoachSelect} />
+              <CoachSelection onSelect={handleCoachSelect} coaches={coaches} />
             ) : (
               <div className="text-center text-white p-4">
                 <p>{t("noCoachesAvailable")}</p>

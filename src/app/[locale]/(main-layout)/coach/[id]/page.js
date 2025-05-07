@@ -15,12 +15,13 @@ import {
   Trash,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/authContext";
 import {
   useGetUserByIdQuery,
   useUpdateUserMutation,
 } from "@/redux/services/user.service";
+
 export default function CoachProfile() {
   const locale = useLocale();
   const { mongoUser } = useAuth();
@@ -37,6 +38,8 @@ export default function CoachProfile() {
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const t = useTranslations("aboutme");
 
+  const pathname = usePathname();
+  const router = useRouter();
   const params = useParams();
 
   // Extract the coach ID from the URL parameters
@@ -47,6 +50,7 @@ export default function CoachProfile() {
     isSuccess,
     refetch,
   } = useGetUserByIdQuery(coachId);
+  console.log(coachId);
 
   const [
     updateUser,
@@ -57,6 +61,33 @@ export default function CoachProfile() {
       isError: isUpdateError,
     },
   ] = useUpdateUserMutation();
+
+  // Effect to handle scrolling after navigation
+  useEffect(() => {
+    if (pathname === `/${locale}` && typeof window !== "undefined") {
+      // Check for hash in URL
+      if (window.location.hash === '#packs') {
+        const scrollToPacks = () => {
+          const packsSection = document.getElementById("packs");
+          if (packsSection) {
+            const offset = 100; // Adjust this value based on your header height
+            const elementPosition = packsSection.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+            
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: "smooth"
+            });
+          }
+        };
+
+        // Try scrolling multiple times
+        scrollToPacks();
+        setTimeout(scrollToPacks, 500);
+        setTimeout(scrollToPacks, 1000);
+      }
+    }
+  }, [pathname, locale]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -80,6 +111,7 @@ export default function CoachProfile() {
         const defaultData = {
           ...data?.user,
           firstName: data?.user?.firstName || "",
+          coachnamearabic: data?.user?.coachnamearabic || "",
           lastName: data?.user?.lastName || "",
           phoneNumber: data?.user?.phoneNumber || "",
           age: data?.user?.age || "",
@@ -118,19 +150,6 @@ export default function CoachProfile() {
     }
   }, [coachId, isSuccess, data?.profilePic, data?.user, locale, mongoUser]);
 
-  // Add new useEffect to handle successful update
-  useEffect(() => {
-    if (isUpdateSuccess) {
-      // Close the modal when update is successful
-      closeEditModal();
-
-      // Reset first-time user flag if this was their first update
-      if (isFirstTimeUser) {
-        setIsFirstTimeUser(false);
-      }
-    }
-  }, [isUpdateSuccess, isFirstTimeUser ]);
-
   const openEditModal = () => {
     // If editFormData is already set (for first-time users), use that
     if (!editFormData) {
@@ -163,10 +182,25 @@ export default function CoachProfile() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setEditFormData({
-      ...editFormData,
-      [name]: value,
-    });
+    if (name === "name") {
+      if (locale === "en") {
+        setEditFormData(prev => ({
+          ...prev,
+          firstName: value
+        }));
+      } else if (locale === "ar") {
+        setEditFormData(prev => ({
+          ...prev,
+          coachnamearabic: value
+        }));
+      }
+   
+    } else {
+      setEditFormData(prev => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleTitleChange = (e) => {
@@ -385,6 +419,7 @@ export default function CoachProfile() {
       certifications: updatedCertifications,
     });
   };
+
   const handleImageUpload = async (file) => {
     try {
       setUploadingImage(true);
@@ -415,6 +450,7 @@ export default function CoachProfile() {
       setUploadingImage(false);
     }
   };
+
   const handleImageChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -456,19 +492,18 @@ export default function CoachProfile() {
       // Ensure we have valid data structures before saving
       const dataToSave = {
         ...editFormData,
-        // Ensure we have paragraphs for both languages
+        firstName: editFormData.firstName || "",
+        coachnamearabic: editFormData.coachnamearabic || "",
         aboutContent: {
           ...editFormData.aboutContent,
           paragraphs: {
             en: editFormData.aboutContent?.paragraphs?.en || [""],
             ar: editFormData.aboutContent?.paragraphs?.ar || [""],
           },
-          // Ensure we have at least one language
           languages: editFormData.aboutContent?.languages?.length
             ? editFormData.aboutContent.languages
             : [{ code: "", name: "" }],
         },
-        // Ensure we have at least one specialty
         specialties: editFormData.specialties?.length
           ? editFormData.specialties
           : [
@@ -477,7 +512,6 @@ export default function CoachProfile() {
                 description: { en: "", ar: "" },
               },
             ],
-        // Ensure we have at least one certification
         certifications: editFormData.certifications?.length
           ? editFormData.certifications
           : [
@@ -492,15 +526,34 @@ export default function CoachProfile() {
         id: coachId,
         user: dataToSave,
       });
+      console.log("Saving data:", dataToSave);
       if (isUpdateError) {
         console.error("Update failed:", updateError);
         return;
+      }
+
+      // Close the modal first
+      closeEditModal();
+
+      // Reset first-time user flag if this was their first update
+      if (isFirstTimeUser) {
+        setIsFirstTimeUser(false);
       }
 
       // Refetch the data to get the latest state from the server
       await refetch();
     } catch (err) {
       console.error("Error saving coach data:", err);
+    }
+  };
+
+  const scrollToPacks = () => {
+    if (pathname === `/${locale}`) {
+      // If already on home page, use hash-based navigation
+      window.location.hash = 'packs';
+    } else {
+      // If not on home page, navigate to home page with hash
+      router.push(`/${locale}#packs`);
     }
   };
 
@@ -573,10 +626,10 @@ export default function CoachProfile() {
                 >
                   {locale === "ar" ? (
                     <>
+                      {t("coach")}{" "}
                       <span className="text-[#B4E90E]">
-                        {coachData?.firstName || ""} {coachData?.lastName || ""}
-                      </span>{" "}
-                      {t("coach")}
+                        {coachData?.coachnamearabic || ""} {coachData?.lastName || ""}
+                      </span>
                     </>
                   ) : (
                     <>
@@ -706,7 +759,7 @@ export default function CoachProfile() {
                 >
                   <h3 className="text-xl sm:text-2xl font-bold mb-6 flex items-center justify-center">
                     <Languages className="text-[#B4E90E] mr-3" />
-                    Languages
+                    {t("sections.languages.title")}
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
                     {coachData?.aboutContent?.languages?.map((lang, index) => (
@@ -842,8 +895,8 @@ export default function CoachProfile() {
             <motion.a
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              href="#"
-              className="inline-flex items-center gap-2 bg-[#0d111a] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold hover:bg-[#161c2a] transition-colors text-sm sm:text-base"
+              onClick={scrollToPacks}
+              className="inline-flex items-center gap-2 bg-[#0d111a] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold hover:bg-[#161c2a] transition-colors text-sm sm:text-base cursor-pointer"
             >
               {t("cta.button")}
               <ChevronRight size={18} className="sm:w-5 sm:h-5" />
@@ -914,19 +967,19 @@ export default function CoachProfile() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">
-                        First Name
+                        {locale === "en" ? "First Name" : "الاسم الأول"}
                       </label>
                       <input
                         type="text"
-                        name="firstName"
-                        value={editFormData?.firstName || ""}
+                        name="name"
+                        value={locale === "en" ? (editFormData?.firstName || "") : (editFormData?.coachnamearabic || "")}
                         onChange={handleInputChange}
                         className="w-full p-2 bg-[#161c2a] border border-[#252d3d] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B4E90E]"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
-                        Last Name
+                        {locale === "en" ? "Last Name" : "الاسم الأخير"}
                       </label>
                       <input
                         type="text"

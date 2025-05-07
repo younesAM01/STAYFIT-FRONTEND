@@ -10,7 +10,6 @@ const TestimonialSlider = () => {
   const [reviews, setReviews] = useState([]);
   const t = useTranslations('HomePage');
   const locale = useLocale();
-  const { loading } = useAuth();
   const { data , isLoading , isSucces , isError , error} = useGetReviewsQuery()
 
   useEffect(() => {
