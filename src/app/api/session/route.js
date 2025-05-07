@@ -86,9 +86,10 @@ export async function GET(request) {
 
     // Get sessions by client ID
     if (clientId) {
-      const sessions = await Session.find({ client: clientId }).populate(
-        "coach"
-      );
+      const sessions = await Session.find({
+        client: clientId,
+        sessionStatus: { $ne: "cancelled" },
+      }).populate("coach");
       return NextResponse.json(sessions, { status: 200 });
     }
 
@@ -131,33 +132,6 @@ export async function PUT(request) {
         { status: 404 }
       );
     }
-
-    // If the session is associated with a client pack and status has changed
-    if (
-      updatedSession.packId &&
-      originalSession &&
-      (originalSession.status !== updatedSession.status ||
-       originalSession.sessionStatus !== updatedSession.sessionStatus)
-    ) {
-      // If session was cancelled or completed, or finished, we may need to update the pack
-      if (
-        updatedSession.status === "cancelled" ||
-        updatedSession.status === "completed" ||
-        updatedSession.sessionStatus === "finished"
-      ) {
-        const clientPack = await ClientPack.findById(updatedSession.packId);
-
-        if (clientPack) {
-          // If this was the last session and it's been completed/finished, update isActive
-          if (clientPack.remainingSessions === 0) {
-            await ClientPack.findByIdAndUpdate(updatedSession.packId, {
-              isActive: false,
-            });
-          }
-        }
-      }
-    }
-
     return NextResponse.json(updatedSession, { status: 200 });
   } catch (error) {
     return NextResponse.json(
@@ -172,7 +146,7 @@ export async function DELETE(request) {
     await connectMongoDB();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-    
+
     if (!id) {
       return NextResponse.json(
         { message: "Session ID is required" },

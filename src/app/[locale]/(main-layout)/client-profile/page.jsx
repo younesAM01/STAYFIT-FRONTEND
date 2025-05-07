@@ -27,9 +27,13 @@ import MemberShip from "@/components/membership";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { useGetClientPackByClientIdQuery } from "@/redux/services/clientpack.service";
+<<<<<<< HEAD
 import { useUpdateUserMutation, useGetCoachQuery } from "@/redux/services/user.service";
 import { useGetReviewsQuery, useCreateReviewMutation, useUpdateReviewMutation, useDeleteReviewMutation } from "@/redux/services/review.service";
 import { toast } from "sonner";
+=======
+import { useUpdateUserMutation } from "@/redux/services/user.service";
+>>>>>>> 495cd1d (change client profile and booking)
 
 export default function ClientProfile() {
   const { mongoUser, isLoading: authLoading } = useAuth();
@@ -49,6 +53,10 @@ export default function ClientProfile() {
   } = useGetClientPackByClientIdQuery(mongoUser?._id, {
     skip: !mongoUser?._id,
   });
+<<<<<<< HEAD
+=======
+  console.log("clientPack", clientPack[0]?._id);
+>>>>>>> 495cd1d (change client profile and booking)
   const profile =
     "https://res.cloudinary.com/dkjx65vc7/image/upload/v1745098188/blank-profile-picture-973460_960_720_oxeuux.webp";
   const t = useTranslations("ProfilePage");
@@ -61,7 +69,11 @@ export default function ClientProfile() {
     }
     if (isError) {
       setLoading(false);
+<<<<<<< HEAD
       if (clientPackError) toast.error(clientPackError.message || "Error loading client pack");
+=======
+      console.log(clientPackError);
+>>>>>>> 495cd1d (change client profile and booking)
     }
   }, [isSuccess, isError, clientPackError]);
   const [
@@ -245,6 +257,10 @@ export default function ClientProfile() {
     );
 
     if (!hasChanges || !mongoUser?._id) {
+<<<<<<< HEAD
+=======
+      console.log("No changes detected or no user ID found");
+>>>>>>> 495cd1d (change client profile and booking)
       setIsEditModalOpen(false);
       return;
     }
@@ -260,7 +276,10 @@ export default function ClientProfile() {
         id: mongoUser._id,
         user: dataToSubmit,
       });
+<<<<<<< HEAD
       toast.success("Profile updated successfully!");
+=======
+>>>>>>> 495cd1d (change client profile and booking)
     } catch (error) {
       toast.error(error.message || "An error occurred while updating");
     } finally {
@@ -308,7 +327,11 @@ export default function ClientProfile() {
           <MemberShip setActiveTab={setActiveTab} />
         )}
 
+<<<<<<< HEAD
         {activeTab === "reviews" && <Reviews />}
+=======
+        {activeTab === "reviews" && <Reviews userId={mongoUser?._id} />}
+>>>>>>> 495cd1d (change client profile and booking)
 
         {activeTab === "book" && (
           <motion.div {...fadeIn} className="mx-auto">
@@ -894,16 +917,48 @@ function Reviews() {
   const [selectedReview, setSelectedReview] = useState(null);
   const [filteredReviews, setFilteredReviews] = useState([]);
   const t = useTranslations("ProfilePage");
+<<<<<<< HEAD
   const { mongoUser } = useAuth();
+=======
+>>>>>>> 495cd1d (change client profile and booking)
 
   // Get current locale
   const locale = useParams().locale || "en";
 
+<<<<<<< HEAD
   // Redux hooks for reviews (no userId argument, just like adminreview.jsx)
   const { data: reviewsData, isLoading: reviewsLoading, refetch: refetchReviews } = useGetReviewsQuery();
   const [createReview] = useCreateReviewMutation();
   const [updateReview] = useUpdateReviewMutation();
   const [deleteReview] = useDeleteReviewMutation();
+=======
+  // Fetch user's reviews
+  const fetchUserReviews = useCallback(async () => {
+    if (!userId) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/review`);
+      if (!response.ok) throw new Error("Failed to fetch reviews");
+      const data = await response.json();
+      console.log("Fetched reviews:", data); // Debug log
+
+      // Filter reviews where the userId matches, handling both populated and unpopulated cases
+      const userReviews = data.data.filter((review) => {
+        // Handle both cases: populated (review.userId._id) and unpopulated (review.userId)
+        const reviewUserId = review.userId?._id || review.userId;
+        return reviewUserId === userId;
+      });
+
+      console.log("Filtered reviews:", userReviews); // Debug log
+      setReviews(userReviews);
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
+>>>>>>> 495cd1d (change client profile and booking)
 
   // Redux hook for coaches
   const { data: coachesData, isLoading: coachesLoading } = useGetCoachQuery();
@@ -929,24 +984,61 @@ function Reviews() {
 
   const handleAddReview = async (reviewData) => {
     try {
+<<<<<<< HEAD
       await createReview(reviewData).unwrap();
       await refetchReviews();
+=======
+      const response = await fetch("/api/review", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reviewData),
+      });
+
+      if (!response.ok) throw new Error("Failed to add review");
+
+      await fetchUserReviews();
+>>>>>>> 495cd1d (change client profile and booking)
       setIsAddReviewModalOpen(false);
       toast.success("Review added successfully!");
     } catch (error) {
+<<<<<<< HEAD
       toast.error(error.message || "Error adding review");
+=======
+      console.error("Error adding review:", error);
+>>>>>>> 495cd1d (change client profile and booking)
     }
   };
 
   const handleUpdateReview = async (reviewId, updatedData) => {
     try {
+<<<<<<< HEAD
       await updateReview({ id: reviewId, ...updatedData }).unwrap();
       await refetchReviews();
+=======
+      const response = await fetch(`/api/review?id=${reviewId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (!response.ok) throw new Error("Failed to update review");
+
+      // Fetch only user's reviews after updating
+      await fetchUserReviews();
+>>>>>>> 495cd1d (change client profile and booking)
       setIsEditReviewModalOpen(false);
       setSelectedReview(null);
       toast.success("Review updated successfully!");
     } catch (error) {
+<<<<<<< HEAD
       toast.error(error.message || "Error updating review");
+=======
+      console.error("Error updating review:", error);
+>>>>>>> 495cd1d (change client profile and booking)
     }
   };
 
@@ -959,13 +1051,28 @@ function Reviews() {
     if (!reviewToDelete) return;
 
     try {
+<<<<<<< HEAD
       await deleteReview(reviewToDelete._id).unwrap();
       await refetchReviews();
+=======
+      const response = await fetch(`/api/review?id=${reviewToDelete._id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete review");
+
+      // Filter out the deleted review locally
+      setReviews(reviews.filter((review) => review._id !== reviewToDelete._id));
+>>>>>>> 495cd1d (change client profile and booking)
       setIsDeleteModalOpen(false);
       setReviewToDelete(null);
       toast.success("Review deleted successfully!");
     } catch (error) {
+<<<<<<< HEAD
       toast.error(error.message || "Error deleting review");
+=======
+      console.error("Error deleting review:", error);
+>>>>>>> 495cd1d (change client profile and booking)
     }
   };
 
@@ -1014,7 +1121,11 @@ function Reviews() {
                     src={
                       review.coachId?.profilePic ||
                       review.coachId?.profilePicture ||
+<<<<<<< HEAD
                       "https://res.cloudinary.com/dkjx65vc7/image/upload/v1745098188/blank-profile-picture-973460_960_720_oxeuux.webp"
+=======
+                      ""
+>>>>>>> 495cd1d (change client profile and booking)
                     }
                     alt={
                       review.coachId
@@ -1124,9 +1235,30 @@ function ReviewModal({ onClose, onSubmit, initialData, userId, isEdit }) {
   });
   const t = useTranslations("ProfilePage");
 
+<<<<<<< HEAD
   // Get coaches from user service
   const { data: coachesData, isLoading: coachesLoading } = useGetCoachQuery();
   const [coaches, setCoaches] = useState([]);
+=======
+  // Modified coaches fetch to use the correct endpoint
+  useEffect(() => {
+    const fetchCoaches = async () => {
+      try {
+        const response = await fetch("/api/coach");
+        if (!response.ok) throw new Error("Failed to fetch coaches");
+        const data = await response.json();
+        // Filter only active coaches
+        const activeCoaches = data.filter(
+          (coach) => coach.coachActive === true
+        );
+        setCoaches(activeCoaches);
+      } catch (error) {
+        console.error("Error fetching coaches:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+>>>>>>> 495cd1d (change client profile and booking)
 
   // Update coaches when data changes
   useEffect(() => {

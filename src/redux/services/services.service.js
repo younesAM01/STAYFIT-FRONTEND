@@ -1,7 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+<<<<<<< HEAD
 
 // Make sure this matches your backend URL
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ;
+=======
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+>>>>>>> 495cd1d (change client profile and booking)
 
 export const servicesApi = createApi({
     reducerPath: 'servicesApi',

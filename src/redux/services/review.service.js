@@ -1,6 +1,9 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+<<<<<<< HEAD
 
 // Use hardcoded URL for testing
+=======
+>>>>>>> 495cd1d (change client profile and booking)
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export const reviewApi = createApi({

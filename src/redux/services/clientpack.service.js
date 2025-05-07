@@ -1,9 +1,13 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
+<<<<<<< HEAD
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL
+=======
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+>>>>>>> 495cd1d (change client profile and booking)
 export const clientPackApi = createApi({
-    reducerPath: 'clientPackApi',
-    baseQuery: fetchBaseQuery({ baseUrl: BACKEND_URL }),
+  reducerPath: "clientPackApi",
+  baseQuery: fetchBaseQuery({ baseUrl: BACKEND_URL }),
     endpoints: (builder) => ({
         getClientPacks: builder.query({ 
             query: () => '/clientpacks',

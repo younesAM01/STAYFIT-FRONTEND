@@ -14,6 +14,7 @@ import CoachSelection from "./coach-selection";
 import BookingCalendar from "./booking-calendar";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { useCreateSessionMutation } from "@/redux/services/session.service";
 export default function BookingSection({
   clientId,
   setActiveTab,
@@ -31,6 +32,7 @@ export default function BookingSection({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [refreshSessionsFunction, setRefreshSessionsFunction] = useState(null);
   const t = useTranslations("BookingPage");
+  const [createSession, { isLoading }] = useCreateSessionMutation();
 
   useEffect(() => {
     // Fetch coaches to have access to the coach data
@@ -100,14 +102,13 @@ export default function BookingSection({
         return;
       }
 
-      // Format the date for the API - preserving the selected date
+      // Format the date for the API - preserving the selected date with timezone
       const formattedDate = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        0,
-        0,
-        0
+        Date.UTC(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate()
+        )
       ).toISOString();
 
       const sessionData = {
@@ -117,49 +118,11 @@ export default function BookingSection({
         sessionDate: formattedDate,
         sessionTime: selectedTime,
         location: sessionLocation,
+        clientPack: clientPack._id,
         status: "scheduled",
-        sessionStatus: "upcoming"
       };
-
-      const response = await fetch("http://localhost:3000/api/session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(sessionData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create session");
-      }
-
-      const result = await response.json();
-
-      // Update remaining sessions in client pack
-      const newRemainingSessionsCount = clientPack.remainingSessions - 1;
-      const updatePackBody = {
-        remainingSessions: newRemainingSessionsCount,
-      };
-
-      // If this will reduce sessions to 0, also set isActive to false
-      if (newRemainingSessionsCount === 0) {
-        updatePackBody.isActive = false;
-      }
-
-      const updatePackResponse = await fetch(
-        `http://localhost:3000/api/client-pack?id=${clientPack._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatePackBody),
-        }
-      );
-
-      if (!updatePackResponse.ok) {
-        throw new Error("Failed to update remaining sessions");
-      }
+      console.log("sessionData", sessionData);
+      await createSession(sessionData).unwrap();
 
       // Refresh client pack data after successful update
       if (refreshClientPack) {

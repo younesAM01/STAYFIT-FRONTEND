@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -8,6 +9,62 @@ export const sessionApi = createApi({
     getSessions: builder.query({
       query: () => "/sessions",
       providesTags: ["Session"],
+=======
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
+export const sessionApi = createApi({
+    reducerPath: 'sessionApi',
+    baseQuery: fetchBaseQuery({ baseUrl: BACKEND_URL }),
+    endpoints: (builder) => ({
+        getSessions: builder.query({ 
+            query: () => '/sessions',
+            providesTags: ['Session']
+        }),
+        getSessionById: builder.query({ 
+            query: (id) => `/sessions/${id}`,
+            providesTags: (result, error, id) => [{ type: 'Session', id }]
+        }),
+        getSessionsByClientId: builder.query({
+            query: (id) => `/sessions/client/${id}`,
+            providesTags: (result, error, id) => [{ type: 'Session', id }]
+        }),
+        createSession: builder.mutation({
+            query: (session) => ({
+                url: '/sessions',
+                method: 'POST',
+                body: session
+            }),
+            invalidatesTags: ['Session']
+        }),
+        updateSession: builder.mutation({
+            query: ({ id, ...session }) => ({
+                url: `/sessions/${id}`,
+                method: 'PUT',
+                body: session
+            }),
+            invalidatesTags: (result, error, { id }) => [{ type: 'Session', id }]
+        }),
+        deleteSession: builder.mutation({
+            query: (id) => ({
+                url: `/sessions/${id}`,
+                method: 'DELETE'
+            }),
+            invalidatesTags: (result, error, id) => [{ type: 'Session', id }]
+        }),
+        cancelSession: builder.mutation({
+            query: (id) => ({
+                url: `/sessions/cancel/${id}`,
+                method: 'PUT'
+            }),
+        }),
+        completeSession: builder.mutation({
+            query: (id) => ({
+                url: `/sessions/complete/${id}`,
+                method: 'PUT'
+            }),
+        })
+>>>>>>> 495cd1d (change client profile and booking)
     }),
     getSessionById: builder.query({
       query: (id) => `/sessions/${id}`,
@@ -60,6 +117,7 @@ export const sessionApi = createApi({
   tagTypes: ["Session"],
 });
 
+<<<<<<< HEAD
 export const {
   useGetSessionsQuery,
   useGetSessionByIdQuery,
@@ -71,3 +129,15 @@ export const {
   useCompleteSessionMutation,
   useGetSessionsByCoachIdQuery,
 } = sessionApi;
+=======
+export const { 
+    useGetSessionsQuery,
+    useGetSessionByIdQuery,
+    useGetSessionsByClientIdQuery,
+    useCreateSessionMutation,
+    useUpdateSessionMutation,
+    useDeleteSessionMutation,
+    useCancelSessionMutation,
+    useCompleteSessionMutation
+} = sessionApi;
+>>>>>>> 495cd1d (change client profile and booking)
