@@ -14,6 +14,7 @@ const TestimonialSlider = () => {
   
   const { data, isLoading: isReviewsLoading, isSuccess: isReviewsSuccess, isError: isReviewsError } = useGetReviewsQuery();
 
+
   useEffect(() => {
     if (isReviewsSuccess && data) {
       setReviews(data.data);
@@ -151,7 +152,10 @@ const TestimonialSlider = () => {
                   </h3>
 
                   <p className="text-sm text-[#B4E90E] font-semibold mb-4">
-                    {locale === 'en' ? 'Coached by ' : 'تدريب من طرف '}{getLocalizedContent(review, 'trainerName')}
+                    {locale === 'en' 
+                      ? `Coached by ${getLocalizedContent(review, 'trainerName')}`
+                      : `${getLocalizedContent(review, 'trainerName')} تدريب من طرف`
+                    }
                   </p>
 
                   <div className="relative max-w-2xl">

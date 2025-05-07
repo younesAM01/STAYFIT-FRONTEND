@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Dumbbell,
@@ -37,10 +38,11 @@ export default function CoachProfile() {
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const t = useTranslations("aboutme");
-
   const pathname = usePathname();
   const router = useRouter();
   const params = useParams();
+
+  
 
   // Extract the coach ID from the URL parameters
   const coachId = params.id;
@@ -63,31 +65,7 @@ export default function CoachProfile() {
   ] = useUpdateUserMutation();
 
   // Effect to handle scrolling after navigation
-  useEffect(() => {
-    if (pathname === `/${locale}` && typeof window !== "undefined") {
-      // Check for hash in URL
-      if (window.location.hash === '#packs') {
-        const scrollToPacks = () => {
-          const packsSection = document.getElementById("packs");
-          if (packsSection) {
-            const offset = 100; // Adjust this value based on your header height
-            const elementPosition = packsSection.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - offset;
-            
-            window.scrollTo({
-              top: offsetPosition,
-              behavior: "smooth"
-            });
-          }
-        };
-
-        // Try scrolling multiple times
-        scrollToPacks();
-        setTimeout(scrollToPacks, 500);
-        setTimeout(scrollToPacks, 1000);
-      }
-    }
-  }, [pathname, locale]);
+  
 
   useEffect(() => {
     if (isSuccess) {
@@ -547,15 +525,7 @@ export default function CoachProfile() {
     }
   };
 
-  const scrollToPacks = () => {
-    if (pathname === `/${locale}`) {
-      // If already on home page, use hash-based navigation
-      window.location.hash = 'packs';
-    } else {
-      // If not on home page, navigate to home page with hash
-      router.push(`/${locale}#packs`);
-    }
-  };
+ 
 
   if (coachLoading) {
     return (
@@ -892,15 +862,16 @@ export default function CoachProfile() {
             <p className="text-base sm:text-lg mb-6 sm:mb-8 text-[#0d111a]/80">
               {t("cta.description")}
             </p>
-            <motion.a
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={scrollToPacks}
-              className="inline-flex items-center gap-2 bg-[#0d111a] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold hover:bg-[#161c2a] transition-colors text-sm sm:text-base cursor-pointer"
-            >
-              {t("cta.button")}
-              <ChevronRight size={18} className="sm:w-5 sm:h-5" />
-            </motion.a>
+            <Link href={`/${locale}/pricing`}>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center gap-2 bg-[#0d111a] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold hover:bg-[#161c2a] transition-colors text-sm sm:text-base cursor-pointer"
+              >
+                {t("cta.button")}
+                <ChevronRight size={18} className="sm:w-5 sm:h-5" />
+              </motion.div>
+            </Link>
           </motion.div>
         </div>
       </motion.div>

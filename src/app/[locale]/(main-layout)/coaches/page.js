@@ -47,40 +47,14 @@ export default function FitnessCoaching() {
   const coachesSectionRef = useRef(null);
   const coachesGridRef = useRef(null);
 
+  // Initialize animations on mount
   useEffect(() => {
-    if (pathname === `/${locale}` && typeof window !== "undefined") {
-      // Check for hash in URL
-      if (window.location.hash === '#packs') {
-        const scrollToPacks = () => {
-          const packsSection = document.getElementById("packs");
-          if (packsSection) {
-            const offset = 100; // Adjust this value based on your header height
-            const elementPosition = packsSection.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - offset;
-            
-            window.scrollTo({
-              top: offsetPosition,
-              behavior: "smooth"
-            });
-          }
-        };
+    heroControls.start("visible");
+    coachesSectionControls.start("visible");
+    coachesGridControls.start("visible");
+  }, []);
 
-        // Try scrolling multiple times
-        scrollToPacks();
-        setTimeout(scrollToPacks, 500);
-        setTimeout(scrollToPacks, 1000);
-      }
-    }
-  }, [pathname, locale]);
-  const scrollToPacks = () => {
-    if (pathname === `/${locale}`) {
-      // If already on home page, use hash-based navigation
-      window.location.hash = 'packs';
-    } else {
-      // If not on home page, navigate to home page with hash
-      router.push(`/${locale}#packs`);
-    }
-  };
+  
   // Hooks to detect if the refs are in view
   // REMOVED 'once: true' to allow animation on scroll back
   const isHeroInView = useInView(heroRef, { margin: "-100px 0px" });
@@ -94,20 +68,15 @@ export default function FitnessCoaching() {
   // --- Animation Trigger Logic ---
   // Trigger hero animation based on visibility state
   useEffect(() => {
-    // Animate to "visible" if in view, otherwise animate back to "hidden"
     if (isHeroInView) {
       heroControls.start("visible");
-    } else {
-      heroControls.start("hidden"); // Animate out when scrolling away
     }
-  }, [heroControls, isHeroInView]); // Dependency array includes isHeroInView
+  }, [heroControls, isHeroInView]);
 
   // Trigger coaches section title/separator animation based on visibility
   useEffect(() => {
     if (isCoachesSectionInView) {
       coachesSectionControls.start("visible");
-    } else {
-      coachesSectionControls.start("hidden"); // Animate out
     }
   }, [coachesSectionControls, isCoachesSectionInView]);
 
@@ -115,10 +84,6 @@ export default function FitnessCoaching() {
   useEffect(() => {
     if (isCoachesGridInView) {
       coachesGridControls.start("visible");
-    } else {
-      // Note: Animating a staggered list back to hidden might look abrupt
-      // depending on the effect. Simple fade-out is usually fine.
-      coachesGridControls.start("hidden"); // Animate out
     }
   }, [coachesGridControls, isCoachesGridInView]);
   // --- End Animation Hooks Setup ---
@@ -158,8 +123,8 @@ export default function FitnessCoaching() {
       {/* Hero Section */}
       {/* Use motion.section for section-level animation */}
       <motion.section
-        // Removed initial animation props from section container, focus on content
         className="relative h-[80vh] flex items-center"
+        initial="visible"
       >
         <div className="absolute inset-0 z-0">
           <Image
@@ -175,7 +140,7 @@ export default function FitnessCoaching() {
           <motion.div
             ref={heroRef} // Attach ref for viewport detection
             className="max-w-2xl mx-auto text-center justify-center"
-            initial="hidden" // Start hidden (will transition between hidden/visible)
+            initial="visible" // Start hidden (will transition between hidden/visible)
             animate={heroControls} // Control animation based on scroll
             variants={fadeInUp} // Use fade-in-up effect
           >
@@ -187,13 +152,12 @@ export default function FitnessCoaching() {
               {t("paragraph")}
             </p>
             <div className={`flex justify-center gap-4`}>
-              <Button 
-              onClick={scrollToPacks}
-              className="bg-[#B4E90E] text-[#0d111a] hover:bg-[#a3d40c] px-8 py-6 text-lg font-semibold transition-transform hover:scale-105 duration-200 ease-in-out">
-                {" "}
-                {/* Added subtle scale on hover */}
-                {t("boutton")}
-              </Button>
+              <Link href={`/${locale}/pricing`} passHref legacyBehavior>
+                <Button 
+                  className="bg-[#B4E90E] text-[#0d111a] hover:bg-[#a3d40c] px-8 py-6 text-lg font-semibold transition-transform hover:scale-105 duration-200 ease-in-out">
+                  {t("boutton")}
+                </Button>
+              </Link>
             </div>
           </motion.div>
         </div>
@@ -201,11 +165,11 @@ export default function FitnessCoaching() {
       {/* Coaches Section Title/Separator */}
       {/* Use motion.div for this specific part's animation */}
       <motion.div
-        ref={coachesSectionRef} // Attach ref for viewport detection
+        ref={coachesSectionRef}
         className="py-16 container mx-auto px-4 text-center"
-        initial="hidden"
-        animate={coachesSectionControls} // Control animation based on scroll
-        variants={fadeInUp} // Use fade-in-up effect for the section title area
+        initial="visible"
+        animate={coachesSectionControls}
+        variants={fadeInUp}
       >
         <h2 className={`text-3xl md:text-4xl font-bold mb-4`}>
           {locale === "ar" ? "قابل" : "Meet"}{" "}
@@ -230,27 +194,22 @@ export default function FitnessCoaching() {
       {/* End of title/separator section animation wrapper */}
       {/* Coaches Grid - Apply animation to the grid container */}
       <motion.div
-        ref={coachesGridRef} // Attach ref for viewport detection
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center md:justify-items-normal container mx-auto px-4 pb-16" // Added container/padding here
-        initial="hidden"
-        animate={coachesGridControls} // Control animation based on scroll
+        ref={coachesGridRef}
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center md:justify-items-normal container mx-auto px-4 pb-16"
+        initial="visible"
+        animate={coachesGridControls}
         variants={{
-          // Define variants directly here for staggering effect
           visible: {
             opacity: 1,
             transition: {
-              staggerChildren: 0.15, // Slightly faster stagger
+              staggerChildren: 0.15,
               delayChildren: 0.1,
-              // Ensure parent opacity transition happens smoothly too
-              duration: 0.3, // Duration for the parent container fade-in itself
+              duration: 0.3,
             },
           },
           hidden: {
             opacity: 0,
             transition: {
-              // When hiding, stagger can feel weird, often better to fade all at once or reverse stagger
-              // For simplicity, let's just fade the container out quickly.
-              // Children will inherit the 'hidden' state instantly unless specific exit transitions are defined.
               duration: 0.3,
             },
           },

@@ -18,6 +18,7 @@ const MembershipPlan = () => {
   const { scrollYProgress } = useScroll();
   const opacity = useTransform(scrollYProgress, [0, 0.1], [1, 0]);
   const [isMobile, setIsMobile] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [
     createClientPackMutation,
     { isError: isClientPackError, error: clientPackError },
@@ -51,10 +52,10 @@ const MembershipPlan = () => {
 
   useEffect(() => {
     if (packsLoading) {
-      toast.loading("Loading membership plans...");
+      console.log("Loading membership plans...");
     }
     if (packsError) {
-      toast.error(packsError?.data?.message || "Failed to load membership plans");
+      console.log(packsError?.data?.message || "Failed to load membership plans");
     }
     if (isClientPackError) {
       toast.error(clientPackError?.data?.message || "Failed to create membership");
@@ -97,7 +98,7 @@ const MembershipPlan = () => {
   // Function to handle "Get Started" button click
   const handleGetStarted = async (pack) => {
     if (!isAuthenticated) {
-      toast.error("Please login to purchase a membership");
+      toast.error(t("login"));
       router.push(`/${locale}/auth/login?redirect=/pricing`);
       return;
     }
@@ -126,20 +127,24 @@ const MembershipPlan = () => {
       };
 
       await createClientPackMutation(clientPackData);
-      toast.success("Membership created successfully!");
+      toast.success(t("Membershipcreated ")); 
+      setIsNavigating(true);
       router.push(`/${locale}/checkoutPage`);
     } catch (error) {
       console.error("Error creating client pack:", error);
-      toast.error("Failed to create membership. Please try again.");
+      toast.error(t("Failedtocreate"));
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (packsLoading || authLoading)
+  if (packsLoading || authLoading || isNavigating)
     return (
       <div className="flex items-center justify-center min-h-screen w-full">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
+          <div className="text-white text-xl">Loading...</div>
+        </div>
       </div>
     );
   if (packsError)
@@ -153,8 +158,7 @@ const MembershipPlan = () => {
 
   return (
     <div
-      id="packs"
-      className="flex flex-col items-center justify-center py-16 px-4 relative w-full bg-cover bg-center"
+      className="flex flex-col items-center justify-center py-16 px-4 relative w-full bg-cover bg-center pt-24 md:pt-32 overflow-x-hidden"
       style={{
         backgroundImage:
           "url('https://res.cloudinary.com/dkjx65vc7/image/upload/v1745095664/d295770e25e76451f2a1d3912903708f_dlplhc.jpg')",
@@ -164,14 +168,14 @@ const MembershipPlan = () => {
       <div className="absolute inset-0 bg-opacity-100 z-10"></div>
 
       <div className="text-center flex flex-col items-center mb-10 relative z-10">
-        <h2 className="text-md md:text-2xl font-bold flex items-center text-center mb-6 text-white">
-          <span className="mx-4 w-28 h-0.5 bg-[#B4E90E] block"></span>
+        <h2 className="text-md md:text-2xl font-bold flex items-center text-center text-white">
+          <span className="mx-4 w-28 h-0.5 bg-[#B4E90E] block "></span>
           {t("packtitle")}
           <span className="ml-4 w-28 h-0.5 bg-[#B4E90E] block"></span>
         </h2>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6 md:gap-8 w-full max-w-6xl justify-center relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl px-4 relative z-10 ">
         {(() => {
           // Ensure 'Pack Single' is always in the middle
           let packsToRender = [...packs];
@@ -197,17 +201,17 @@ const MembershipPlan = () => {
                 whileInView={{ opacity: 1, x: 0, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
                 viewport={{ once: false, amount: 0.3 }}
-                className={`w-full md:w-1/3 border ${isMiddle ? "border-2 border-[#B4E90E] shadow-2xl" : "border-gray-700 hover:border-[#B4E90E] shadow-lg"} rounded-lg p-6 transform transition-transform hover:scale-105 hover:shadow-[#B4E90E]`}
+                className={`w-full border ${isMiddle ? "border-2 border-[#B4E90E] shadow-2xl" : "border-gray-700 hover:border-[#B4E90E] shadow-lg"} rounded-lg p-4 transform transition-transform hover:scale-105 hover:shadow-[#B4E90E]`}
               >
-                <h2 className="text-xl font-bold text-[#B4E90E] mb-4 text-center">
+                <h2 className="text-lg font-bold text-[#B4E90E] mb-3 text-center">
                   {pack.category?.[locale]}
                 </h2>
 
-                <div className="text-center mb-6">
-                  <h3 className="text-lg font-bold text-white mb-2">
+                <div className="text-center mb-4">
+                  <h3 className="text-base font-bold text-white mb-1">
                     {t("pricestart")}
                   </h3>
-                  <span className="text-4xl font-bold text-[#B4E90E]">
+                  <span className="text-3xl font-bold text-[#B4E90E]">
                     {pack?.startPrice}
                   </span>
                   <span className="text-sm text-white ml-1">
@@ -215,20 +219,20 @@ const MembershipPlan = () => {
                   </span>
                 </div>
 
-                <div className="flex justify-center gap-4 mb-6">
+                <div className="flex justify-center gap-3 mb-4">
                   <div className="text-center">
-                    <p className="text-sm text-gray-300">
+                    <p className="text-xs text-gray-300">
                       {t("sessions", "Sessions")}
                     </p>
-                    <p className="text-lg font-bold text-white">
+                    <p className="text-base font-bold text-white">
                       {selectedSession.sessionCount}
                     </p>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm text-gray-300">
+                    <p className="text-xs text-gray-300">
                       {t("expiry", "Validity")}
                     </p>
-                    <p className="text-lg font-bold text-white">
+                    <p className="text-base font-bold text-white">
                       {selectedSession.expirationDays} {t("days", "days")}
                     </p>
                   </div>
@@ -236,10 +240,10 @@ const MembershipPlan = () => {
 
                 {/* Session selection dropdown */}
                 {pack.sessions.length > 1 && (
-                  <div className="mb-6">
+                  <div className="mb-4">
                     <select
                       value={selectedSessions[pack._id]}
-                      className="w-full bg-black bg-opacity-50 border border-gray-700 rounded py-2 px-3 text-white text-sm"
+                      className="w-full bg-black bg-opacity-50 border border-gray-700 rounded py-1.5 px-2 text-white text-xs"
                       onChange={(e) =>
                         handleSessionChange(pack._id, e.target.value)
                       }
@@ -247,25 +251,25 @@ const MembershipPlan = () => {
                       {pack.sessions.map((session) => (
                         <option key={session._id} value={session._id}>
                           {t("sessions", "Sessions")} {session.sessionCount} - {formatPrice(session.price)} {t("currency", "SR")}
-                          {session.price > 1000 && session.upsell ? ` (${locale === 'ar' ? 'ت.ح' : 'PS'} ${session.upsell} ${t("currency", "SR") })` : ""}
+                          {session.price > 1000 && session.upsell ? ` (${locale === 'ar' ? 'ت.ج' : 'PS'} ${session.upsell} ${t("currency", "SR") })` : ""}
                         </option>
                       ))}
                     </select>
                   </div>
                 )}
 
-                <ul className="space-y-3 mb-8">
+                <ul className="space-y-2 mb-6">
                   {features.map((feature, i) => (
                     <li key={i} className="flex items-start">
-                      <Check className="text-white h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-300 text-sm">{feature}</span>
+                      <Check className="text-white h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-300 text-xs">{feature}</span>
                     </li>
                   ))}
                 </ul>
 
                 <div className="flex justify-center">
                   <button
-                    className={`px-6 py-2 rounded font-medium transition-colors border border-[#B4E90E] text-white hover:bg-[#B4E90E] hover:text-black ${submitting ? "opacity-70 cursor-not-allowed" : ""}`}
+                    className={`px-4 py-1.5 rounded text-sm font-medium transition-colors border border-[#B4E90E] text-white hover:bg-[#B4E90E] hover:text-black ${submitting ? "opacity-70 cursor-not-allowed" : ""}`}
                     onClick={() => handleGetStarted(pack)}
                     disabled={submitting}
                   >

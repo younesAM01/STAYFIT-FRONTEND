@@ -152,8 +152,7 @@ export default function ClientPacksPage() {
     // Handle both populated and unpopulated pack objects
     if (typeof pack === "object") {
       const category = pack.category?.[locale] || "N/A";
-      const sessionCount = pack.sessions?.[0]?.sessionCount || 0;
-      return `${category} - ${sessionCount} sessions`;
+      return `${category} `;
     }
 
     // If we just have the ID, return a simpler display
@@ -602,7 +601,7 @@ export default function ClientPacksPage() {
                     <SelectContent className="border-white/10">
                       {packs.map((pack) => (
                         <SelectItem key={pack._id} value={pack._id}>
-                          {`${pack.category?.[locale]} - ${pack.sessions[0]?.sessionCount || 0} sessions`}
+                          {`${pack.category?.[locale]}  `}
                         </SelectItem>
                       ))}
                     </SelectContent>

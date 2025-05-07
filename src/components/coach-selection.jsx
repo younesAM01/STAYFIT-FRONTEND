@@ -24,8 +24,9 @@ export default function CoachSelection({ onSelect }) {
 
   useEffect(() => {
     if (isSuccess) {
-      // Filter coaches to only show active ones
-      const activeCoaches = data.filter(coach => coach.coachActive === true);
+      // Access the coaches array from the response structure
+      const coachesData = data?.coach || [];
+      const activeCoaches = coachesData.filter(coach => coach.coachActive === true);
       setCoaches(activeCoaches);
     }
   }, [data, isSuccess]);

@@ -6,12 +6,13 @@ import { useEffect, useState, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { useGetServicesQuery } from "@/redux/services/services.service";
 import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
 
 export default function Services() {
   const t = useTranslations("Servicespage");
   const locale = useLocale();
   const router = useRouter();
-  const pathname = usePathname();
+  
   // Removed isClient state as it didn't seem to be used
   const [loadError, setLoadError] = useState({});
   const [services, setServices] = useState([]);
@@ -30,31 +31,7 @@ export default function Services() {
     }
   }, [data, isServicesSuccess]);
 
-  useEffect(() => {
-    if (pathname === `/${locale}` && typeof window !== "undefined") {
-      // Check for hash in URL
-      if (window.location.hash === '#packs') {
-        const scrollToPacks = () => {
-          const packsSection = document.getElementById("packs");
-          if (packsSection) {
-            const offset = 100; // Adjust this value based on your header height
-            const elementPosition = packsSection.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - offset;
-            
-            window.scrollTo({
-              top: offsetPosition,
-              behavior: "smooth"
-            });
-          }
-        };
-
-        // Try scrolling multiple times
-        scrollToPacks();
-        setTimeout(scrollToPacks, 500);
-        setTimeout(scrollToPacks, 1000);
-      }
-    }
-  }, [pathname, locale]);
+ 
 
   const handleImageError = (index) => {
     setLoadError((prev) => ({ ...prev, [index]: true }));
@@ -64,16 +41,7 @@ export default function Services() {
     servicesRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const scrollToPacks = () => {
-    if (pathname === `/${locale}`) {
-      // If already on home page, use hash-based navigation
-      window.location.hash = 'packs';
-    } else {
-      // If not on home page, navigate to home page with hash
-      router.push(`/${locale}#packs`);
-    }
-  };
-
+ 
   // Helper function to get the localized content
   const getLocalizedContent = (service, field, fallback = "") => {
     if (!service || !service[field]) return fallback;
@@ -138,11 +106,9 @@ export default function Services() {
               transition={{ duration: 0.6, delay: 0.5 }}
             >
               <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                <button 
-                  onClick={scrollToPacks}
-                  className="px-8 py-3 bg-[#B4E90E] hover:bg-[#9bcf0e] text-[#0d111a] font-medium rounded-md transition-colors text-base sm:text-lg md:text-xl w-full cursor-pointer sm:w-auto">
+                <Link href={`/${locale}/pricing`} className="px-8 py-3 bg-[#B4E90E] hover:bg-[#9bcf0e] text-[#0d111a] font-medium rounded-md transition-colors text-base sm:text-lg md:text-xl w-full cursor-pointer sm:w-auto">
                   {t("subscribe")}
-                </button>
+                </Link>
                 <button
                   onClick={scrollToServices}
                   className="px-8 py-3 border-2 border-white text-[#b4e90e] hover:bg-white/10 rounded-md font-bold transition-colors text-base sm:text-lg md:text-xl cursor-pointer w-full sm:w-auto"

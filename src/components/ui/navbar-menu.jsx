@@ -337,6 +337,13 @@ const Navbar = () => {
           href={`/${locale}/pricing`}
           isMobile={isMobile}
         />
+        <MenuItem
+          setActive={setActive}
+          active={active}
+          item={t("terms")}
+          href={`/${locale}/term-conditions`}
+          isMobile={isMobile}
+        />
       </DesktopMenu>
 
       {/* Mobile Menu */}
@@ -418,6 +425,14 @@ const Navbar = () => {
             onClick={() => setIsMenuOpen(false)}
           >
             {t("pricing")}
+          </Link>
+
+          <Link
+            href={`/${locale}/term-conditions`}
+            className="text-lg font-medium text-white hover:text-[#b4e90e]"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            {t("terms")}
           </Link>
 
           {/* Mobile Auth Buttons */}
