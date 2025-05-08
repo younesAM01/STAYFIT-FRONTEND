@@ -41,7 +41,6 @@
     "sessions": "Sessions",
     "expiry": "Expiration time",
     "days": "Day",
-    "View": "View More",
 
     "ContactPage": {
       "title": "CONTACT US",
@@ -119,10 +118,6 @@
       "specialties": {
         "title": "Specialties"
       },
-      "languages": {
-        "title": "Languages"
-      },
-
       "certifications": {
         "title": "Certifications"
       },
