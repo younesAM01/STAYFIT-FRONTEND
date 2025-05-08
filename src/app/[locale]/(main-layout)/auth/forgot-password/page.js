@@ -34,7 +34,7 @@ export default function ForgotPassword() {
 
       // Send password reset email via Supabase
       const { error } = await supabase.auth.resetPasswordForEmail(validatedData.email, {
-        redirectTo: `${window.location.origin}/${local}/auth/reset-password`,
+        redirectTo: `https://stayfit.sa/${local}/auth/reset-password`,
       })
 
       if (error) {
