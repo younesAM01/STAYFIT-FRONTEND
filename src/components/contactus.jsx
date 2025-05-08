@@ -1,3 +1,4 @@
+'use client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -5,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import img from "@/assets/img1.png";
 import { useTranslations, useLocale } from "next-intl";
+import { useState } from "react";
 
 export default function ContactForm() {
   const t = useTranslations("HomePage.ContactPage");
@@ -12,6 +14,56 @@ export default function ContactForm() {
 
   // Determine text alignment and flex direction based on locale
   const textAlign = locale === "ar" ? "text-right" : "text-left";
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    subject: "",
+    message: "",
+    acceptTerms: false
+  });
+
+  // Handle input changes
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData({
+      ...formData,
+      [id === "prenom" ? "firstName" : 
+       id === "nom" ? "lastName" : 
+       id === "objet" ? "subject" : id]: value
+    });
+  };
+
+  // Handle checkbox change
+  const handleCheckboxChange = (checked) => {
+    setFormData({
+      ...formData,
+      acceptTerms: checked
+    });
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Log the form data
+    console.log("Form Data:", formData);
+    
+    // Here you would typically send the data to your backend
+    // Example:
+    // fetch('/api/contact', {
+    //   method: 'POST',
+    //   headers: {
+    //     'Content-Type': 'application/json',
+    //   },
+    //   body: JSON.stringify(formData),
+    // })
+    // .then(response => response.json())
+    // .then(data => console.log('Success:', data))
+    // .catch(error => console.error('Error:', error));
+  };
 
   return (
     <div
@@ -46,7 +98,7 @@ export default function ContactForm() {
             <p className={`text-gray-300 ${textAlign}`}>{t("description")}</p>
           </div>
 
-          <form className="space-y-3">
+          <form className="space-y-3" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="prenom" className={`text-white ${textAlign}`}>
@@ -55,6 +107,8 @@ export default function ContactForm() {
                 <Input
                   id="prenom"
                   className="bg-transparent border-gray-700 rounded-md focus:border-[#eeff00] focus:ring-[#eeff00]"
+                  value={formData.firstName}
+                  onChange={handleChange}
                 />
               </div>
               <div className="space-y-2">
@@ -64,11 +118,12 @@ export default function ContactForm() {
                 <Input
                   id="nom"
                   className="bg-transparent border-gray-700 rounded-md focus:border-[#eeff00] focus:ring-[#eeff00]"
+                  value={formData.lastName}
+                  onChange={handleChange}
                 />
               </div>
             </div>
 
-            {/* Repeat similar pattern for other form fields */}
             <div className="space-y-2">
               <Label htmlFor="email" className={`text-white ${textAlign}`}>
                 {t("form.email")}
@@ -77,18 +132,8 @@ export default function ContactForm() {
                 id="email"
                 type="email"
                 className="bg-transparent border-gray-700 rounded-md focus:border-[#eeff00] focus:ring-[#eeff00]"
-              />
-            </div>
-
-            {/* Continue with other form fields similarly */}
-            <div className="space-y-2">
-              <Label htmlFor="telephone" className={`text-white ${textAlign}`}>
-                {t("form.phone")}
-              </Label>
-              <Input
-                id="telephone"
-                type="tel"
-                className="bg-transparent border-gray-700 rounded-md focus:border-[#eeff00] focus:ring-[#eeff00]"
+                value={formData.email}
+                onChange={handleChange}
               />
             </div>
 
@@ -99,6 +144,8 @@ export default function ContactForm() {
               <Input
                 id="objet"
                 className="bg-transparent border-gray-700 rounded-md focus:border-[#eeff00] focus:ring-[#eeff00]"
+                value={formData.subject}
+                onChange={handleChange}
               />
             </div>
 
@@ -109,15 +156,21 @@ export default function ContactForm() {
               <Textarea
                 id="message"
                 className="min-h-[80px] bg-transparent border-gray-700 rounded-md focus:border-[#eeff00] focus:ring-[#eeff00]"
+                value={formData.message}
+                onChange={handleChange}
               />
             </div>
 
             <div
-              className={`flex items-center ${locale === "ar" ? "flex-row-reverse" : "flex-row"} space-x-2`}
+              className={`flex items-center ${
+                locale === "ar" ? "flex-row-reverse" : "flex-row"
+              } space-x-2`}
             >
               <Checkbox
                 id="accept"
                 className="border-gray-700 data-[state=checked]:bg-[#eeff00] data-[state=checked]:border-[#eeff00]"
+                checked={formData.acceptTerms}
+                onCheckedChange={handleCheckboxChange}
               />
               <Label
                 htmlFor="accept"
@@ -130,7 +183,7 @@ export default function ContactForm() {
               </Label>
             </div>
 
-            <Button className="w-full bg-[#B4E90E] hover:bg-[#9bcf0e] text-[#0d111a] font-semibold py-3 text-lg rounded-md">
+            <Button type="submit" className="w-full bg-[#B4E90E] hover:bg-[#9bcf0e] text-[#0d111a] font-semibold py-3 text-lg rounded-md">
               {t("form.submit")}
             </Button>
           </form>

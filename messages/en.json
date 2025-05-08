@@ -41,6 +41,7 @@
     "sessions": "Sessions",
     "expiry": "Expiration time",
     "days": "Day",
+    "View": "View More",
 
     "ContactPage": {
       "title": "CONTACT US",
@@ -69,7 +70,7 @@
       "quickLinks": {
         "title": "Quick Links",
         "about": "About Us",
-        "contact": "Contact Us",
+        "contact": "Pricing",
         "services": "Services",
         "trainers": "Our Trainers",
         "terms": "Terms & Conditions"
@@ -77,9 +78,9 @@
       "connect": {
         "title": "Connect With Us",
         "contact": "Contact:",
-        "email": "info@fitcoach.com",
+        "email": "info@stayfit.sa",
         "phone": "Phone:",
-        "phoneNumber": "+123 456 7890"
+        "phoneNumber": "+966 599 542 748"
       }
     }
   },
@@ -124,7 +125,10 @@
 
       "certifications": {
         "title": "Certifications"
-      }
+      },
+      "languages": {
+      "title": "Languages"
+    }
     },
     "cta": {
       "title": "Ready to Transform Your Fitness?",
@@ -133,6 +137,7 @@
     },
     "coach": "Coach",
     "welcome": "Welcome to Stay Fit"
+    
   },
   "ProfilePage": {
     "title": "Profile Page",
@@ -240,7 +245,8 @@
     "selectTime": "Select Time",
     "confirm": "Confirm",
     "sessionBookedSuccessfully": "Session booked successfully!",
-    "noCoachesAvailable": "No coaches available"
+    "noCoachesAvailable": "No coaches available",
+    "loadingCoaches": "Loading coaches..."
   },
   "BookingCalendar": {
     "membershipRequired": "Membership Required",
@@ -332,11 +338,9 @@
     "errorApplyingCoupon": "Error applying coupon",
     "couponApplied": "Coupon applied successfully",
     "off": "off",
-    "noPendingPurchase": "No pending purchase",
-    "validity": "Validity",
-    "noPendingPurchase": "No pending purchase",
-    "pleaseSelectPackFirst": "Please select a pack first",
-    "goToHomePage": "Go to Home Page"
+    "noPendingPurchase": "No pack choose's yet ",
+    "pleaseSelectPackFirst": "Please select a pack first in home page",
+    "goToHomePage": "Back Home"
   },
   "FAQ": {
     "faqtitle": "Frequently Asked Questions",

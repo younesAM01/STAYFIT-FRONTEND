@@ -14,6 +14,8 @@ import { Provider } from "react-redux";
 
 export default function SecondMainLayout({ children }) {
   return (
+    
+       
     <Provider store={store}>
       <AuthProvider>
         <div className="min-h-screen subtle-brand-background">

@@ -10,7 +10,7 @@ export const packApi = createApi({
         }),
         getPackById: builder.query({ 
             query: (id) => `/packs/${id}`,
-            providesTags: (result, error, id) => [{ type: 'Pack', id }]
+            providesTags:  ['Pack']
         }),
         createPack: builder.mutation({
             query: (pack) => ({

@@ -11,15 +11,15 @@ export const sessionApi = createApi({
     }),
     getSessionById: builder.query({
       query: (id) => `/sessions/${id}`,
-      providesTags: (result, error, id) => [{ type: "Session", id }],
+      providesTags: ["Session"],
     }),
     getSessionsByClientId: builder.query({
       query: (id) => `/sessions/client/${id}`,
-      providesTags: (result, error, id) => [{ type: "Session", id }],
+      providesTags: ["Session"],
     }),
     getSessionsByCoachId: builder.query({
       query: (id) => `/sessions/coach/${id}`,
-      providesTags: (result, error, id) => [{ type: "Session", id }],
+      providesTags: ["Session"],
     }),
     createSession: builder.mutation({
       query: (session) => ({
@@ -35,20 +35,21 @@ export const sessionApi = createApi({
         method: "PUT",
         body: session,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Session", id }],
+      invalidatesTags: ["Session"],
     }),
     deleteSession: builder.mutation({
       query: (id) => ({
         url: `/sessions/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: (result, error, id) => [{ type: "Session", id }],
+      invalidatesTags: ["Session"],
     }),
     cancelSession: builder.mutation({
       query: (id) => ({
         url: `/sessions/cancel/${id}`,
         method: "PUT",
       }),
+      invalidatesTags: ["Session"],
     }),
     completeSession: builder.mutation({
       query: (id) => ({

@@ -63,7 +63,7 @@ export default function Footer() {
     <footer className="w-full bg-[#0d111a] text-white py-12">
       <div className="container mx-auto px-4">
         {/* Newsletter Subscription */}
-        <div className="flex flex-col items-center justify-center mb-12 text-center">
+        {/* <div className="flex flex-col items-center justify-center mb-12 text-center">
           <h3 className="text-xl font-bold mb-4 text-[#B4E90E]">
             {t("newsletter.title")}
           </h3>
@@ -77,12 +77,12 @@ export default function Footer() {
               {t("newsletter.button")}
             </Button>
           </div>
-        </div>
+        </div> */}
 
         {/* Footer Content - 3 Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-8 border-t border-[#1a1f2e]">
           {/* Left Column - Logo and Description */}
-          <div className="flex flex-col">
+          <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <Image src={logo} alt="STAY FiT" width={130} height={40} />
             <p className="text-gray-400 mb-4">{t("description")}</p>
             <p className="text-gray-500 text-sm">
@@ -91,9 +91,9 @@ export default function Footer() {
           </div>
 
           {/* Middle Column - Links */}
-          <div className="flex flex-col md:items-center">
+          <div className="flex flex-col items-center">
             <h4 className="font-bold text-lg mb-4">{t("quickLinks.title")}</h4>
-            <nav className="flex flex-col space-y-2">
+            <nav className="flex flex-col space-y-2 items-center md:items-center">
               <Link
                 href="#"
                 className="text-gray-400 hover:text-[#B4E90E] transition-colors"
@@ -101,10 +101,10 @@ export default function Footer() {
                 {t("quickLinks.about")}
               </Link>
               <button
-                onClick={scrollToContact}
-                className="text-gray-400 hover:text-[#B4E90E] transition-colors text-left cursor-pointer"
+                onClick={() => router.push(`/${locale}/pricing`)}
+                className="text-gray-400 hover:text-[#B4E90E] transition-colors text-center md:text-left cursor-pointer"
               >
-                {t("quickLinks.contact")}
+                {t("quickLinks.pricing")}
               </button>
               <Link
                 href="#"
@@ -113,23 +113,22 @@ export default function Footer() {
                 {t("quickLinks.services")}
               </Link>
               <Link
-                href="#"
+                href={`/${locale}/coaches`}
                 className="text-gray-400 hover:text-[#B4E90E] transition-colors"
               >
                 {t("quickLinks.trainers")}
               </Link>
               <Link
-                href="#"
+                href={`/${locale}/term-conditions`}
                 className="text-gray-400 hover:text-[#B4E90E] transition-colors"
               >
                 {t("quickLinks.terms")}
-
               </Link>
             </nav>
           </div>
 
           {/* Right Column - Social Media */}
-          <div className="flex flex-col md:items-end">
+          <div className="flex flex-col items-center md:items-end">
             <h4 className="font-bold text-lg mb-4">{t("connect.title")}</h4>
             <div className="flex space-x-4">
               <Link
@@ -161,10 +160,10 @@ export default function Footer() {
                 <span className="sr-only">YouTube</span>
               </Link>
             </div>
-            <div className={`mt-6 `}>
-              <div className="text-gray-400 text-sm ">
+            <div className="mt-6 text-center md:text-left">
+              <div className="text-gray-400 text-sm">
                 {locale === "ar" ? (
-                  <div className="text-right">
+                  <div className="text-center md:text-right">
                     <a
                       href="mailto:info@fitcoach.com"
                       className="text-[#B4E90E]"
@@ -177,7 +176,7 @@ export default function Footer() {
                   <div>
                     {t("connect.contact")}{" "}
                     <a
-                      href="mailto:info@fitcoach.com"
+                      href="mailto:info@stayfit.sa"
                       className="text-[#B4E90E]"
                     >
                       {t("connect.email")}
@@ -185,10 +184,10 @@ export default function Footer() {
                   </div>
                 )}
               </div>
-              <div className="text-gray-400 text-sm mt-1 text-left">
+              <div className="text-gray-400 text-sm mt-1 text-center md:text-left">
                 {locale === "ar" ? (
-                  <div className="text-right">
-                    <a href="tel:+1234567890" className="text-[#B4E90E]">
+                  <div className="text-center md:text-right">
+                    <a href="tel:+966599542748" className="text-[#B4E90E]">
                       {t("connect.phoneNumber")}
                     </a>{" "}
                     {t("connect.phone")}

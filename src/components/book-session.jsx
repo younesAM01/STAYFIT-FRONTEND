@@ -14,6 +14,8 @@ import CoachSelection from "./coach-selection";
 import BookingCalendar from "./booking-calendar";
 import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { useCreateSessionMutation } from "@/redux/services/session.service";
+import { useGetCoachQuery } from "@/redux/services/user.service";
 export default function BookingSection({
   clientId,
   setActiveTab,
@@ -29,29 +31,20 @@ export default function BookingSection({
   const [sessionLocation, setSessionLocation] = useState(""); // New state for session location
   const [coaches, setCoaches] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [refreshSessionsFunction, setRefreshSessionsFunction] = useState(null);
+  const [setRefreshSessionsFunction] = useState(null);
   const t = useTranslations("BookingPage");
+  const [createSession, { isLoading }] = useCreateSessionMutation();
+  const { data, isLoading: isLoadingCoaches, isSuccess } = useGetCoachQuery();
 
   useEffect(() => {
-    // Fetch coaches to have access to the coach data
-    const fetchCoaches = async () => {
-      try {
-        const response = await fetch("/api/coach");
-        if (!response.ok) {
-          throw new Error("Failed to fetch coaches");
-        }
-        const data = await response.json();
-        const activeCoaches = data.filter(
-          (coach) => coach.coachActive === true
-        );
-        setCoaches(activeCoaches);
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchCoaches();
-  }, []);
+    if (isSuccess) {
+      console.log("data", data);
+      const activeCoaches = data.coach.filter(
+        (coach) => coach.coachActive === true
+      );
+      setCoaches(activeCoaches);
+    }
+  }, [data, isSuccess]);
 
   // Find coach by ID whenever selectedCoachId changes
   useEffect(() => {
@@ -66,11 +59,10 @@ export default function BookingSection({
     setStep("calendar");
   };
 
-  const handleDateTimeSelect = (date, time, location, refreshSessions) => {
+  const handleDateTimeSelect = (date, time, location, refetchCoachSessions) => {
     setSelectedDate(date);
     setSelectedTime(time);
     setSessionLocation(location);
-    setRefreshSessionsFunction(() => refreshSessions);
     setStep("confirmation");
   };
 
@@ -100,14 +92,13 @@ export default function BookingSection({
         return;
       }
 
-      // Format the date for the API - preserving the selected date
+      // Format the date for the API - preserving the selected date with timezone
       const formattedDate = new Date(
-        selectedDate.getFullYear(),
-        selectedDate.getMonth(),
-        selectedDate.getDate(),
-        0,
-        0,
-        0
+        Date.UTC(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate()
+        )
       ).toISOString();
 
       const sessionData = {
@@ -117,59 +108,21 @@ export default function BookingSection({
         sessionDate: formattedDate,
         sessionTime: selectedTime,
         location: sessionLocation,
+        clientPack: clientPack._id,
         status: "scheduled",
-        sessionStatus: "upcoming"
       };
-
-      const response = await fetch("http://localhost:3000/api/session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(sessionData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create session");
-      }
-
-      const result = await response.json();
-
-      // Update remaining sessions in client pack
-      const newRemainingSessionsCount = clientPack.remainingSessions - 1;
-      const updatePackBody = {
-        remainingSessions: newRemainingSessionsCount,
-      };
-
-      // If this will reduce sessions to 0, also set isActive to false
-      if (newRemainingSessionsCount === 0) {
-        updatePackBody.isActive = false;
-      }
-
-      const updatePackResponse = await fetch(
-        `http://localhost:3000/api/client-pack?id=${clientPack._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatePackBody),
-        }
-      );
-
-      if (!updatePackResponse.ok) {
-        throw new Error("Failed to update remaining sessions");
-      }
+      console.log("sessionData", sessionData);
+      await createSession(sessionData).unwrap();
 
       // Refresh client pack data after successful update
       if (refreshClientPack) {
         await refreshClientPack();
       }
 
-      // Call the refresh sessions function if it exists
-      if (refreshSessionsFunction) {
-        refreshSessionsFunction();
-      }
+      // // Call the refresh sessions function if it exists
+      // if (refreshSessionsFunction) {
+      //   refreshSessionsFunction();
+      // }
 
       toast.success("Session booked successfully!");
 
@@ -179,7 +132,6 @@ export default function BookingSection({
       setSelectedDate(null);
       setSelectedTime(null);
       setSessionLocation("");
-      setRefreshSessionsFunction(null);
     } catch (error) {
       console.error("Error creating session:", error);
       toast.error("Failed to book session. Please try again.");
@@ -223,8 +175,13 @@ export default function BookingSection({
           </TabsList>
 
           <TabsContent value="coach" className="mt-6">
-            {coaches.length > 0 ? (
-              <CoachSelection onSelect={handleCoachSelect} />
+            {isLoadingCoaches ? (
+              <div className="flex justify-center items-center p-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
+                <span className="ml-3 text-white">{t("loadingCoaches")}</span>
+              </div>
+            ) : coaches.length > 0 ? (
+              <CoachSelection onSelect={handleCoachSelect} coaches={coaches} />
             ) : (
               <div className="text-center text-white p-4">
                 <p>{t("noCoachesAvailable")}</p>

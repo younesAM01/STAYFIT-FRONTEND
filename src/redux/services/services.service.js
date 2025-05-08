@@ -7,20 +7,11 @@ export const servicesApi = createApi({
     reducerPath: 'servicesApi',
     baseQuery: fetchBaseQuery({ 
         baseUrl: BACKEND_URL,
-        prepareHeaders: (headers, { getState }) => {
-            // Only add headers if we're on the client side
-            if (typeof window !== 'undefined') {
-                // Add any required headers here    
-                return headers;
-            }
-            return headers;
-        }
     }),
     tagTypes: ['Services'],
     endpoints: (builder) => ({
         getServices: builder.query({ 
             query: () => {
-                console.log('Fetching services from:', `${BACKEND_URL}/services`);
                 return '/services';
             },
            
@@ -29,7 +20,7 @@ export const servicesApi = createApi({
         getServiceById: builder.query({ 
             query: (id) => `/services/${id}`,
         
-            providesTags: (result, error, id) => [{ type: 'Services', id }]
+            providesTags: ['Services']
         }),
         createService: builder.mutation({
             query: (service) => ({

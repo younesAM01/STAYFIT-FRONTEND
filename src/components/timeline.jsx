@@ -22,10 +22,10 @@ const TimelineItem = ({ activity, index, position = 'right' }) => {
       />
       
       {/* Content container */}
-      <div className={`flex w-full items-center ${isLeft ? 'flex-row-reverse' : 'flex-row'}`}>
+      <div className={`flex w-full items-center ${isLeft ? 'flex-row-reverse' : 'flex-row'} `}>
         {/* Timeline label */}
         <motion.div 
-          className={`w-1/3 px-4 ${isLeft ? 'text-right' : 'text-left'}`}
+          className={`w-1/3 px-4 ${isLeft ? 'text-right' : 'text-left'} `}
           initial={{ opacity: 0, x: isLeft ? 30 : -30 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: false, amount: 0.2, margin: "-20px" }}
@@ -69,22 +69,22 @@ const Timeline = () => {
     {
       title: t('General Fitness'),  // Translated title
       description: t('GeneralFitnessDescription'),  // Translated description
-      image: "https://img.freepik.com/photos-gratuite/vue-angle-bas-homme-muscle-meconnaissable-se-preparant-soulever-barre-dans-club-sante_637285-2497.jpg"
+      image: "https://res.cloudinary.com/dkjx65vc7/image/upload/v1744290139/Athletic-Man-Doing-a-Bulgarian-Split-Squat_1_a7se8t.webp"
     },
     {
       title: t('Pre/Postnatal Exercises'),
       description: t('ExercisesDescription'),
-      image: "https://images.squarespace-cdn.com/content/v1/582a774c5016e1e43d96ecba/1616515884190-ZSIYM8ZSZ0K7UOW8H8NP/unsplash-image-ORK-USd2DDc.jpg?format=1500w"
+      image: "https://res.cloudinary.com/dkjx65vc7/image/upload/v1744290140/unsplash-image-ORK-USd2DDc_1_dcx5qo.jpg"
     },
     {
       title: t('Boxing'),
       description: t('BoxingDescription'),
-      image: "https://media.gq.com/photos/59ee10b166e2d56abcd79fd3/16:9/w_2560%2Cc_limit/gq-fitness-boxing.jpg"
+      image: "https://res.cloudinary.com/dkjx65vc7/image/upload/v1744290140/gq-fitness-boxing_gzy9ea.webp"
     },
     {
       title: t('Yoga'),
       description: t('YogaDescription'),
-      image: "https://ds.static.rtbf.be/article/image/1920x1080/0/2/f/87ae6fb631f7c8a627e8e28785d9992d-1687356162.jpg"
+      image: "https://res.cloudinary.com/dkjx65vc7/image/upload/v1744290140/87ae6fb631f7c8a627e8e28785d9992d-1687356162_cxop4m.jpg"
     }
   ];
   return (

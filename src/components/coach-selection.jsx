@@ -10,8 +10,7 @@ import { Star } from "lucide-react";
 import { useLocale, useTranslations } from 'next-intl'
 import { useGetCoachQuery } from "@/redux/services/user.service";
 
-export default function CoachSelection({ onSelect }) {  
-  const [coaches, setCoaches] = useState([]);
+export default function CoachSelection({ onSelect , coaches }) {  
   const t = useTranslations('BookingPage')
   const locale = useLocale();
 

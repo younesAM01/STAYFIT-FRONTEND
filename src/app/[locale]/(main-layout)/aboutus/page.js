@@ -33,7 +33,8 @@ const staggerContainer = {
 
 // NEW: Variants for text slide-in based on locale, with delay parameter
 const textSlideIn = (delay = 0) => ({
-  hidden: (customLocale) => ({ // Accept locale via custom prop
+  hidden: (customLocale) => ({
+    // Accept locale via custom prop
     opacity: 0,
     x: customLocale === "ar" ? 50 : -50, // Start from right if 'ar', left otherwise
   }),
@@ -49,11 +50,6 @@ const textSlideIn = (delay = 0) => ({
 });
 
 export default function AboutUs() {
-  const vid = require("@/assets/pinterest.mp4");
-  // Refs for scroll animations (can be removed if not used for direct triggering)
-  // const storyRef = useRef(null);
-  // const valuesRef = useRef(null);
-  // const teamRef = useRef(null);
   const locale = useLocale();
   const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef(null);
@@ -73,26 +69,86 @@ export default function AboutUs() {
   // Localized core values (no changes needed here)
   const getCoreValues = () => {
     const defaultValues = [
-      { icon: <Users className="h-10 w-10 text-[#B4E90E]" />, title: { en: "Community", ar: "المجتمع" }, description: { en: "We believe in building a supportive community where everyone feels welcome and motivated.", ar: "نؤمن ببناء مجتمع داعم يشعر فيه الجميع بالترحيب والتحفيز." } },
-      { icon: <Award className="h-10 w-10 text-[#B4E90E]" />, title: { en: "Excellence", ar: "التميز" }, description: { en: "We strive for excellence in everything we do, from our training programs to our facility.", ar: "نسعى للتميز في كل ما نقوم به، من برامج التدريب إلى المرافق." } },
-      { icon: <Heart className="h-10 w-10 text-[#B4E90E]" />, title: { en: "Passion", ar: "الشغف" }, description: { en: "Our coaches are passionate about fitness and dedicated to helping you achieve your goals.", ar: "مدربونا مفعمون بالشغف بالرياضة ومكرسون لمساعدتك في تحقيق أهدافك." } },
-      { icon: <Clock className="h-10 w-10 text-[#B4E90E]" />, title: { en: "Consistency", ar: "الاستمرارية" }, description: { en: "We believe consistent effort over time is the key to lasting transformation and results.", ar: "نؤمن بأن الجهد المستمر عبر الوقت هو مفتاح التحول والنتائج الدائمة." } },
+      {
+        icon: <Users className="h-10 w-10 text-[#B4E90E]" />,
+        title: { en: "Community", ar: "المجتمع" },
+        description: {
+          en: "We believe in building a supportive community where everyone feels welcome and motivated.",
+          ar: "نؤمن ببناء مجتمع داعم يشعر فيه الجميع بالترحيب والتحفيز.",
+        },
+      },
+      {
+        icon: <Award className="h-10 w-10 text-[#B4E90E]" />,
+        title: { en: "Excellence", ar: "التميز" },
+        description: {
+          en: "We strive for excellence in everything we do, from our training programs to our facility.",
+          ar: "نسعى للتميز في كل ما نقوم به، من برامج التدريب إلى المرافق.",
+        },
+      },
+      {
+        icon: <Heart className="h-10 w-10 text-[#B4E90E]" />,
+        title: { en: "Passion", ar: "الشغف" },
+        description: {
+          en: "Our coaches are passionate about fitness and dedicated to helping you achieve your goals.",
+          ar: "مدربونا مفعمون بالشغف بالرياضة ومكرسون لمساعدتك في تحقيق أهدافك.",
+        },
+      },
+      {
+        icon: <Clock className="h-10 w-10 text-[#B4E90E]" />,
+        title: { en: "Consistency", ar: "الاستمرارية" },
+        description: {
+          en: "We believe consistent effort over time is the key to lasting transformation and results.",
+          ar: "نؤمن بأن الجهد المستمر عبر الوقت هو مفتاح التحول والنتائج الدائمة.",
+        },
+      },
     ];
-    return defaultValues.map((value) => ({ ...value, title: value.title[locale] || value.title.en, description: value.description[locale] || value.description.en }));
+    return defaultValues.map((value) => ({
+      ...value,
+      title: value.title[locale] || value.title.en,
+      description: value.description[locale] || value.description.en,
+    }));
   };
 
   // Localized team members (no changes needed here)
   const getTeamMembers = () => {
-     const defaultMembers = [
-      { name: { en: "John Doe", ar: "جون دو" }, role: { en: "Founder & Head Coach", ar: "المؤسس والمدرب الرئيسي" }, image: "/placeholder.svg?height=400&width=400&text=John", bio: { en: "Former Olympic athlete with 15+ years of coaching experience. John founded Elite Fitness to help people transform their lives through fitness.", ar: "رياضي أولمبي سابق مع أكثر من 15 عامًا من الخبرة التدريبية. أسس جون Elite Fitness لمساعدة الناس على تحويل حياتهم من خلال اللياقة البدنية." } },
-      { name: { en: "Jane Smith", ar: "جين سميث" }, role: { en: "Nutritionist", ar: "أخصائية تغذية" }, image: "/placeholder.svg?height=400&width=400&text=Jane", bio: { en: "Jane is a certified nutritionist with over 10 years of experience in helping clients achieve their dietary goals.", ar: "جين أخصائية تغذية معتمدة ولديها أكثر من 10 سنوات من الخبرة في مساعدة العملاء على تحقيق أهدافهم الغذائية." } },
-      { name: { en: "Mike Johnson", ar: "مايك جونسون" }, role: { en: "Fitness Trainer", ar: "مدرب لياقة" }, image: "/placeholder.svg?height=400&width=400&text=Mike", bio: { en: "Mike is a passionate fitness trainer who specializes in strength training and has helped many clients reach their fitness goals.", ar: "مايك مدرب لياقة شغوف متخصص في تدريب القوة وقد ساعد العديد من العملاء في تحقيق أهدافهم الرياضية." } },
-     ];
-    return defaultMembers.map((member) => ({ ...member, name: member.name[locale] || member.name.en, role: member.role[locale] || member.role.en, bio: member.bio[locale] || member.bio.en }));
+    const defaultMembers = [
+      {
+        name: { en: "OUSSAMA", ar: "أسامة" },
+        role: { en: "COACH OUSSAMA", ar: "المدرب أسامة" },
+        bio: {
+          en: "I am a trainer with over 9 years of experience in personal training and boxing. I am passionate about helping individuals achieve their health and fitness goals through customized training programs that meet their specific needs.I am committed to providing a motivating and respectful training environment for each client, which helps them achieve tangible results in fitness and nutrition. I focus on developing clients' skills and enhancing their self-confidence, contributing to an overall improvement in their quality of life.",
+          ar: "أنا مدرب ذو خبرة تزيد عن 9 سنوات في مجال التدريب الشخصي والبوكسينغ أعمل بشغف على مساعدة الأفراد في تحقيق أهدافهم الصحية واللياقية من خلال برامج تدريب مُخصصة تناسب احتياجاتهم. ألتزم بتوفير بيئة تدريب تحفز وتحترم كل عميل، مما يساعدهم على تحقيق نتائج ملموسة في مجالات اللياقة البدنية والتغذية. أركز على تطوير مهارات العملاء وتعزيز ثقتهم بأنفسهم، مما يساهم في تحسين جودة حياتهم بشكل عام.",
+        },
+      },
+      {
+        name: { en: "ISHAK", ar: "إسحاق" },
+        role: { en: "COACH ISHAK", ar: "المدرب إسحاق" },
+        bio: {
+          en: "Passionate Personal Trainer Adept At Making Workouts Fun And Rewarding.Expertise In Instructing Clients On Proper Lifting Techniques And Educating Clients On Proper Nutrition And Hydration Needs .Experience Providing Instruction For One On One Session And Ability To Motivate Others Toward Acomplishing Weight Loss",
+          ar: "أنا مدرب شخصي شغوف، أتمتع بقدرة على جعل التمارين ممتعة ومجزية. أتمتع بخبرة في تعليم العملاء تقنيات الرفع الصحيحة وتثقيفهم حول الاحتياجات المناسبة للتغذية والترطيب. لدي تجربة في تقديم التعليمات خلال جلسات فردية، وقدرة على تحفيز الآخرين لتحقيق أهداف فقدان الوزن.",
+        },
+      },
+      {
+        name: { en: "KHADIJA", ar: "خديجة" },
+        role: { en: "COACH KHADIJA", ar: " المدربة خديجة" },
+        bio: {
+          en: "I am a dedicated trainer with over 8 years of experience In personal training, dance, and martial arts. My passion for fitness and movement drives me to help individuals achieve their personal goals through tailored training programs. I specialize in creating engaging and dynamic sessions that incorporate various styles, ensuring that each client feels motivated and empowered. Whether it's building strength, enhancing flexibility, or mastering new dance techniques, I am committed to guiding my clients on their journey to wellness and self-discovery.",
+          ar: " أنا مدربة متخصصة أتمتع بخبرة تزيد عن 8 سنوات في التدريب الشخصي، والرقص، وفنون القتال. يدفعني شغفي باللياقة البدنية والحركة لمساعدة الأفراد في تحقيق أهدافهم الشخصية من خلال برامج تدريب مُخصصة. أتميز في إنشاء جلسات ممتعة وديناميكية تتضمن أنماطًا متنوعة، مما يضمن شعور كل عميل بالتحفيز والقوة. سواء كان الهدف هو بناء القوة، تعزيز المرونة، أو إتقان تقنيات رقص جديدة، أنا ملتزمة بتوجيه عملائي في رحلتهم نحو الصحة والاكتشاف الذاتي.",
+        },
+      },
+    ];
+    return defaultMembers.map((member) => ({
+      ...member,
+      name: member.name[locale] || member.name.en,
+      role: member.role[locale] || member.role.en,
+      bio: member.bio[locale] || member.bio.en,
+    }));
   };
 
   return (
-    <div className="min-h-screen text-white overflow-x-hidden"> {/* Added overflow-x-hidden to prevent horizontal scroll during animation */}
+    <div className="min-h-screen text-white overflow-x-hidden">
+      {" "}
+      {/* Added overflow-x-hidden to prevent horizontal scroll during animation */}
       {/* Hero Section */}
       <section className="relative h-[90vh] flex items-center ">
         <div className="absolute inset-0 z-0 sm:translate-y-0 md:translate-y-[30px]">
@@ -112,7 +168,8 @@ export default function AboutUs() {
             className="max-w-2xl"
           >
             <h1 className="text-4xl md:text-6xl font-bold mb-4">
-              {t("headertitle")} <span className="text-[#B4E90E]">{t("headertitle_span")}</span>
+              {t("headertitle")}{" "}
+              <span className="text-[#B4E90E]">{t("headertitle_span")}</span>
             </h1>
             <div className="text-lg md:text-xl mb-8 text-gray-300">
               {t("headerdescription")}
@@ -120,14 +177,11 @@ export default function AboutUs() {
           </motion.div>
         </div>
       </section>
-
       {/* Our Story Section */}
-      <section /* Removed ref={storyRef} */ className="py-16 container mx-auto px-4">
-         {/* Removed outer motion.div with staggerContainer as we apply variants directly */}
+      <section className="py-16 container mx-auto px-6 md:px-14">
         <div className="grid md:grid-cols-2 gap-10 items-center mt-10">
-           {/* --- Text Content Column --- */}
-          <div // Changed from motion.div to simple div, children handle animation
-            // Removed variants={fadeIn}
+          {/* --- Text Content Column --- */}
+          <div
             className={`order-2 md:order-${locale === "ar" ? "2" : "1"} ${locale === "ar" ? "text-right" : "text-left"}`}
           >
             {/* Our Story Title + Desc */}
@@ -198,11 +252,9 @@ export default function AboutUs() {
           </div>
 
           {/* --- Video/Image Column --- */}
-          {/* This part already had animation, keeping it */}
+
           <motion.div
-            // variants={fadeIn} // Keep existing slide-in or use fadeIn if preferred
             className={`order-1 md:order-${locale === "ar" ? "1" : "2"} relative h-[400px] rounded-xl w-min-[#400px]`}
-             // The inner div handles its own more specific animation
           >
             <motion.div
               className="w-full lg:mx-8"
@@ -215,15 +267,17 @@ export default function AboutUs() {
                 <motion.video
                   ref={videoRef}
                   className=" h-[400px] w-[500px] object-cover rounded-lg"
-                  poster="https://i.pinimg.com/236x/64/25/81/642581d7373f8f3cc234bebfe77e6dfb.jpg"
+                  // poster="https://i.pinimg.com/236x/64/25/81/642581d7373f8f3cc234bebfe77e6dfb.jpg"
                   controls={isPlaying} // Show controls only when playing
-                  // Add initial/whileInView for fade if desired, or let parent handle slide
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 1.2, delay: 0.2 }} // Slight delay after slide
+                  transition={{ duration: 1.2, delay: 0.2 }}
                 >
-                  <source src={vid} type="video/mp4" />
+                  <source
+                    src="https://res.cloudinary.com/dkjx65vc7/video/upload/v1745094824/homevid_n5g9hc.mp4"
+                    type="video/mp4"
+                  />
                   Your browser does not support the video tag.
                 </motion.video>
                 {!isPlaying && (
@@ -254,9 +308,9 @@ export default function AboutUs() {
               </div>
             </motion.div>
           </motion.div>
-        </div> {/* End Grid */}
+        </div>{" "}
+        {/* End Grid */}
       </section>
-
       {/* Core Values Section */}
       <section /* Removed ref={valuesRef} */ className="py-16 ">
         <div className="container mx-auto px-4">
@@ -295,6 +349,7 @@ export default function AboutUs() {
                 key={index}
                 variants={fadeIn} // Each card fades in
                 className="bg-gray-800 p-6 rounded-xl hover:bg-gray-700 transition-colors duration-300"
+                dir={locale === "ar" ? "rtl" : "ltr"} // <-- Add this line
               >
                 <div className="mb-4">{value.icon}</div>
                 <h3 className="text-xl font-bold mb-2">{value.title}</h3>
@@ -304,9 +359,8 @@ export default function AboutUs() {
           </motion.div>
         </div>
       </section>
-
       {/* Team Section */}
-      <section /* Removed ref={teamRef} */ className="py-16 container mx-auto px-4">
+      <section className="py-16 container mx-auto px-4">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -336,6 +390,7 @@ export default function AboutUs() {
           viewport={{ once: true, margin: "-100px" }}
           variants={staggerContainer} // Stagger the appearance of team cards
           className="grid md:grid-cols-3 gap-8"
+          dir={locale === "ar" ? "rtl" : "ltr"} // <-- Add this line
         >
           {getTeamMembers().map((member, index) => (
             <motion.div
@@ -346,14 +401,6 @@ export default function AboutUs() {
               transition={{ type: "spring", stiffness: 300 }}
               className="bg-gray-800 rounded-xl overflow-hidden transition-transform duration-300" // removed hover:transform hover:scale-105
             >
-              <div className="relative h-64">
-                <Image
-                  src={member.image || "/placeholder.svg"}
-                  alt={member.name}
-                  fill
-                  className="object-cover object-center"
-                />
-              </div>
               <div className="p-6">
                 <h3 className="text-xl font-bold">{member.name}</h3>
                 <p className="text-[#B4E90E] mb-3">{member.role}</p>
@@ -363,7 +410,6 @@ export default function AboutUs() {
           ))}
         </motion.div>
       </section>
-
       {/* CTA Section */}
       <section className="py-16">
         <div className="container mx-auto px-4 text-center">
@@ -385,8 +431,11 @@ export default function AboutUs() {
                 : "Join our community today and take the first step toward achieving your fitness goals."}
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-               {/* Added slight animation to buttons */}
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              {/* Added slight animation to buttons */}
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
                 <Button
                   className="bg-[#B4E90E] text-[#0d111a] hover:bg-[#a3d40c] px-8 py-6 text-lg font-semibold"
                   asChild
@@ -396,10 +445,6 @@ export default function AboutUs() {
                   </Link>
                 </Button>
               </motion.div>
-               {/* If you have a second button, wrap it similarly */}
-               {/* <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}> */}
-               {/* <Button>...</Button> */}
-               {/* </motion.div> */}
             </div>
           </motion.div>
         </div>

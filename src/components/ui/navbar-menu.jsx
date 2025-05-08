@@ -436,15 +436,15 @@ const Navbar = () => {
           </Link>
 
           {/* Mobile Auth Buttons */}
-          <div className="pt-4 border-t border-[#b4e90e]/20">
+          <div className="pt-4 border-t border-[#b4e90e]/20 my-8">
             {isLoading ? (
               <div className="flex justify-center">
                 <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-[#B4E90E]"></div>
               </div>
             ) : isAuthenticated ? (
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-6 ">
                 <div className="flex flex-col items-center">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#B4E90E] text-black text-lg font-bold mb-2">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-[#B4E90E] text-black text-lg font-bold mb-3">
                     {user?.firstName
                       ? user.firstName.split(" ")[0].charAt(0).toUpperCase() +
                         (user.firstName.split(" ").length > 1
@@ -453,16 +453,16 @@ const Navbar = () => {
                       : user?.email?.charAt(0).toUpperCase() || "U"}
                   </div>
                   <div className="flex">
-                    <p className="text-white font-medium mb-1 mr-1">
+                    <p className="text-white font-medium mb-3 mr-1">
                       {user?.firstName || "User"}
                     </p>
-                    <p className="text-white font-medium mb-1">
+                    <p className="text-white font-medium mb-3">
                       {user?.lastName || "lastName"}
                     </p>
                   </div>
                   <Link
-                    href={`/${locale}/profile`}
-                    className="text-[#B4E90E] text-sm hover:underline mb-2"
+                    href={`/${locale}/client-profile`}
+                    className="text-[#B4E90E] text-sm hover:underline mb-3"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {t("viewProfile")}
@@ -472,7 +472,7 @@ const Navbar = () => {
                   {user?.role === "coach" && (
                     <Link
                       href={`/${locale}/coach`}
-                      className="text-[#B4E90E] text-sm hover:underline mb-2"
+                      className="text-[#B4E90E]  text-sm hover:underline mb-4"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {t("coachDashboard")}
@@ -482,7 +482,7 @@ const Navbar = () => {
                   {(user?.role === "admin" || user?.role === "superadmin") && (
                     <Link
                       href={`/${locale}/admin`}
-                      className="text-[#B4E90E] text-sm hover:underline mb-2"
+                      className="text-[#B4E90E] text-sm hover:underline mb-4"
                       onClick={() => setIsMenuOpen(false)}
                     >
                       {t("adminDashboard")}
@@ -494,7 +494,7 @@ const Navbar = () => {
                       signOut();
                       setIsMenuOpen(false);
                     }}
-                    className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-[#b4e90e] text-[#b4e90e] rounded-full"
+                    className="flex items-center justify-center gap-2 w-full py-2 px-4 border border-[#b4e90e] text-[#b4e90e]  rounded-full"
                   >
                     <LogOut size={16} />
                     <span>{t("logout")}</span>
