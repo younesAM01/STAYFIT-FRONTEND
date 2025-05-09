@@ -239,7 +239,7 @@ export function LoginForm({ onToggle }) {
         </div>
       </div>
 
-      <Button
+      {/* <Button
         type="button"
         variant="outline"
         className="w-full border-gray-700 text-white bg-black/20"
@@ -278,7 +278,7 @@ export function LoginForm({ onToggle }) {
             {t("signInWithGoogle")}
           </>
         )}
-      </Button>
+      </Button> */}
 
       <div className="text-center text-sm text-gray-400">
         {t("dontHaveAnAccount")}
