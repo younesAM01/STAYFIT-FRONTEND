@@ -348,13 +348,15 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       <nav className="relative w-full rounded-none border-b border-[#b4e90e]/[0.1] bg-gradient-to-r from-black via-black to-[#b4e90e]/20 lg:hidden flex items-center px-4 py-1">
-        <Image
+      <Link href={`/${locale}`}> <Image
           src={logo}
           alt="STAY FiT"
           width={130}
           height={40}
           className="text-[#b4e90e] font-bold text-2xl font-inter"
         />
+        </Link>
+        
         <div className="ml-auto flex items-center gap-2">
           <LocaleDropdown />
           <button

@@ -195,7 +195,7 @@ export default function Footer() {
                 ) : (
                   <>
                     {t("connect.phone")}{" "}
-                    <a href="tel:+1234567890" className="text-[#B4E90E]">
+                    <a href="tel:+966599542748" className="text-[#B4E90E]">
                       {t("connect.phoneNumber")}
                     </a>
                   </>

@@ -177,18 +177,18 @@ const MembershipPlan = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full max-w-5xl px-4 relative z-10 ">
         {(() => {
-          // Ensure 'Pack Single' is always in the middle
+          // Ensure 'Pack Single' is always first
           let packsToRender = [...packs];
           const singleIndex = packsToRender.findIndex(
             pack => pack.category?.en === 'Pack Single' || pack.category?.ar === 'باقة فردية'
           );
-          if (singleIndex !== -1 && packsToRender.length >= 3) {
+          if (singleIndex !== -1) {
             const [singlePack] = packsToRender.splice(singleIndex, 1);
-            packsToRender.splice(1, 0, singlePack);
+            packsToRender.unshift(singlePack);
           }
           return packsToRender.map((pack, index) => {
             const selectedSession = getSelectedSession(pack);
-            const isMiddle = index === 1; // Highlight the middle pack
+            const isMiddle = !isMobile && index === 1; // Only highlight middle pack on desktop
             const features = pack.features[locale] || pack.features.en;
             return (
               <motion.div
