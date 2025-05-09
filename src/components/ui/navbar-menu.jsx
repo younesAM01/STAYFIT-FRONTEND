@@ -357,6 +357,7 @@ const Navbar = () => {
         />
         </Link>
         
+        
         <div className="ml-auto flex items-center gap-2">
           <LocaleDropdown />
           <button
