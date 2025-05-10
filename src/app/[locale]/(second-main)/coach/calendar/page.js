@@ -20,7 +20,7 @@ const CoachCalendar = () => {
   const coachId = mongoUser?._id;
   const locale = useLocale();
 
-  //
+  ///
   const [currentWeekStart, setCurrentWeekStart] = useState(
     getWeekStartDate(new Date())
   );
