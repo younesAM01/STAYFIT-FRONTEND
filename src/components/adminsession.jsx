@@ -23,6 +23,9 @@ import { useGetUserQuery } from "@/redux/services/user.service"
 import { useGetPacksQuery } from "@/redux/services/pack.service"
 import { toast } from "sonner"
 import { useGetClientPackByClientIdQuery } from '@/redux/services/clientpack.service'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 export default function SessionsPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -55,7 +58,8 @@ export default function SessionsPage() {
     sessionTime: "09:00",
     location: "",
     duration: 60,
-    status: "scheduled"
+    status: "scheduled",
+    freeSession: false
   })
   const [selectedClientId, setSelectedClientId] = useState("")
   const [filteredClientPacks, setFilteredClientPacks] = useState([])
@@ -264,7 +268,8 @@ export default function SessionsPage() {
         sessionTime: formData.sessionTime,
         location: formData.location,
         duration: 60, // Default duration
-        status: formData.status
+        status: formData.status,
+        freeSession: formData.freeSession
       };
 
       const result = await updateSession({
@@ -296,7 +301,8 @@ export default function SessionsPage() {
           sessionTime: "",
           location: "",
           duration: 60, // Default duration
-          status: "scheduled"
+          status: "scheduled",
+          freeSession: false
         });
         toast.success('Session updated successfully');
       }
@@ -525,7 +531,8 @@ export default function SessionsPage() {
         sessionTime: formData.sessionTime,
         location: formData.location,
         duration: 60, // Default duration
-        status: formData.status || "scheduled"
+        status: formData.status || "scheduled",
+        freeSession: formData.freeSession
       };
 
       const result = await createSession(newSession).unwrap();
@@ -539,7 +546,8 @@ export default function SessionsPage() {
           sessionTime: "",
           location: "",
           duration: 60, // Default duration
-          status: "scheduled"
+          status: "scheduled",
+          freeSession: false
         });
         toast.success('Session added successfully');
       }
@@ -571,66 +579,104 @@ export default function SessionsPage() {
   };
 
   const renderClientSelect = () => {
+    const [inputValue, setInputValue] = useState("");
+    const [showDropdown, setShowDropdown] = useState(false);
+    const filteredClients = clients.filter(client => {
+      const fullName = `${client.firstName} ${client.lastName}`.toLowerCase();
+      return fullName.includes(inputValue.toLowerCase());
+    });
+    const selectedClient = clients.find(c => c._id === formData.client);
+
     return (
-      <Select 
-        value={formData.client} 
-        onValueChange={(value) => {
-          setFormData({...formData, client: value});
-        }}
-        required
-      >
-        <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-          <SelectValue placeholder="Select client">
-            {
-              clients.find(c => c._id === formData.client)
-                ? `${clients.find(c => c._id === formData.client).firstName} ${clients.find(c => c._id === formData.client).lastName}`
-                : "Select client"
-            }
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent className="border-white/10">
-          {clients.map((client) => (
-            <SelectItem key={client._id} value={client._id}>
-              {client.firstName} {client.lastName}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="relative w-full">
+        <Input
+          type="text"
+          placeholder="Search client..."
+          value={selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : inputValue}
+          onChange={e => {
+            setInputValue(e.target.value);
+            setShowDropdown(true);
+            setFormData({ ...formData, client: "" });
+          }}
+          onFocus={() => setShowDropdown(true)}
+          onBlur={() => setTimeout(() => setShowDropdown(false), 100)}
+          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+          autoComplete="off"
+        />
+        {showDropdown && inputValue && filteredClients.length > 0 && (
+          <div className="absolute z-10 mt-1 w-full bg-gray-900 border border-white/10 rounded shadow-lg max-h-48 overflow-auto">
+            {filteredClients.map(client => (
+              <div
+                key={client._id}
+                className="px-4 py-2 cursor-pointer hover:bg-gray-700 text-white"
+                onMouseDown={() => {
+                  setFormData({ ...formData, client: client._id });
+                  setInputValue(`${client.firstName} ${client.lastName}`);
+                  setShowDropdown(false);
+                }}
+              >
+                {client.firstName} {client.lastName}
+              </div>
+            ))}
+          </div>
+        )}
+        {showDropdown && inputValue && filteredClients.length === 0 && (
+          <div className="absolute z-10 mt-1 w-full bg-gray-900 border border-white/10 rounded shadow-lg px-4 py-2 text-white">
+            No client found.
+          </div>
+        )}
+      </div>
     );
   };
 
   const renderCoachSelect = () => {
-    console.log('Current coaches state:', coaches);
-    console.log('Current formData.coach:', formData.coach);
-    
+    const [inputValue, setInputValue] = useState("");
+    const [showDropdown, setShowDropdown] = useState();
+    const filteredCoaches = coaches.filter(coach => {
+      const fullName = `${coach.firstName} ${coach.lastName}`.toLowerCase();
+      return fullName.includes(inputValue.toLowerCase());
+    });
+    const selectedCoach = coaches.find(c => c._id === formData.coach);
+
     return (
-      <Select 
-        value={typeof formData.coach === 'object' ? formData.coach._id : formData.coach} 
-        onValueChange={(value) => {
-          console.log('Selected coach value:', value);
-          const selectedCoach = coaches.find(c => c._id === value);
-          console.log('Found coach:', selectedCoach);
-          setFormData({...formData, coach: selectedCoach || value});
-        }}
-        required
-      >
-        <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-          <SelectValue placeholder="Select coach">
-            {formData.coach?.firstName ? `${formData.coach.firstName} ${formData.coach.lastName}` : "Select coach"}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent className="border-white/10">
-          {coaches.length > 0 ? (
-            coaches.map((coach) => (
-              <SelectItem key={coach._id} value={coach._id}>
+      <div className="relative w-full">
+        <Input
+          type="text"
+          placeholder="Search coach..."
+          value={selectedCoach ? `${selectedCoach.firstName} ${selectedCoach.lastName}` : inputValue}
+          onChange={e => {
+            setInputValue(e.target.value);
+            setShowDropdown(true);
+            setFormData({ ...formData, coach: "" });
+          }}
+          onFocus={() => setShowDropdown(true)}
+          onBlur={() => setTimeout(() => setShowDropdown(), 100)}
+          className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+          autoComplete="off"
+        />
+        {showDropdown && inputValue && filteredCoaches.length > 0 && (
+          <div className="absolute z-10 mt-1 w-full bg-gray-900 border border-white/10 rounded shadow-lg max-h-48 overflow-auto">
+            {filteredCoaches.map(coach => (
+              <div
+                key={coach._id}
+                className="px-4 py-2 cursor-pointer hover:bg-gray-700 text-white"
+                onMouseDown={() => {
+                  setFormData({ ...formData, coach: coach._id });
+                  setInputValue(`${coach.firstName} ${coach.lastName}`);
+                  setShowDropdown();
+                }}
+              >
                 {coach.firstName} {coach.lastName}
-              </SelectItem>
-            ))
-          ) : (
-            <SelectItem value="" disabled>No coaches available</SelectItem>
-          )}
-        </SelectContent>
-      </Select>
+              </div>
+            ))}
+          </div>
+        )}
+        {showDropdown && inputValue && filteredCoaches.length === 0 && (
+          <div className="absolute z-10 mt-1 w-full bg-gray-900 border border-white/10 rounded shadow-lg px-4 py-2 text-white">
+            No coach found.
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -721,6 +767,23 @@ export default function SessionsPage() {
           <SelectItem value="cancelled">Cancelled</SelectItem>
         </SelectContent>
       </Select>
+    );
+  };
+
+  const renderFreeSessionCheckbox = () => {
+    return (
+      <div className="flex items-center space-x-2">
+        <input
+          type="checkbox"
+          id="freeSession"
+          checked={formData.freeSession}
+          onChange={(e) => setFormData({...formData, freeSession: e.target.checked})}
+          className="h-4 w-4 rounded border-gray-300 text-[#B4E90E] focus:ring-[#B4E90E]"
+        />
+        <Label htmlFor="freeSession" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          Free Session
+        </Label>
+      </div>
     );
   };
 
@@ -1016,7 +1079,8 @@ export default function SessionsPage() {
                                         sessionTime: session.sessionTime || '09:00',
                                         location: session.location || '',
                                         duration: session.duration || 60,
-                                        status: session.status || 'scheduled'
+                                        status: session.status || 'scheduled',
+                                        freeSession: session.freeSession || false
                                       });
                                       setShowEditForm(true);
                                     }}
@@ -1170,6 +1234,9 @@ export default function SessionsPage() {
                     {renderStatusSelect()}
                   </div>
                 </div>
+                <div className="grid gap-2">
+                  {renderFreeSessionCheckbox()}
+                </div>
               </div>
               <DialogFooter className="mt-4 border-t border-white/10 pt-4">
                 <Button 
@@ -1264,6 +1331,9 @@ export default function SessionsPage() {
                     <Label htmlFor="status">Status</Label>
                     {renderStatusSelect()}
                   </div>
+                </div>
+                <div className="grid gap-2">
+                  {renderFreeSessionCheckbox()}
                 </div>
               </div>
               <DialogFooter className="mt-4 border-t border-white/10 pt-4">

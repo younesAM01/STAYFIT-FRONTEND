@@ -359,7 +359,7 @@ export default function AboutUs() {
           </motion.div>
         </div>
       </section>
-      {/* Team Section */}
+      {/* Team Section
       <section className="py-16 container mx-auto px-4">
         <motion.div
           initial="hidden"
@@ -409,7 +409,7 @@ export default function AboutUs() {
             </motion.div>
           ))}
         </motion.div>
-      </section>
+      </section> */}
       {/* CTA Section */}
       <section className="py-16">
         <div className="container mx-auto px-4 text-center">

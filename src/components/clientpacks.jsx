@@ -60,6 +60,10 @@ import { toast } from "sonner";
 
 export default function ClientPacksPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [selectedClient, setSelectedClient] = useState(null);
   const {
     data: response = { success: false, clientPacks: [] },
     isLoading,
@@ -281,6 +285,13 @@ export default function ClientPacksPage() {
     const client = clients.find((c) => c._id === clientId);
     return client ? client.fullName : "N/A";
   };
+
+  // Add filtered clients state
+  const filteredClients = useMemo(() => {
+    return clients.filter(client =>
+      client.fullName.toLowerCase().includes(clientSearchTerm.toLowerCase())
+    );
+  }, [clients, clientSearchTerm]);
 
   if (queryError || error) {
     return (
@@ -553,29 +564,50 @@ export default function ClientPacksPage() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="client">Client</Label>
-                  <Select
-                    value={formData.client}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, client: value })
-                    }
-                  >
-                    <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-                      <SelectValue placeholder="Select client" />
-                    </SelectTrigger>
-                    <SelectContent className="border-white/10">
-                      {clients.length > 0 ? (
-                        clients.map((client) => (
-                          <SelectItem key={client._id} value={client._id}>
-                            {client.fullName}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="" disabled>
-                          No clients available
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      placeholder="Search client..."
+                      value={selectedClient ? `${selectedClient.firstName} ${selectedClient.lastName}` : clientSearchTerm}
+                      onChange={e => {
+                        const value = e.target.value;
+                        setClientSearchTerm(value);
+                        setShowClientDropdown(value.length > 0);
+                        setFormData({ ...formData, client: "" });
+                        setSelectedClient(null);
+                      }}
+                      onFocus={() => {
+                        if (clientSearchTerm.length > 0) {
+                          setShowClientDropdown(true);
+                        }
+                      }}
+                      onBlur={() => setTimeout(() => setShowClientDropdown(false), 100)}
+                      className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+                      autoComplete="off"
+                    />
+                    {showClientDropdown && (
+                      <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-white/10 rounded-md shadow-lg max-h-60 overflow-auto">
+                        {filteredClients.length > 0 ? (
+                          filteredClients.map((client) => (
+                            <div
+                              key={client._id}
+                              className="px-4 py-2 hover:bg-gray-700 cursor-pointer text-white"
+                              onClick={() => {
+                                setSelectedClient(client);
+                                setInputValue("");
+                                setShowClientDropdown(false);
+                                setFormData({ ...formData, client: client._id });
+                              }}
+                            >
+                              {client.fullName}
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-4 py-2 text-white/60">No clients found</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="pack">Package</Label>
