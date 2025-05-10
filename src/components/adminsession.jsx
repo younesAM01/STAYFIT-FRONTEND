@@ -840,7 +840,7 @@ export default function SessionsPage() {
                   <div className="min-w-max">
                     <div className="grid grid-cols-8 border-b border-gray-700">
                       <div className="p-2 text-center text-sm font-medium text-gray-500 border-r border-gray-700 sticky left-0 z-10">
-                        GMT+00
+                        GMT+3
                       </div>
                       {weekDays.map((day) => {
                         const isToday = day.date.toDateString() === new Date().toDateString()

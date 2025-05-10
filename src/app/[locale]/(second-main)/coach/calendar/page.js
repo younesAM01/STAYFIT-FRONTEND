@@ -12,6 +12,8 @@ import {
 import { useAuth } from "@/context/authContext";
 import { useLocale } from "next-intl";
 import { useGetSessionsByCoachIdQuery } from "@/redux/services/session.service";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const CoachCalendar = () => {
   const { mongoUser } = useAuth();
@@ -204,156 +206,125 @@ const CoachCalendar = () => {
         Coach Calendar
       </h1>
 
-      <div className="w-full mx-auto bg-gray-900 border-gray-800 text-white rounded-lg shadow border ">
-        <div className="flex justify-between items-center p-2 sm:p-4 border-b border-gray-700">
-          <div className="flex items-center gap-1 sm:gap-2">
-            <Calendar className="text-[#B4E90E] hidden sm:block" size={20} />
-            <h2 className="text-lg sm:text-xl font-bold">Weekly Schedule</h2>
-          </div>
-
-          <div className="flex items-center gap-1 sm:gap-2">
-            <button
-              onClick={goToPreviousWeek}
-              className="p-1 sm:p-2 rounded-full hover:bg-gray-800 text-gray-300"
-            >
-              <ChevronLeft size={16} />
-            </button>
-
-            <button
-              onClick={goToToday}
-              className="px-2 py-1 text-xs sm:text-sm bg-[#2a3142] text-[#B4E90E] rounded-md hover:bg-[#353e52]"
-            >
-              Current Week
-            </button>
-
-            <button
-              onClick={goToNextWeek}
-              className="p-1 sm:p-2 rounded-full hover:bg-gray-800 text-gray-300"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#B4E90E]"></div>
-          </div>
-        ) : isError ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="text-red-500 text-center">
-              <p className="text-lg font-semibold mb-2">
-                Error loading sessions
-              </p>
-              <p className="text-sm">Please try again later</p>
+      <Card className="bg-gray-900 border-0 w-full min-w-0">
+        <CardHeader>
+          <CardTitle className="text-white mt-3">Weekly Calendar</CardTitle>
+          <CardDescription className="text-white/60">View and manage sessions in calendar format</CardDescription>
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="bg-[#B4E90E] border-white/10 hover:bg-gray-700"
+                onClick={goToPreviousWeek}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="bg-[#B4E90E] border-white/10 hover:bg-gray-700"
+                onClick={goToToday}
+              >
+                Today
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="bg-[#B4E90E] border-white/10 hover:bg-gray-700"
+                onClick={goToNextWeek}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="text-white font-medium">
+              {currentWeekStart.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
             </div>
           </div>
-        ) : (
-          // Calendar container with horizontal scroll on mobile
-          <div className="w-full overflow-x-auto md:overflow-x-hidden">
-            <div className="min-w-max md:w-full">
-              {/* Calendar header */}
-              <div className="grid grid-cols-8 border-b border-gray-700">
-                <div className="p-1 sm:p-2 text-center text-xs sm:text-sm font-medium text-gray-500 border-r border-gray-700 sticky left-0 z-10">
-                  GMT+00
-                </div>
-
-                {weekDays.map((day) => {
-                  const isToday =
-                    day.date.toDateString() === new Date().toDateString();
-                  return (
-                    <div
-                      key={day.dateStr}
-                      className={`p-1 sm:p-3 text-center border-r border-gray-700 ${isToday ? "bg-blue-900" : ""}`}
-                    >
-                      <div className="text-xs sm:text-sm font-medium text-gray-400">
-                        {day.name.toUpperCase()}
-                      </div>
-                      <div
-                        className={`text-lg sm:text-2xl font-bold ${isToday ? "text-blue-300" : "text-white"}`}
-                      >
-                        {day.date.getDate()}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Time slots */}
-              {hours.map((hour) => (
-                <div
-                  key={hour}
-                  className="grid grid-cols-8 border-b border-gray-700"
-                >
-                  <div className="p-1 sm:p-2 text-right text-xs text-gray-500 border-r border-gray-700 sticky left-0 z-10">
-                    {formatHour(hour)}
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="text-white">Loading...</div>
+            </div>
+          ) : isError ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="text-red-500">{error}</div>
+            </div>
+          ) : (
+            <div className="w-full overflow-x-auto">
+              <div className="min-w-max">
+                <div className="grid grid-cols-8 border-b border-gray-700">
+                  <div className="p-2 text-center text-sm font-medium text-gray-500 border-r border-gray-700 sticky left-0 z-10">
+                    GMT+3
                   </div>
-
                   {weekDays.map((day) => {
-                    // Get session with priority for scheduled over cancelled
-                    const session = getPrioritySessionForTimeSlot(day, hour);
-                    // Get all sessions to show count badge if multiple sessions exist
-                    const allSessionsInSlot = getSessionsForTimeSlot(day, hour);
-                    const sessionCount = allSessionsInSlot.length;
-
+                    const isToday = day.date.toDateString() === new Date().toDateString()
                     return (
                       <div
-                        key={`${day.dateStr}-${hour}`}
-                        className={`border-r border-gray-700 relative ${getSessionBackgroundColor(session)}`}
-                        style={{ height: "50px" }}
+                        key={day.dateStr}
+                        className={`p-3 text-center border-r border-gray-700 ${isToday ? "bg-blue-900" : ""}`}
                       >
-                        {session && (
-                          <div
-                            className="absolute inset-0 m-1 p-1 text-white text-xs rounded overflow-hidden cursor-pointer transition-all hover:bg-[#35505d]"
-                            onMouseEnter={() =>
-                              !isMobile && setHoveredSession(session)
-                            }
-                            onMouseLeave={() =>
-                              !isMobile && setHoveredSession(null)
-                            }
-                            onClick={() =>
-                              setHoveredSession(
-                                hoveredSession === session ? null : session
-                              )
-                            }
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-1">
-                                <User
-                                  size={10}
-                                  className="text-[#B4E90E] hidden sm:block"
-                                />
-                                <span className="font-bold truncate text-xs">
-                                  {session.client.firstName}{" "}
-                                  {session.client.lastName}
-                                </span>
-                              </div>
-                              {sessionCount > 1 && (
-                                <span className="bg-[#B4E90E] text-black text-xs px-1 rounded-full">
-                                  {sessionCount}
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-gray-300 mt-1 hidden sm:flex items-center gap-1">
-                              <MapPin size={8} />
-                              <span className="truncate text-xs">
-                                {session.location}
-                              </span>
-                            </div>
-                            <div className="text-[#B4E90E] text-xs mt-1">
-                              {formatSessionTime(session.sessionTime)}
-                            </div>
-                          </div>
-                        )}
+                        <div className="text-sm font-medium text-gray-400">
+                          {day.name.toUpperCase()}
+                        </div>
+                        <div className={`text-2xl font-bold ${isToday ? "text-blue-300" : "text-white"}`}>
+                          {day.date.getDate()}
+                        </div>
                       </div>
-                    );
+                    )
                   })}
                 </div>
-              ))}
+
+                {hours.map((hour) => (
+                  <div key={hour} className="grid grid-cols-8 border-b border-gray-700">
+                    <div className="p-2 text-right text-sm text-gray-500 border-r border-gray-700 sticky left-0 z-10">
+                      {formatHour(hour)}
+                    </div>
+                    {weekDays.map((day) => {
+                      const sessionsInSlot = getSessionsForTimeSlot(day, hour);
+                      return (
+                        <div
+                          key={`${day.dateStr}-${hour}`}
+                          className="border-r border-gray-700 h-[50px] relative overflow-hidden"
+                        >
+                          <div className="absolute inset-0 flex flex-wrap gap-1 p-1 overflow-hidden">
+                            {sessionsInSlot.map((session) => (
+                              <div
+                                key={session._id}
+                                className={`flex-1 h-full rounded overflow-hidden cursor-pointer transition-all hover:bg-[#35505d] ${getSessionBackgroundColor(session)}`}
+                                onClick={() => {
+                                  setHoveredSession(session);
+                                }}
+                              >
+                                <div className="h-full flex flex-col justify-start p-1">
+                                  <div className="flex items-center gap-1 min-w-0">
+                                    <User size={10} className="text-[#B4E90E] flex-shrink-0" />
+                                    <span className="font-bold truncate text-xs">
+                                      {session.client.firstName} {session.client.lastName}
+                                    </span>
+                                  </div>
+                                  <div className="text-gray-300 flex items-center gap-1 min-w-0">
+                                    <MapPin size={8} className="flex-shrink-0" />
+                                    <span className="truncate text-xs">{session.location}</span>
+                                  </div>
+                                  <div className="text-[#B4E90E] text-xs truncate min-w-0">
+                                    {formatSessionTime(session.sessionTime)}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Session info modal for mobile / tooltip for desktop */}
       {hoveredSession && (

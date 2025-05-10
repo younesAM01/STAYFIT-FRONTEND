@@ -12,23 +12,15 @@ import { useGetCoachQuery } from "@/redux/services/user.service";
 
 export default function CoachSelection({ onSelect , coaches }) {  
   const t = useTranslations('BookingPage')
+  
   const locale = useLocale();
 
   const {
-    data,
     isLoading,
-    error,
-    isSuccess
+    error,  
   } = useGetCoachQuery();
 
-  useEffect(() => {
-    if (isSuccess) {
-      // Access the coaches array from the response structure
-      const coachesData = data?.coach || [];
-      const activeCoaches = coachesData.filter(coach => coach.coachActive === true);
-      setCoaches(activeCoaches);
-    }
-  }, [data, isSuccess]);
+
 
   if (isLoading) {
     return (
