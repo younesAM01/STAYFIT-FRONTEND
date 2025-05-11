@@ -300,7 +300,7 @@ export default function SessionsPage() {
           sessionDate: "",
           sessionTime: "",
           location: "",
-          duration: 60, // Default duration
+          duration: 60, // Default duration:
           status: "scheduled",
           freeSession: false
         });
