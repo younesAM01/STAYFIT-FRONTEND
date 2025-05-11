@@ -53,7 +53,6 @@ export default function ReserveSessionPage() {
       toast.error(error?.data?.message);
     }
   }, [isSuccess, isError, router , error]);
-  });
 
 
   const handleFormSubmission = async (e) => {
