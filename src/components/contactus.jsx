@@ -6,9 +6,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import img from "@/assets/img1.png";
 import { useTranslations, useLocale } from "next-intl";
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
+import { useSendContactEmailMutation } from "@/redux/services/email.service";
+import { toast } from "sonner";
 export default function ContactForm() {
+  const [sendContactEmail, { isLoading, error , isSuccess , isError}] = useSendContactEmailMutation();
   const t = useTranslations("HomePage.ContactPage");
   const locale = useLocale();
 
@@ -24,6 +26,15 @@ export default function ContactForm() {
     message: "",
     acceptTerms: false
   });
+
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success("we have received your message and will get back to you as soon as possible");
+    }
+    if (isError) {
+      toast.error(error?.data?.message);
+    }
+  }, [isSuccess, isError]);
 
   // Handle input changes
   const handleChange = (e) => {
@@ -45,25 +56,17 @@ export default function ContactForm() {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Log the form data
-    console.log("Form Data:", formData);
-    
-    // Here you would typically send the data to your backend
-    // Example:
-    // fetch('/api/contact', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(formData),
-    // })
-    // .then(response => response.json())
-    // .then(data => console.log('Success:', data))
-    // .catch(error => console.error('Error:', error));
-  };
+        
+    try {
+     await sendContactEmail(formData);
+      
+    } catch (error) {
+      console.error("Error sending email:", error);
+    }
+  }
 
   return (
     <div

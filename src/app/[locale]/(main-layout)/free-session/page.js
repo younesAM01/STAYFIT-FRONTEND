@@ -33,7 +33,7 @@ import { useRouter } from "next/navigation";
 
 export default function ReserveSessionPage() {
   const router = useRouter();
-  const [sendFreeSessionEmail, { isLoading, error , isSuccess }] = useSendFreeSessionEmailMutation();
+  const [sendFreeSessionEmail, { isLoading, error , isSuccess , isError }] = useSendFreeSessionEmailMutation();
   const [date, setDate] = useState(new Date());
   const [errors, setErrors] = useState({
     name: "",
@@ -48,7 +48,10 @@ export default function ReserveSessionPage() {
       toast.success("Your request has been sent successfully , we will contact you as soon as possible");
       router.push("/");
     }
-  }, [isSuccess , router]);
+    if (isError) {
+      toast.error(error?.data?.message);
+    }
+  }, [isSuccess, isError, router , error]);
 
   const handleFormSubmission = async (e) => {
     e.preventDefault();

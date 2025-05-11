@@ -11,9 +11,16 @@ export const emailApi = createApi({
                 method: 'POST',
                 body: emailData
             })
+        }),
+        sendContactEmail: builder.mutation({
+            query: (emailData) => ({
+                url: '/contact',
+                method: 'POST',
+                body: emailData
+            })
         })
     })
 })
 
-export const { useSendFreeSessionEmailMutation } = emailApi;
+export const { useSendFreeSessionEmailMutation, useSendContactEmailMutation } = emailApi;
     
