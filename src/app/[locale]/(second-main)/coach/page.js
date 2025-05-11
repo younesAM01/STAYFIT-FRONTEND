@@ -12,7 +12,13 @@ import {
   Tooltip,
   LabelList,
 } from "recharts";
-import { Calendar, CheckCircle, Clock, XCircle } from "lucide-react";
+import {
+  Calendar,
+  CheckCircle,
+  Clock,
+  SearchCheck,
+  XCircle,
+} from "lucide-react";
 import { motion } from "framer-motion";
 
 import {
@@ -48,6 +54,7 @@ export default function CoachDashboard() {
     scheduled: 0,
     completed: 0,
     canceled: 0,
+    freeSessions: 0,
     total: 0,
   });
   useEffect(() => {
@@ -60,7 +67,7 @@ export default function CoachDashboard() {
     if (!isLoading && coachSessions?.length > 0) {
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
-
+      console.log(coachSessions);
       const stats = coachSessions.reduce(
         (acc, session) => {
           if (session.sessionDate) {
@@ -77,17 +84,30 @@ export default function CoachDashboard() {
                 if (status === "scheduled") acc.scheduled++;
                 else if (status === "completed") acc.completed++;
                 else if (status === "cancelled") acc.canceled++;
+                if (session.freeSession) acc.freeSessions++;
               }
             }
           }
           return acc;
         },
-        { scheduled: 0, completed: 0, canceled: 0, total: coachSessions.length }
+        {
+          scheduled: 0,
+          completed: 0,
+          canceled: 0,
+          freeSessions: 0,
+          total: coachSessions.length,
+        }
       );
 
       setMonthlyStats(stats);
     } else if (!isLoading) {
-      setMonthlyStats({ scheduled: 0, completed: 0, canceled: 0, total: 0 });
+      setMonthlyStats({
+        scheduled: 0,
+        completed: 0,
+        canceled: 0,
+        freeSessions: 0,
+        total: 0,
+      });
     }
   }, [coachSessions, isLoading]);
 
@@ -134,6 +154,12 @@ export default function CoachDashboard() {
         title: "Sessions Cancelled",
         value: monthlyStats.canceled.toString(),
         icon: XCircle,
+        description: "This month",
+      },
+      {
+        title: "Free Sessions",
+        value: monthlyStats.freeSessions.toString(),
+        icon: SearchCheck,
         description: "This month",
       },
       {
@@ -206,7 +232,6 @@ export default function CoachDashboard() {
       });
     }
 
-    console.log("Monthly data (fixed range):", monthsData);
     setMonthlySessions(monthsData);
 
     // Update the CardDescription to match the actual range being shown
@@ -355,7 +380,7 @@ export default function CoachDashboard() {
 
         <motion.div
           variants={itemVariants}
-          className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+          className="grid gap-4 md:grid-cols-2 lg:grid-cols-5"
         >
           {sessionStatsCards.map((stat, index) => (
             <motion.div
