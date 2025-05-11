@@ -26,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+
 import { useState, useEffect } from "react";
 import { useSendFreeSessionEmailMutation } from "@/redux/services/email.service";
 import { toast } from "sonner";
@@ -52,6 +53,8 @@ export default function ReserveSessionPage() {
       toast.error(error?.data?.message);
     }
   }, [isSuccess, isError, router , error]);
+  });
+
 
   const handleFormSubmission = async (e) => {
     e.preventDefault();
@@ -130,7 +133,6 @@ export default function ReserveSessionPage() {
       return;
     }
 
-    console.log("Form submission data:", data);
 
     try {
       const response = await sendFreeSessionEmail(data).unwrap();
@@ -238,6 +240,7 @@ export default function ReserveSessionPage() {
                     <p className="text-red-500 text-xs mt-1">{errors.city}</p>
                   )}
                 </div>
+
 
                 <div className="space-y-2">
                   <Label htmlFor="location" className="text-zinc-300">
@@ -365,4 +368,5 @@ export default function ReserveSessionPage() {
       </div>
     </div>
   );
+
 }

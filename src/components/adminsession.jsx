@@ -300,7 +300,7 @@ export default function SessionsPage() {
           sessionDate: "",
           sessionTime: "",
           location: "",
-          duration: 60, // Default duration
+          duration: 60, // Default duration:
           status: "scheduled",
           freeSession: false
         });
@@ -1023,6 +1023,7 @@ export default function SessionsPage() {
                         <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Time</th>
                         <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Location</th>
                         <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Status</th>
+                        <th className="px-2 py-2 sm:px-4 sm:py-3 text-left text-xs sm:text-sm font-medium text-white/60 border-r border-white/10">Free Session</th>
                         <th className="px-2 py-2 sm:px-4 sm:py-3 text-right text-xs sm:text-sm font-medium text-white/60">Actions</th>
                       </tr>
                     </thead>
@@ -1056,6 +1057,13 @@ export default function SessionsPage() {
                             </td>
                             <td className={`px-2 py-2 sm:px-4 sm:py-3 text-sm border-r border-white/10 ${getStatusTextColor(session.status)}`}>
                               {renderStatusCell(session.status)}
+                            </td>
+                            <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
+                              {session.freeSession ? (
+                                <span className="text-[#B4E90E]">Yes</span>
+                              ) : (
+                                <span className="text-gray-400">No</span>
+                              )}
                             </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 text-right">
                               <DropdownMenu>
