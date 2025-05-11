@@ -26,17 +26,35 @@ import {
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
+import { useSendFreeSessionEmailMutation } from "@/redux/services/email.service";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function ReserveSessionPage() {
+  const router = useRouter();
+  const [sendFreeSessionEmail, { isLoading, error , isSuccess , isError }] = useSendFreeSessionEmailMutation();
   const [date, setDate] = useState(new Date());
   const [errors, setErrors] = useState({
     name: "",
     email: "",
     phone: "",
     city: "",
+    location: "",
     timeRange: "",
   });
+  useEffect(() => {
+    if (isSuccess) {
+      toast.success("Your request has been sent successfully , we will contact you as soon as possible");
+      router.push("/");
+    }
+    if (isError) {
+      toast.error(error?.data?.message);
+    }
+  }, [isSuccess, isError, router , error]);
+  });
+
 
   const handleFormSubmission = async (e) => {
     e.preventDefault();
@@ -47,6 +65,7 @@ export default function ReserveSessionPage() {
       email: "",
       phone: "",
       city: "",
+      location: "",
       timeRange: "",
     });
 
@@ -56,6 +75,7 @@ export default function ReserveSessionPage() {
       email: formData.get("email"),
       phone: formData.get("phone"),
       city: formData.get("city"),
+      location: formData.get("location"),
       date: formData.get("date"),
       timeRange: formData.get("timeRange"),
     };
@@ -97,6 +117,11 @@ export default function ReserveSessionPage() {
       hasErrors = true;
     }
 
+    if (!data.location) {
+      newErrors.location = "Please enter your session location";
+      hasErrors = true;
+    }
+
     if (!data.timeRange) {
       newErrors.timeRange = "Please select a time range";
       hasErrors = true;
@@ -108,8 +133,13 @@ export default function ReserveSessionPage() {
       return;
     }
 
-    console.log("Form submission data:", data);
 
+    try {
+      const response = await sendFreeSessionEmail(data).unwrap();
+      console.log("Email sent successfully:", response);
+    } catch (error) {
+      console.error("Error sending email:", error);
+    }
     // Here you would typically send the data to your API
     // For now we're just logging it
   };
@@ -208,6 +238,25 @@ export default function ReserveSessionPage() {
                   />
                   {errors.city && (
                     <p className="text-red-500 text-xs mt-1">{errors.city}</p>
+                  )}
+                </div>
+
+
+                <div className="space-y-2">
+                  <Label htmlFor="location" className="text-zinc-300">
+                    Session Location
+                  </Label>
+                  <Input
+                    id="location"
+                    name="location"
+                    placeholder="Enter your preferred session location"
+                    required
+                    className={`bg-gray-800 border-gray-600 text-white placeholder:text-zinc-300 focus-visible:ring-[#B4E90E] ${
+                      errors.location ? "border-red-500" : ""
+                    }`}
+                  />
+                  {errors.location && (
+                    <p className="text-red-500 text-xs mt-1">{errors.location}</p>
                   )}
                 </div>
               </div>
@@ -319,4 +368,5 @@ export default function ReserveSessionPage() {
       </div>
     </div>
   );
+
 }

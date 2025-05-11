@@ -14,12 +14,12 @@ function Calendar({
   ...props
 }) {
   return (
-    (<DayPicker
+    <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{
         months: "flex flex-col sm:flex-row gap-2",
-        month: "flex flex-col gap-8",
+        month: "flex flex-col gap-4",
         caption: "flex justify-center pt-1 relative items-center w-full",
         caption_label: "text-sm font-medium",
         nav: "flex items-center gap-1",
@@ -29,11 +29,11 @@ function Calendar({
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-x-1 gap-1 text-center",
-        head_row: "flex gap-10",
+        table: "w-full border-collapse space-x-1",
+        head_row: "flex",
         head_cell:
-          "text-muted-foreground rounded-md w-10 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2 gap-10 text-center",
+          "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
+        row: "flex w-full mt-2",
         cell: cn(
           "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-range-end)]:rounded-r-md",
           props.mode === "range"
@@ -67,7 +67,7 @@ function Calendar({
           <ChevronRight className={cn("size-4", className)} {...props} />
         ),
       }}
-      {...props} />)
+      {...props} />
   );
 }
 
