@@ -311,6 +311,7 @@ export default function SessionsPage() {
     }
   };
 
+  ///
   const handleDeleteSession = async () => {
     try {
       if (!selectedSession?._id) {
