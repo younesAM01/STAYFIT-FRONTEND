@@ -152,7 +152,7 @@ export default function FitnessCoaching() {
               {t("paragraph")}
             </p>
             <div className={`flex justify-center gap-4`}>
-              <Link href={`/${locale}/pricing`} passHref legacyBehavior>
+              <Link href={`/${locale}/free-session`} passHref legacyBehavior>
                 <Button 
                   className="bg-[#B4E90E] text-[#0d111a] hover:bg-[#a3d40c] px-8 py-6 text-lg font-semibold transition-transform hover:scale-105 duration-200 ease-in-out">
                   {t("boutton")}

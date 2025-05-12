@@ -862,7 +862,7 @@ export default function CoachProfile() {
             <p className="text-base sm:text-lg mb-6 sm:mb-8 text-[#0d111a]/80">
               {t("cta.description")}
             </p>
-            <Link href={`/${locale}/pricing`}>
+            <Link href={`/${locale}/free-session`}>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

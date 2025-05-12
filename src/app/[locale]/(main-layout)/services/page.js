@@ -106,7 +106,7 @@ export default function Services() {
               transition={{ duration: 0.6, delay: 0.5 }}
             >
               <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                <Link href={`/${locale}/pricing`} className="px-8 py-3 bg-[#B4E90E] hover:bg-[#9bcf0e] text-[#0d111a] font-medium rounded-md transition-colors text-base sm:text-lg md:text-xl w-full cursor-pointer sm:w-auto">
+                <Link href={`/${locale}/free-session`} className="px-8 py-3 bg-[#B4E90E] hover:bg-[#9bcf0e] text-[#0d111a] font-medium rounded-md transition-colors text-base sm:text-lg md:text-xl w-full cursor-pointer sm:w-auto">
                   {t("subscribe")}
                 </Link>
                 <button

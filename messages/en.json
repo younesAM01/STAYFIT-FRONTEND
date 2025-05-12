@@ -87,7 +87,7 @@
     "herotitle1": "Transform Your Body",
     "herotitle_span": "Transform Your Life",
     "paragraph": "Our expert coaches are ready to guide you through your fitness journey, providing personalized training to help you achieve your goals.",
-    "boutton": "Start Your Journey",
+    "boutton": "Start your free session",
     "meetcoaches": "Meet Our Expert Coaches",
     "all": "All",
     "cardio": "Cardio",
@@ -101,7 +101,7 @@
     "title": "TRANSFORM YOUR BODY, TRANSFORM YOUR LIFE",
     "subtitle": "KEEP BODY FIT & STRONG",
     "description": "Train to be stronger both physically and mentally. Get ready for the next level.",
-    "subscribe": "SUBSCRIBE",
+    "subscribe": "BOOK A FREE SESSION",
     "services": "OUR SERVICES",
     "focus": "FOCUS ON YOUR WORKOUTS NOT YOUR WORRIES"
   },
@@ -128,7 +128,7 @@
     "cta": {
       "title": "Ready to Transform Your Fitness?",
       "description": "Book a session with our Coaches and start your fitness journey today.",
-      "button": "Book a Session"
+      "button": "Book a free session"
     },
     "coach": "Coach",
     "welcome": "Welcome to Stay Fit"
@@ -358,7 +358,7 @@
   "Hero": {
     "title": "Unlock Your Potential",
     "description": "Join expert coaching designed to elevate your skills and transform your life. Your first session is completely FREE — start your journey today!",
-    "button": "Start Training Now"
+    "button": "Start your free session"
   },
   "AboutUs": {
     "headertitle": "About ",
