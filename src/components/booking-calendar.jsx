@@ -68,7 +68,6 @@ export default function BookingCalendar({ coachId, onSelect }) {
     })
   );
   const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  console.log(coachSessions);
 
   useEffect(() => {
     if (coachId && hasValidMembership && sessionData) {

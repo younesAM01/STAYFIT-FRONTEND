@@ -11,11 +11,11 @@ export const clientPackApi = createApi({
         }),
         getClientPackById: builder.query({ 
             query: (clientId) => `/clientpacks/${clientId}`,
-            providesTags: (result, error, clientId) => [{ type: 'ClientPack', clientId }]
+            providesTags: ['ClientPack']
         }),
         getClientPackByClientId: builder.query({
             query: (clientId) => `/clientpacks/client/${clientId}`,
-            providesTags: (result, error, clientId) => [{ type: 'ClientPack', clientId }]
+            providesTags: ['ClientPack']
         }),
         createClientPack: builder.mutation({
             query: (clientPack) => ({

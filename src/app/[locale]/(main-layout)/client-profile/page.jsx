@@ -52,6 +52,21 @@ export default function ClientProfile() {
   const profile =
     "https://res.cloudinary.com/dkjx65vc7/image/upload/v1745098188/blank-profile-picture-973460_960_720_oxeuux.webp";
   const t = useTranslations("ProfilePage");
+  
+  // Function to get the latest client pack
+  const getLatestClientPack = (clientPackArray) => {
+    if (!clientPackArray || clientPackArray.length === 0) {
+      return null;
+    }
+    
+    // If there's only one pack, return it
+    if (clientPackArray.length === 1) {
+      return clientPackArray[0];
+    }
+    
+    // Otherwise, return the last one (most recently added)
+    return clientPackArray[clientPackArray.length - 1];
+  };
   // Add this function to ClientProfile
 
   useEffect(() => {
@@ -314,14 +329,14 @@ export default function ClientProfile() {
           <motion.div {...fadeIn} className="mx-auto">
             <div className="bg-[#0a0e15] rounded-lg border border-[#161c2a] text-center">
               {clientPack && clientPack.length > 0 ? (
-                <SessionBooking
-                  clientId={mongoUser?._id}
-                  packId={packId}
-                  setActiveTab={setActiveTab}
-                  clientPack={clientPack[0]}
-                  refreshClientPack={refetch}
-                />
-              ) : (
+                  <SessionBooking
+                    clientId={mongoUser?._id}
+                    packId={packId}
+                    setActiveTab={setActiveTab}
+                    clientPack={getLatestClientPack(clientPack)}
+                    refreshClientPack={refetch}
+                  />
+                ) : (
                 <div className="p-8 flex flex-col items-center justify-center">
                   <h2 className="text-xl font-bold mb-4 text-white">
                     {t("noActivePackages")}

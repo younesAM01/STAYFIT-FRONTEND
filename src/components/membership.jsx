@@ -8,9 +8,7 @@ import {
   User,
   X,
   AlertCircle,
-  ChevronRight,
   Info,
-  Check,
   CheckCircle,
   MapPin,
 } from "lucide-react";
@@ -23,7 +21,7 @@ import {
   useCompleteSessionMutation,
   useGetSessionsByClientIdQuery,
 } from "@/redux/services/session.service";
-import { useUpdateClientPackMutation } from "@/redux/services/clientpack.service";
+
 
 const Membership = ({ setActiveTab }) => {
   const { mongoUser } = useAuth();
@@ -36,8 +34,7 @@ const Membership = ({ setActiveTab }) => {
   const [sessionToCancel, setSessionToCancel] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [finishModalOpen, setFinishModalOpen] = useState(false);
-  const [sessionToFinish, setSessionToFinish] = useState(null);
+
   const t = useTranslations("MembershipPage");
   const locale = useLocale();
   const {
@@ -58,9 +55,7 @@ const Membership = ({ setActiveTab }) => {
     useCancelSessionMutation();
   const [completeSession, { isLoading: completeLoading }] =
     useCompleteSessionMutation();
-  const [updateClientPack, { isLoading: updateClientPackLoading }] =
-    useUpdateClientPackMutation();
-  console.log("sessions", sessions);
+
   useEffect(() => {
     if (sessions?.sessions) {
       const completedSessions = sessions.sessions.filter(
@@ -74,11 +69,9 @@ const Membership = ({ setActiveTab }) => {
       const scheduledSessions = sessions.sessions.filter(
         (session) => session.status === "scheduled"
       );
-      console.log("scheduledSessions", scheduledSessions);
       setUpcomingSessions(scheduledSessions);
     }
   }, [sessions, sessionsLoading]);
-
   useEffect(() => {
     if (!clientPackLoading) {
       setLoading(false);
@@ -90,8 +83,7 @@ const Membership = ({ setActiveTab }) => {
     }
   }, [clientPack, clientPackLoading]);
 
-  // Move the actual finish logic to a new function
-
+  
   // Helper function to normalize time string for better parsing
   const normalizeTimeString = (timeStr) => {
     if (!timeStr) return null;
@@ -263,11 +255,7 @@ const Membership = ({ setActiveTab }) => {
     try {
       // Check if session has required data
       if (!session.sessionDate || !session.sessionTime) {
-        console.error("Missing session data:", {
-          id: session._id,
-          date: session.sessionDate,
-          time: session.sessionTime,
-        });
+       
 
         setErrorMessage(
           t(
@@ -363,6 +351,7 @@ const Membership = ({ setActiveTab }) => {
     console.log("sessionToCancel", sessionToCancel);
     await cancelSession(sessionToCancel._id).unwrap();
     toast.success("Session cancelled successfully");
+    refetchClientPack();
     refetchSessions();
     setCancelModalOpen(false);
     setSessionToCancel(null);
@@ -400,25 +389,6 @@ const Membership = ({ setActiveTab }) => {
         refetchClientPack();
         return;
       }
-
-      // Calculate new remaining sessions count
-      const newRemainingSessionsCount = Math.max(
-        0,
-        clientPackToUpdate.remainingSessions - 1
-      );
-      const updateData = {
-        id: packId,
-        remainingSessions: newRemainingSessionsCount,
-      };
-
-      // If this was the last session, set isActive to false
-      if (newRemainingSessionsCount === 0) {
-        updateData.isActive = false;
-      }
-
-      // Update the client pack
-      await updateClientPack(updateData).unwrap();
-
       toast.success("Session completed successfully and package updated");
       refetchSessions();
       refetchClientPack();
