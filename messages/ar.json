@@ -116,7 +116,7 @@
     "sections": {
       "about": {
         "title": "نبذة عني"
-         },
+      },
       "specialties": {
         "title": "التخصصات"
       },
@@ -357,7 +357,7 @@
   "Hero": {
     "title": "اكتشف قدراتك الحقيقية",
     "description": "انضم إلى تدريب احترافي يساعدك على تطوير مهاراتك وتغيير حياتك نحو الأفضل. احصل على جلستك الأولى مجانًا تمامًا — وابدأ رحلتك اليوم",
-    "button":  "ابدأ جلستك المجانية"
+    "button": "ابدأ جلستك المجانية"
   },
   "AboutUs": {
     "headertitle": "من ",
@@ -446,5 +446,31 @@
     },
 
     "finalConfirmation": "بتوقيعك على العقد أو استخدامك لخدماتنا، تؤكد أنك قد قرأت وفهمت كافة الشروط والأحكام المذكورة أعلاه، وتوافق على الالتزام بها."
+  },
+  "FreeSession": {
+    "title": "احجز جلستك المجانية",
+    "description": "املأ النموذج أدناه لحجز استشارتك المجانية في اللياقة البدنية",
+    "personalInformation": "المعلومات الشخصية",
+    "pleaseProvideYourDetailsToReserveYourFreeCoachingSession": "يرجى تقديم معلوماتك لحجز جلستك التدريبية المجانية",
+    "fullName": "الاسم الكامل",
+    "fullNamePlaceholder": "اسمك الكامل",
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "your.email@example.com",
+    "phoneNumber": "رقم الهاتف",
+    "phoneNumberPlaceholder": "رقم الهاتف الخاص بك",
+    "city": "المدينة",
+    "cityPlaceholder": "المدينة الخاصة بك",
+    "location": "موقع الجلسة",
+    "locationPlaceholder": "موقع الجلسة الخاصة بك",
+    "sessionDetails": "تفاصيل الجلسة",
+    "date": "التاريخ المفضل",
+    "datePlaceholder": "التاريخ المفضل الخاص بك",
+    "time": "الفترة الزمنية المفضلة (4 ساعات)",
+    "timePlaceholder": "الفترة الزمنية المفضلة الخاصة بك",
+    "submit": "احجز جلستي المجانية",
+    "cancel": "إلغاء",
+    "freeSessionBookedSuccessfully": "تم حجز الجلسة المجانية بنجاح!",
+    "freeSessionBookingFailed": "فشل حجز الجلسة المجانية. يرجى المحاولة مرة أخرى.",
+    "submitAgreement": "من خلال إرسال هذا النموذج، فإنك توافق على أن يتم التواصل معك بخصوص استشارتك المجانية في اللياقة البدنية"
   }
 }

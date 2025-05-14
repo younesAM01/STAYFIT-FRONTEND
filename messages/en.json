@@ -447,5 +447,31 @@
     },
 
     "finalConfirmation": "By signing the contract or using our services, you confirm that you have read and understood all the terms and conditions mentioned above, and you agree to abide by them."
+  },
+  "FreeSession": {
+    "title": "Reserve Your Free Session",
+    "description": "Fill out the form below to book your complimentary fitness consultation",
+    "personalInformation": "Personal Information",
+    "pleaseProvideYourDetailsToReserveYourFreeCoachingSession": "Please provide your details to reserve your free coaching session",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Enter your full name",
+    "email": "Email Address",
+    "emailPlaceholder": "your.email@example.com",
+    "phoneNumber": "Phone Number",
+    "phoneNumberPlaceholder": "Enter your phone number",
+    "city": "City",
+    "cityPlaceholder": "Enter your city",
+    "location": "Session Location",
+    "locationPlaceholder": "Enter your location",
+    "sessionDetails": "Session Details",
+    "date": "Preferred Date",
+    "datePlaceholder": "Enter your preferred date",
+    "time": "Preferred Time Range (4 hours)",
+    "timePlaceholder": "Enter your preferred time range",
+    "submit": "Reserve My Free Session",
+    "cancel": "Cancel",
+    "freeSessionBookedSuccessfully": "Free session booked successfully!",
+    "freeSessionBookingFailed": "Free session booking failed. Please try again.",
+    "submitAgreement": "By submitting this form, you agree to be contacted regarding your free fitness consultation"
   }
 }
