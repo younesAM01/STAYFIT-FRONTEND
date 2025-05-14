@@ -1386,5 +1386,5 @@ function formatDateKey(date) {
 }
 
 function formatHour(hour) {
-  return `${hour % 12 || 12} ${hour < 12 ? "AM" : "PM"}`
+  return `${hour % 12 || 12}${hour < 12 ? "AM" : "PM"}`
 }
