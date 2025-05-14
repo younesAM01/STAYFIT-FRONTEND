@@ -31,11 +31,9 @@ export default function BookingSection({
   const [sessionLocation, setSessionLocation] = useState(""); // New state for session location
   const [coaches, setCoaches] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [setRefreshSessionsFunction] = useState(null);
   const t = useTranslations("BookingPage");
   const [createSession, { isLoading }] = useCreateSessionMutation();
   const { data, isLoading: isLoadingCoaches, isSuccess } = useGetCoachQuery();
-
   useEffect(() => {
     if (isSuccess) {
       console.log("data", data);
@@ -111,18 +109,12 @@ export default function BookingSection({
         clientPack: clientPack._id,
         status: "scheduled",
       };
-      console.log("sessionData", sessionData);
       await createSession(sessionData).unwrap();
 
       // Refresh client pack data after successful update
       if (refreshClientPack) {
         await refreshClientPack();
       }
-
-      // // Call the refresh sessions function if it exists
-      // if (refreshSessionsFunction) {
-      //   refreshSessionsFunction();
-      // }
 
       toast.success("Session booked successfully!");
 
@@ -133,7 +125,6 @@ export default function BookingSection({
       setSelectedTime(null);
       setSessionLocation("");
     } catch (error) {
-      console.error("Error creating session:", error);
       toast.error("Failed to book session. Please try again.");
     } finally {
       setIsSubmitting(false);
