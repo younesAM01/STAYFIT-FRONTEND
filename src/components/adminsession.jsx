@@ -47,7 +47,7 @@ export default function SessionsPage() {
   const [showSessionInfo, setShowSessionInfo] = useState(false)
   const [selectedCalendarSession, setSelectedCalendarSession] = useState(null)
   const [showAddForm, setShowAddForm] = useState(false)
-  const hours = Array.from({ length: 15 }, (_, i) => i + 8) // 8 AM to 10 PM
+  const hours = Array.from({ length: 16 }, (_, i) => i + 8) // 8AM to 11PM
   const weekDays = getWeekDays(currentWeekStart)
   const [formData, setFormData] = useState({
     client: "",
@@ -255,27 +255,51 @@ export default function SessionsPage() {
         toast.error('No session selected for update');
         return;
       }
-      // Find the selected clientPack object
-      const selectedClientPackObj = filteredClientPacks.find(cp => (cp._id === (formData.clientPack?._id || formData.clientPack)));
-      const packId = selectedClientPackObj?.pack?._id || selectedClientPackObj?.pack;
 
+      // Create update data only with fields that have values
       const updateData = {
-        client: typeof formData.client === 'object' ? formData.client._id : formData.client,
-        coach: typeof formData.coach === 'object' ? formData.coach._id : formData.coach,
-        pack: packId,
-        clientPack: typeof formData.clientPack === 'object' ? formData.clientPack._id : formData.clientPack,
-        sessionDate: formData.sessionDate,
-        sessionTime: formData.sessionTime,
-        location: formData.location,
-        duration: 60, // Default duration
-        status: formData.status,
-        freeSession: formData.freeSession
+        id: selectedSession._id
       };
 
-      const result = await updateSession({
-        id: selectedSession._id,
-        ...updateData
-      }).unwrap();
+      // Only add fields that have values and have changed
+      if (formData.client) {
+        updateData.client = typeof formData.client === 'object' ? formData.client._id : formData.client;
+      }
+      
+      if (formData.coach) {
+        updateData.coach = typeof formData.coach === 'object' ? formData.coach._id : formData.coach;
+      }
+
+      if (formData.clientPack) {
+        const selectedClientPackObj = filteredClientPacks.find(cp => 
+          cp._id === (typeof formData.clientPack === 'object' ? formData.clientPack._id : formData.clientPack)
+        );
+        if (selectedClientPackObj) {
+          updateData.clientPack = selectedClientPackObj._id;
+          updateData.pack = selectedClientPackObj.pack?._id || selectedClientPackObj.pack;
+        }
+      }
+
+      if (formData.sessionDate) {
+        updateData.sessionDate = formData.sessionDate;
+      }
+
+      if (formData.sessionTime) {
+        updateData.sessionTime = formData.sessionTime;
+      }
+
+      if (formData.location) {
+        updateData.location = formData.location;
+      }
+
+      if (formData.status) {
+        updateData.status = formData.status;
+      }
+
+      updateData.duration = formData.duration || 60;
+      updateData.freeSession = Boolean(formData.freeSession);
+
+      const result = await updateSession(updateData).unwrap();
       
       if (result.success) {
         setSessions(prevSessions => 
@@ -285,28 +309,32 @@ export default function SessionsPage() {
               : session
           )
         );
+
         if (selectedCalendarSession?._id === selectedSession._id) {
           setSelectedCalendarSession(prev => ({
             ...prev,
             ...updateData
           }));
         }
+
         setShowEditForm(false);
         setSelectedSession(null);
         setFormData({
           client: "",
           coach: "",
           clientPack: "",
-          sessionDate: "",
-          sessionTime: "",
+          sessionDate: new Date().toISOString().split('T')[0],
+          sessionTime: "09:00",
           location: "",
-          duration: 60, // Default duration:
+          duration: 60,
           status: "scheduled",
           freeSession: false
         });
+
         toast.success('Session updated successfully');
       }
     } catch (error) {
+      console.error('Update error:', error);
       toast.error(error.message || 'Error updating session');
     }
   };
@@ -423,24 +451,18 @@ export default function SessionsPage() {
 
         // Parse the session time
         let sessionHour;
-        if (session.sessionTime.includes(':')) {
-          // Handle 24-hour format (e.g., "14:30")
-          const [hours, minutes] = session.sessionTime.split(':').map(Number);
-          sessionHour = hours;
+        const timeMatch = session.sessionTime.match(/^(\d{1,2})([AP]M)$/i);
+        if (timeMatch) {
+          let [_, h, ampm] = timeMatch;
+          h = parseInt(h, 10);
+          if (ampm.toUpperCase() === 'PM' && h < 12) h += 12;
+          if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
+          sessionHour = h;
+        } else if (session.sessionTime.includes(':')) {
+          // Handle legacy HH:mm format
+          sessionHour = parseInt(session.sessionTime.split(':')[0], 10);
         } else {
-          // Handle 12-hour format (e.g., "2:30 PM")
-          const timeMatch = session.sessionTime.match(/(\d+)([AP]M)/);
-          if (!timeMatch) return false;
-          
-          let hour = parseInt(timeMatch[1], 10);
-          const meridian = timeMatch[2];
-          
-          if (meridian === "PM" && hour < 12) {
-            hour += 12;
-          } else if (meridian === "AM" && hour === 12) {
-            hour = 0;
-          }
-          sessionHour = hour;
+          return false;
         }
 
         const isSameDate = 
@@ -458,17 +480,21 @@ export default function SessionsPage() {
   const formatSessionTime = (sessionTime) => {
     if (!sessionTime) return '';
     
+    // If already in format like "5PM", return as is
+    if (/^\d{1,2}[AP]M$/i.test(sessionTime)) {
+      return sessionTime;
+    }
+    
+    // Convert from HH:mm format
     if (sessionTime.includes(':')) {
-      // Handle 24-hour format
-      const [hours, minutes] = sessionTime.split(':');
+      const [hours] = sessionTime.split(':');
       const hour = parseInt(hours, 10);
       const meridian = hour >= 12 ? 'PM' : 'AM';
       const displayHour = hour % 12 || 12;
-      return `${displayHour}:${minutes} ${meridian}`;
-    } else {
-      // Handle 12-hour format
-      return sessionTime;
+      return `${displayHour}${meridian}`;
     }
+    
+    return sessionTime;
   };
 
   const calculateEndTime = (startTime, durationMinutes) => {
@@ -497,12 +523,24 @@ export default function SessionsPage() {
       endHour = 12
     }
 
-    return `${endHour}:00 ${endMeridian}`
+    return `${endHour}${endMeridian}`
   }
 
   const handleAddSession = async (e) => {
     e.preventDefault();
     try {
+      // Check remaining sessions
+      const selectedClientPack = filteredClientPacks.find(cp => cp._id === formData.clientPack);
+      if (!selectedClientPack) {
+        toast.error('Please select a client pack');
+        return;
+      }
+
+      if (selectedClientPack.remainingSessions === 0) {
+        toast.error('Cannot add session - no remaining sessions in this pack');
+        return;
+      }
+
       // Collect missing fields
       const missingFields = [];
       if (!formData.client) missingFields.push('client');
@@ -546,7 +584,7 @@ export default function SessionsPage() {
           sessionDate: "",
           sessionTime: "",
           location: "",
-          duration: 60, // Default duration
+          duration: 60,
           status: "scheduled",
           freeSession: false
         });
@@ -683,23 +721,55 @@ export default function SessionsPage() {
 
   const renderClientPackSelect = () => {
     return (
-      <Select 
-        value={typeof formData.clientPack === 'object' ? formData.clientPack._id : formData.clientPack}
-        onValueChange={(value) => setFormData({...formData, clientPack: value})}
-        required
-        disabled={filteredClientPacks.length === 0}
-      >
-        <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
-          <SelectValue placeholder="Select client pack" />
-        </SelectTrigger>
-        <SelectContent className="border-white/10">
-          {filteredClientPacks.map((clientPack) => (
-            <SelectItem key={clientPack._id} value={clientPack._id}>
-              {clientPack.pack?.category?.[locale] || clientPack.pack?.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div>
+        <Select 
+          value={typeof formData.clientPack === 'object' ? formData.clientPack._id : formData.clientPack}
+          onValueChange={(value) => setFormData({...formData, clientPack: value})}
+          required
+          disabled={filteredClientPacks.length === 0}
+        >
+          <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+            <SelectValue placeholder="Select client pack" />
+          </SelectTrigger>
+          <SelectContent className="border-white/10">
+            {filteredClientPacks.map((clientPack) => (
+              <SelectItem key={clientPack._id} value={clientPack._id}>
+                {clientPack.pack?.category?.[locale] || clientPack.pack?.name} 
+                {" - "}
+                <span className={clientPack.remainingSessions === 0 ? "text-red-500" : "text-[#B4E90E]"}>
+                  {clientPack.remainingSessions} sessions remaining
+                </span>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {formData.clientPack && (
+          <div className="mt-1 text-sm">
+            {(() => {
+              const selectedPack = filteredClientPacks.find(cp => cp._id === formData.clientPack);
+              if (selectedPack) {
+                return (
+                  <span className={selectedPack.remainingSessions === 0 ? "text-red-500" : "text-[#B4E90E]"}>
+                    {selectedPack.remainingSessions} sessions remaining
+                  </span>
+                );
+              }
+              return null;
+            })()}
+          </div>
+        )}
+        {formData.clientPack && (() => {
+          const selectedPack = filteredClientPacks.find(cp => cp._id === formData.clientPack);
+          if (selectedPack?.remainingSessions === 0) {
+            return (
+              <div className="mt-1 text-sm text-red-500">
+                Cannot add session - no remaining sessions in this pack
+              </div>
+            );
+          }
+          return null;
+        })()}
+      </div>
     );
   };
 
@@ -716,14 +786,33 @@ export default function SessionsPage() {
   };
 
   const renderTimeInput = () => {
+    // Convert any time format to hour number
+    const currentHour = toTimeInputValue(formData.sessionTime);
+    
     return (
-      <Input
-        type="time"
-        value={formData.sessionTime}
-        onChange={(e) => setFormData({...formData, sessionTime: e.target.value})}
-        className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]"
+      <Select 
+        value={currentHour.toString()}
+        onValueChange={(value) => {
+          const hour = parseInt(value, 10);
+          // Convert to format like "5PM"
+          const meridian = hour >= 12 ? "PM" : "AM";
+          const displayHour = hour % 12 || 12;
+          const timeValue = `${displayHour}${meridian}`;
+          setFormData({...formData, sessionTime: timeValue});
+        }}
         required
-      />
+      >
+        <SelectTrigger className="bg-gray-800 border-white/10 focus:ring-[#B4E90E] focus:border-[#B4E90E]">
+          <SelectValue placeholder="Select time" />
+        </SelectTrigger>
+        <SelectContent className="border-white/10">
+          {hours.map((hour) => (
+            <SelectItem key={hour} value={hour.toString()}>
+              {formatHour(hour)}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     );
   };
 
@@ -789,32 +878,29 @@ export default function SessionsPage() {
   };
 
   function toTimeInputValue(timeStr) {
-    if (!timeStr) return '09:00';
-    // If already in HH:mm, return as is
-    if (/^\d{2}:\d{2}$/.test(timeStr)) return timeStr;
-    // If in H:mm, pad hour
-    if (/^\d{1}:\d{2}$/.test(timeStr)) return '0' + timeStr;
-    // If in 12-hour format with optional minutes and AM/PM
-    const match = timeStr.match(/^(\d{1,2}):?(\d{2})? ?([AP]M)$/i);
-    if (match) {
-      let [_, h, m, ampm] = match;
-      h = parseInt(h, 10);
-      m = m || '00';
-      if (ampm.toUpperCase() === 'PM' && h < 12) h += 12;
-      if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
-      return (h < 10 ? '0' : '') + h + ':' + m;
-    }
-    // If just H or HH with AM/PM (e.g., 10AM, 2PM)
-    const matchSimple = timeStr.match(/^(\d{1,2}) ?([AP]M)$/i);
-    if (matchSimple) {
-      let [_, h, ampm] = matchSimple;
+    if (!timeStr) return 9;
+    
+    // If in format like "5PM"
+    const ampmMatch = timeStr.match(/^(\d{1,2})([AP]M)$/i);
+    if (ampmMatch) {
+      let [_, h, ampm] = ampmMatch;
       h = parseInt(h, 10);
       if (ampm.toUpperCase() === 'PM' && h < 12) h += 12;
       if (ampm.toUpperCase() === 'AM' && h === 12) h = 0;
-      return (h < 10 ? '0' : '') + h + ':00';
+      return h;
     }
+    
+    // If in HH:mm format
+    if (timeStr.includes(':')) {
+      return parseInt(timeStr.split(':')[0], 10);
+    }
+    
+    // If just a number
+    const hour = parseInt(timeStr, 10);
+    if (!isNaN(hour)) return hour;
+    
     // fallback
-    return '09:00';
+    return 9;
   }
 
   return (
@@ -1051,7 +1137,7 @@ export default function SessionsPage() {
                               {formatDate(session.sessionDate)}
                             </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
-                              {session.sessionTime}
+                              {formatSessionTime(session.sessionTime)}
                             </td>
                             <td className="px-2 py-2 sm:px-4 sm:py-3 text-sm text-white border-r border-white/10">
                               {session.location}
@@ -1164,10 +1250,11 @@ export default function SessionsPage() {
                         day: "numeric",
                       })}
                       , {formatSessionTime(selectedCalendarSession.sessionTime)} -{" "}
-                      {calculateEndTime(
-                        selectedCalendarSession.sessionTime,
-                        selectedCalendarSession.duration
-                      )}
+                      {(() => {
+                        const startHour = toTimeInputValue(selectedCalendarSession.sessionTime);
+                        const endHour = (startHour + 1) % 24;
+                        return formatHour(endHour);
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -1313,9 +1400,6 @@ export default function SessionsPage() {
                 <div className="grid gap-2">
                   <Label htmlFor="clientPack">Client Pack</Label>
                   {renderClientPackSelect()}
-                  {filteredClientPacks.length === 0 && (
-                    <div className="text-red-400 text-xs mt-1">This client has no active packs. Please assign a pack first.</div>
-                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
@@ -1349,7 +1433,6 @@ export default function SessionsPage() {
                 <Button 
                   type="submit"
                   className="bg-[#B4E90E] text-black hover:bg-[#A3D80D] transition-colors"
-                  disabled={filteredClientPacks.length === 0}
                 >
                   Add Session
                 </Button>
@@ -1386,5 +1469,5 @@ function formatDateKey(date) {
 }
 
 function formatHour(hour) {
-  return `${hour % 12 || 12}${hour < 12 ? "AM" : "PM"}`
+  return `${hour % 12 || 12}${hour < 12 ? "AM" : "PM"}`;
 }

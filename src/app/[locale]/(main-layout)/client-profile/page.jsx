@@ -346,7 +346,7 @@ export default function ClientProfile() {
                   </p>
                   <button
                     className="bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
-                    onClick={() => (window.location.href = `/${locale}/pricing`)}
+                    onClick={() => (window.location.href = `https://stayfit.sa/${locale}/pricing`)}
                   >
                     <ShoppingCart size={20} />
                     {t("buyAPackage")}

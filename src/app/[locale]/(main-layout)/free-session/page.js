@@ -31,10 +31,14 @@ import { useState, useEffect } from "react";
 import { useSendFreeSessionEmailMutation } from "@/redux/services/email.service";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-
+import { useTranslations } from "next-intl";
+import { useLocale } from "next-intl";
 export default function ReserveSessionPage() {
+  const t = useTranslations("FreeSession");
+  const locale = useLocale();
   const router = useRouter();
-  const [sendFreeSessionEmail, { isLoading, error , isSuccess , isError }] = useSendFreeSessionEmailMutation();
+  const [sendFreeSessionEmail, { isLoading, error, isSuccess, isError }] =
+    useSendFreeSessionEmailMutation();
   const [date, setDate] = useState(new Date());
   const [errors, setErrors] = useState({
     name: "",
@@ -46,14 +50,15 @@ export default function ReserveSessionPage() {
   });
   useEffect(() => {
     if (isSuccess) {
-      toast.success("Your request has been sent successfully , we will contact you as soon as possible");
+      toast.success(
+        "Your request has been sent successfully , we will contact you as soon as possible"
+      );
       router.push("/");
     }
     if (isError) {
       toast.error(error?.data?.message);
     }
-  }, [isSuccess, isError, router , error]);
-
+  }, [isSuccess, isError, router, error]);
 
   const handleFormSubmission = async (e) => {
     e.preventDefault();
@@ -132,7 +137,6 @@ export default function ReserveSessionPage() {
       return;
     }
 
-
     try {
       const response = await sendFreeSessionEmail(data).unwrap();
       console.log("Email sent successfully:");
@@ -147,35 +151,35 @@ export default function ReserveSessionPage() {
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-5xl mx-auto mt-16">
         <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 text-center">
-          Reserve Your Free Session
+          {t("title")}
         </h1>
         <p className="text-zinc-400 text-center mb-8">
-          Fill out the form below to book your complimentary fitness
-          consultation
+          {t("description")}
         </p>
 
         <Card className="border-0 bg-gray-900 text-white shadow-xl rounded-lg p-4">
           <CardHeader className="border-b border-gray-900 bg-gray-900">
-            <CardTitle className="text-[#B4E90E]">
-              Personal Information
+            <CardTitle className="text-[#B4E90E]" dir={locale === "ar" ? "rtl" : "ltr"}>
+              {t("personalInformation")}
             </CardTitle>
-            <CardDescription className="text-zinc-400">
-              Please provide your details to reserve your free coaching session
+            <CardDescription className="text-zinc-400" dir={locale === "ar" ? "rtl" : "ltr"}>
+              {t("pleaseProvideYourDetailsToReserveYourFreeCoachingSession")}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
             <form onSubmit={handleFormSubmission} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-zinc-300">
-                    Full Name
+                  <Label htmlFor="name" className="text-zinc-300" dir={locale === "ar" ? "rtl" : "ltr"}>
+                    {t("fullName")}
                   </Label>
                   <Input
                     id="name"
                     name="name"
-                    placeholder="Enter your full name"
+                    placeholder={t("fullNamePlaceholder")}
                     required
-                    className={`bg-gray-800 border-gray-600 text-white placeholder:text-zinc-300 focus-visible:ring-[#B4E90E] ${
+                    dir={locale === "ar" ? "rtl" : "ltr"}
+                    className={`bg-gray-800 border-gray-600 text-white placeholder:text-zinc-300  focus-visible:ring-[#B4E90E] ${
                       errors.name ? "border-red-500" : ""
                     }`}
                   />
@@ -185,15 +189,16 @@ export default function ReserveSessionPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-zinc-300">
-                    Email Address
+                  <Label htmlFor="email" className="text-zinc-300" dir={locale === "ar" ? "rtl" : "ltr"}>
+                    {t("email")}
                   </Label>
                   <Input
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="your.email@example.com"
+                    placeholder={t("emailPlaceholder")}
                     required
+                    dir={locale === "ar" ? "rtl" : "ltr"}
                     className={`bg-gray-800 border-gray-600 text-white placeholder:text-zinc-300 focus-visible:ring-[#B4E90E] ${
                       errors.email ? "border-red-500" : ""
                     }`}
@@ -204,15 +209,16 @@ export default function ReserveSessionPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-zinc-300">
-                    Phone Number
+                  <Label htmlFor="phone" className="text-zinc-300" dir={locale === "ar" ? "rtl" : "ltr"}>
+                    {t("phoneNumber")}
                   </Label>
                   <Input
                     id="phone"
                     name="phone"
                     type="tel"
-                    placeholder="Your phone number"
+                    placeholder={t("phoneNumberPlaceholder")}
                     required
+                    dir={locale === "ar" ? "rtl" : "ltr"}
                     className={`bg-gray-800 border-gray-600 text-white placeholder:text-zinc-300 focus-visible:ring-[#B4E90E] ${
                       errors.phone ? "border-red-500" : ""
                     }`}
@@ -223,14 +229,15 @@ export default function ReserveSessionPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="city" className="text-zinc-300">
-                    City
+                  <Label htmlFor="city" className="text-zinc-300" dir={locale === "ar" ? "rtl" : "ltr"}>
+                    {t("city")}
                   </Label>
                   <Input
                     id="city"
                     name="city"
-                    placeholder="Your city"
+                    placeholder={t("cityPlaceholder")}
                     required
+                    dir={locale === "ar" ? "rtl" : "ltr"}
                     className={`bg-gray-800 border-gray-600 text-white placeholder:text-zinc-300 focus-visible:ring-[#B4E90E] ${
                       errors.city ? "border-red-500" : ""
                     }`}
@@ -240,35 +247,37 @@ export default function ReserveSessionPage() {
                   )}
                 </div>
 
-
                 <div className="space-y-2">
-                  <Label htmlFor="location" className="text-zinc-300">
-                    Session Location
+                  <Label htmlFor="location" className="text-zinc-300" dir={locale === "ar" ? "rtl" : "ltr"}>
+                    {t("location")}
                   </Label>
                   <Input
                     id="location"
                     name="location"
-                    placeholder="Enter your preferred session location"
+                    placeholder={t("locationPlaceholder")}
                     required
+                    dir={locale === "ar" ? "rtl" : "ltr"}
                     className={`bg-gray-800 border-gray-600 text-white placeholder:text-zinc-300 focus-visible:ring-[#B4E90E] ${
                       errors.location ? "border-red-500" : ""
                     }`}
                   />
                   {errors.location && (
-                    <p className="text-red-500 text-xs mt-1">{errors.location}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.location}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="border-t border-zinc-700 pt-6">
-                <h3 className="text-lg font-medium text-[#B4E90E] mb-4">
-                  Session Details
+                <h3 className="text-lg font-medium text-[#B4E90E] mb-4" dir={locale === "ar" ? "rtl" : "ltr"}>
+                  {t("sessionDetails")}
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="date" className="text-zinc-300">
-                      Preferred Date
+                    <Label htmlFor="date" className="text-zinc-300" dir={locale === "ar" ? "rtl" : "ltr"}>
+                      {t("date")}
                     </Label>
                     <Popover>
                       <PopoverTrigger asChild>
@@ -280,7 +289,7 @@ export default function ReserveSessionPage() {
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
-                          {date ? format(date, "PPP") : "Select a date"}
+                          {date ? format(date, "PPP") : t("datePlaceholder")}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0 bg-gray-800 border-gray-700">
@@ -306,6 +315,7 @@ export default function ReserveSessionPage() {
                             day_today:
                               "bg-gray-700 text-white w-10 h-10 mx-auto rounded-md",
                             day: "text-white hover:bg-gray-700 focus:bg-gray-700 w-10 h-10 mx-auto p-0 mb-1 rounded-md",
+
                           }}
                         />
                       </PopoverContent>
@@ -314,12 +324,13 @@ export default function ReserveSessionPage() {
                       type="hidden"
                       name="date"
                       value={date ? format(date, "yyyy-MM-dd") : ""}
+                      dir={locale === "ar" ? "rtl" : "ltr"}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="timeRange" className="text-zinc-300">
-                      Preferred Time Range (4 hours)
+                    <Label htmlFor="timeRange" className="text-zinc-300" >
+                      {t("time")}
                     </Label>
                     <Select name="timeRange">
                       <SelectTrigger
@@ -328,7 +339,7 @@ export default function ReserveSessionPage() {
                         }`}
                       >
                         <SelectValue
-                          placeholder="Select time range"
+                          placeholder={t("timePlaceholder")}
                           className="platext-zinc-300"
                         />
                       </SelectTrigger>
@@ -354,11 +365,10 @@ export default function ReserveSessionPage() {
                   type="submit"
                   className="w-full bg-[#B4E90E] hover:bg-[#a3d40c] text-black font-bold py-3"
                 >
-                  Reserve My Free Session
+                  {t("submit")}
                 </Button>
                 <p className="text-zinc-400 text-sm mt-4 text-center">
-                  By submitting this form, you agree to be contacted regarding
-                  your free fitness consultation
+                  {t("submitAgreement")}
                 </p>
               </div>
             </form>
@@ -367,5 +377,4 @@ export default function ReserveSessionPage() {
       </div>
     </div>
   );
-
 }
