@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   User,
@@ -344,13 +345,14 @@ export default function ClientProfile() {
                   <p className="text-gray-400 mb-6">
                     {t("purchasePackageToBook")}
                   </p>
-                  <button
-                    className="bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
-                    onClick={() => (window.location.href = `https://stayfit.sa/${locale}/pricing`)}
-                  >
-                    <ShoppingCart size={20} />
-                    {t("buyAPackage")}
-                  </button>
+                  <Link href={`https://stayfit.sa/${locale}/pricing`}>
+                    <button
+                      className="bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <ShoppingCart size={20} />
+                      {t("buyAPackage")}
+                    </button>
+                  </Link>
                 </div>
               )}
             </div>
