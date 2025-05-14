@@ -299,7 +299,7 @@ export default function ReserveSessionPage() {
                           onSelect={setDate}
                           disabled={(date) => date < new Date()}
                           initialFocus
-                          className="bg-gray-800 text-white rounded-md"
+                          className="bg-gray-800 text-white rounded-md text-center"
                           classNames={{
                             months:
                               "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
