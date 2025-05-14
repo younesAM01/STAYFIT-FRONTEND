@@ -345,7 +345,7 @@ export default function ClientProfile() {
                   <p className="text-gray-400 mb-6">
                     {t("purchasePackageToBook")}
                   </p>
-                  <Link href={`https://stayfit.sa/${locale}/pricing`}>
+                  <Link href={`/${locale}/pricing`}>
                     <button
                       className="bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
                     >
