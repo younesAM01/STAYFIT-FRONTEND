@@ -297,7 +297,7 @@ export default function ClientProfile() {
       </div>
     );
   }
-
+//
   return (
     <div className="min-h-screen text-white">
       {/* Hero Section with Background */}
@@ -346,7 +346,7 @@ export default function ClientProfile() {
                   </p>
                   <button
                     className="bg-[#B4E90E] hover:bg-[#A0D50C] text-black font-bold py-3 px-8 rounded-lg transition-colors flex items-center gap-2"
-                    onClick={() => (window.location.href = `/${locale}/`)}
+                    onClick={() => (window.location.href = `/${locale}/pricing`)}
                   >
                     <ShoppingCart size={20} />
                     {t("buyAPackage")}
@@ -358,7 +358,7 @@ export default function ClientProfile() {
         )}
       </div>
 
-      {/* Edit Modal */}
+      {/* Edite Modal */}
       {isEditModalOpen && (
         <EditProfileModal
           formData={formData}

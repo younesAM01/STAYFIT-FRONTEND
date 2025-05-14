@@ -135,9 +135,9 @@ export default function ReserveSessionPage() {
 
     try {
       const response = await sendFreeSessionEmail(data).unwrap();
-      console.log("Email sent successfully:", response);
+      console.log("Email sent successfully:");
     } catch (error) {
-      console.error("Error sending email:", error);
+      console.error("Error sending email:");
     }
     // Here you would typically send the data to your API
     // For now we're just logging it
