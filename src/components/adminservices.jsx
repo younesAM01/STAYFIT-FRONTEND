@@ -48,13 +48,13 @@ export default function ServicesPage() {
     try {
       setUploadingImage(true)
       const formData = new FormData()
-      formData.append('file', file)
-      formData.append('upload_preset', 'STAYFIT')
-      formData.append('cloud_name', 'dkjx65vc7')
-      formData.append('folder', 'Cloudinary-React')
+      formData.append("file", file);
+      formData.append("upload_preset", "Stayfit");
+      formData.append("cloud_name", "dtpnoltk6");
+      formData.append("folder", "Cloudinary-React");
 
       const response = await fetch(
-        'https://api.cloudinary.com/v1_1/dkjx65vc7/image/upload',
+        "https://api.cloudinary.com/v1_1/dtpnoltk6/image/upload",
         {
           method: 'POST',
           body: formData,

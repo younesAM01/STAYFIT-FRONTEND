@@ -22,6 +22,7 @@ import {
   useGetUserByIdQuery,
   useUpdateUserMutation,
 } from "@/redux/services/user.service";
+import { toast } from "sonner";
 
 export default function CoachProfile() {
   const locale = useLocale();
@@ -403,12 +404,12 @@ export default function CoachProfile() {
       setUploadingImage(true);
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("upload_preset", "STAYFIT");
-      formData.append("cloud_name", "dkjx65vc7");
+      formData.append("upload_preset", "Stayfit");
+      formData.append("cloud_name", "dtpnoltk6");
       formData.append("folder", "Cloudinary-React");
 
       const response = await fetch(
-        "https://api.cloudinary.com/v1_1/dkjx65vc7/image/upload",
+        "https://api.cloudinary.com/v1_1/dtpnoltk6/image/upload",
         {
           method: "POST",
           body: formData,
@@ -461,7 +462,7 @@ export default function CoachProfile() {
       setError(null);
     } catch (err) {
       console.error("Upload error:", err);
-      setError(err.message || "Failed to upload image. Please try again.");
+      toast.error(err.message || "Failed to upload image. Please try again.");
     }
   };
 
@@ -582,8 +583,11 @@ export default function CoachProfile() {
                 alt={`Coach ${coachData?.firstName || "Profile"} ${coachData?.lastName || ""}`}
                 width={320}
                 height={320}
-                className="object-cover w-full h-full"
+                className="object-cover object-top w-full h-full bg-black"
                 priority
+                onError={(e) => {
+                  e.target.src = "/placeholder.svg?height=1080&width=1920";
+                }}
               />
             </motion.div>
 
@@ -909,7 +913,7 @@ export default function CoachProfile() {
                         alt="Profile preview"
                         width={128}
                         height={128}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-top"
                       />
                     </div>
                     <div>

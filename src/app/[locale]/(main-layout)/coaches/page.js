@@ -230,7 +230,7 @@ export default function FitnessCoaching() {
                   src={coach.profilePic || "/placeholder.svg"}
                   alt={`${coach.firstName} ${coach.lastName}`}
                   fill
-                  className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-110" // Image zoom on card hover
+                  className="object-cover object-top transition-transform duration-300 ease-in-out group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>{" "}
                 {/* Gradient overlay on hover */}
