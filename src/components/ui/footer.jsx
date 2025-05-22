@@ -132,7 +132,7 @@ export default function Footer() {
             <h4 className="font-bold text-lg mb-4">{t("connect.title")}</h4>
             <div className="flex space-x-4">
               <Link
-                href="https://www.instagram.com/stayfit.sa"
+                href="https://www.instagram.com/stay.fit.sa"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-[#B4E90E] transition-colors"
