@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -22,14 +22,12 @@ import {
   useGetUserByIdQuery,
   useUpdateUserMutation,
 } from "@/redux/services/user.service";
-import { toast } from "sonner";
 
 export default function CoachProfile() {
   const locale = useLocale();
   const { mongoUser } = useAuth();
   const [activeTab, setActiveTab] = useState("about");
   const [coachData, setCoachData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState(null);
@@ -39,11 +37,8 @@ export default function CoachProfile() {
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const t = useTranslations("aboutme");
-  const pathname = usePathname();
-  const router = useRouter();
   const params = useParams();
 
-  
 
   // Extract the coach ID from the URL parameters
   const coachId = params.id;
@@ -66,7 +61,6 @@ export default function CoachProfile() {
   ] = useUpdateUserMutation();
 
   // Effect to handle scrolling after navigation
-  
 
   useEffect(() => {
     if (isSuccess) {
@@ -163,19 +157,18 @@ export default function CoachProfile() {
     const { name, value } = e.target;
     if (name === "name") {
       if (locale === "en") {
-        setEditFormData(prev => ({
+        setEditFormData((prev) => ({
           ...prev,
-          firstName: value
+          firstName: value,
         }));
       } else if (locale === "ar") {
-        setEditFormData(prev => ({
+        setEditFormData((prev) => ({
           ...prev,
-          coachnamearabic: value
+          coachnamearabic: value,
         }));
       }
-   
     } else {
-      setEditFormData(prev => ({
+      setEditFormData((prev) => ({
         ...prev,
         [name]: value,
       }));
@@ -462,7 +455,7 @@ export default function CoachProfile() {
       setError(null);
     } catch (err) {
       console.error("Upload error:", err);
-      toast.error(err.message || "Failed to upload image. Please try again.");
+      setError(err.message || "Failed to upload image. Please try again.");
     }
   };
 
@@ -526,8 +519,6 @@ export default function CoachProfile() {
     }
   };
 
- 
-
   if (coachLoading) {
     return (
       <div className="min-h-screen bg-[#0d111a] text-white flex items-center justify-center">
@@ -568,12 +559,14 @@ export default function CoachProfile() {
         <div className="absolute inset-0 bg-[url('/placeholder.svg?height=1080&width=1920')] bg-cover bg-center"></div>
 
         <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-end pb-6 sm:pb-8 md:pb-12">
-          <div className="flex flex-col items-center sm:items-start md:flex-row md:items-end gap-4 sm:gap-6 md:gap-8">
+          <div
+            className={`flex flex-col items-center sm:items-start md:flex-row md:items-end gap-4 sm:gap-6 md:gap-8 ${locale === "ar" ? "flex-row-reverse" : ""}`}
+          >
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
-              className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-xl overflow-hidden border-4 border-[#B4E90E] shadow-lg shadow-[#B4E90E]/20"
+              className={`w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-xl overflow-hidden border-4 border-[#B4E90E] shadow-lg shadow-[#B4E90E]/20 ${locale === "ar" ? "order-2" : ""}`}
             >
               <Image
                 src={
@@ -583,16 +576,17 @@ export default function CoachProfile() {
                 alt={`Coach ${coachData?.firstName || "Profile"} ${coachData?.lastName || ""}`}
                 width={320}
                 height={320}
-                className="object-cover object-top w-full h-full bg-black"
+                className="object-cover w-full h-full"
                 priority
-                onError={(e) => {
-                  e.target.src = "/placeholder.svg?height=1080&width=1920";
-                }}
               />
             </motion.div>
 
-            <div className="flex-1 text-center md:text-left">
-              <div className="flex items-center justify-center md:justify-start">
+            <div
+              className={`flex-1 text-center md:text-left ${locale === "ar" ? "md:text-right order-1" : ""}`}
+            >
+              <div
+                className={`flex items-center ${locale === "ar" ? "justify-center md:justify-end" : "justify-center md:justify-start"}`}
+              >
                 <motion.h1
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -602,14 +596,14 @@ export default function CoachProfile() {
                     <>
                       {t("coach")}{" "}
                       <span className="text-[#B4E90E]">
-                        {coachData?.coachnamearabic || ""} 
+                        {coachData?.coachnamearabic || ""}
                       </span>
                     </>
                   ) : (
                     <>
                       {t("coach")}{" "}
                       <span className="text-[#B4E90E]">
-                        {coachData?.firstName || ""} 
+                        {coachData?.firstName || ""}
                       </span>
                     </>
                   )}
@@ -617,7 +611,7 @@ export default function CoachProfile() {
                 {isOwnProfile && (
                   <button
                     onClick={openEditModal}
-                    className="ml-3 p-2 bg-[#161c2a] hover:bg-[#B4E90E] hover:text-[#0d111a] rounded-full transition-colors"
+                    className={`${locale === "ar" ? "mr-3" : "ml-3"} p-2 bg-[#161c2a] hover:bg-[#B4E90E] hover:text-[#0d111a] rounded-full transition-colors`}
                     aria-label="Edit coach profile"
                   >
                     <Edit size={20} />
@@ -628,7 +622,7 @@ export default function CoachProfile() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className={`text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 mt-2 sm:mt-3 ${locale === "ar" ? "text-center" : ""}`}
+                className={`text-sm sm:text-base md:text-lg lg:text-xl text-gray-300 mt-2 sm:mt-3 ${locale === "ar" ? "text-right" : ""}`}
               >
                 {locale === "en" ? coachData?.title?.en : coachData?.title?.ar}
               </motion.p>
@@ -860,17 +854,17 @@ export default function CoachProfile() {
             whileHover={{ scale: 1.02 }}
             className="max-w-3xl mx-auto bg-gradient-to-r from-[#9bc80c] to-[#B4E90E] rounded-lg sm:rounded-xl p-6 sm:p-8 md:p-12"
           >
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-[#0d111a]">
+            <h2 className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-[#0d111a] ${locale === "ar" ? "text-right" : "text-left"}`}>
               {t("cta.title")}
             </h2>
-            <p className="text-base sm:text-lg mb-6 sm:mb-8 text-[#0d111a]/80">
+            <p className={`text-base sm:text-lg mb-6 sm:mb-8 text-[#0d111a]/80 ${locale === "ar" ? "text-right" : "text-left"}`}>
               {t("cta.description")}
             </p>
-            <Link href={`/${locale}/free-session`}>
+            <Link className={`${locale === "ar" ? "text-right" : "text-left"} align-center justify-center`} href={`/${locale}/free-session`}>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="inline-flex items-center gap-2 bg-[#0d111a] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold hover:bg-[#161c2a] transition-colors text-sm sm:text-base cursor-pointer"
+                className={`inline-flex items-center justify-center gap-2 bg-[#0d111a] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg font-bold hover:bg-[#161c2a] transition-colors text-sm sm:text-base cursor-pointer ${locale === "ar" ? "text-right" : "text-left"}`}
               >
                 {t("cta.button")}
                 <ChevronRight size={18} className="sm:w-5 sm:h-5" />
@@ -913,7 +907,7 @@ export default function CoachProfile() {
                         alt="Profile preview"
                         width={128}
                         height={128}
-                        className="w-full h-full object-cover object-top"
+                        className="w-full h-full object-cover"
                       />
                     </div>
                     <div>
@@ -947,15 +941,16 @@ export default function CoachProfile() {
                       <input
                         type="text"
                         name="name"
-                        value={locale === "en" ? (editFormData?.firstName || "") : (editFormData?.coachnamearabic || "")}
+                        value={
+                          locale === "en"
+                            ? editFormData?.firstName || ""
+                            : editFormData?.coachnamearabic || ""
+                        }
                         onChange={handleInputChange}
                         className="w-full p-2 bg-[#161c2a] border border-[#252d3d] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B4E90E]"
                       />
                     </div>
-                    <div>
-                     
-                     
-                    </div>
+                    <div></div>
                     <div>
                       <label className="block text-sm font-medium mb-1">
                         Phone Number
