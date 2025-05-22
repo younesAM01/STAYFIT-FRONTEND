@@ -368,7 +368,6 @@ export default function ClientProfile() {
           handleArrayInputChange={handleArrayInputChange}
           handleSubmit={handleSubmit}
           setIsEditModalOpen={setIsEditModalOpen}
-          handleImageChange={handleImageChange}
         />
       )}
     </div>
@@ -378,8 +377,6 @@ export default function ClientProfile() {
 // ProfileHero Component
 function ProfileHero({ clientInfo }) {
   const t = useTranslations("ProfilePage");
-  // Use a unique key based on the profile pic URL to force re-render when it changes
-  const profilePicKey = clientInfo?.profilePic || "default-profile";
 
   return (
     <div className="relative h-[30vh] sm:h-[50vh] md:h-[60vh] lg:h-[60vh] overflow-hidden">
@@ -393,26 +390,6 @@ function ProfileHero({ clientInfo }) {
 
       <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 h-full flex flex-col justify-end pb-6 sm:pb-8 md:pb-12">
         <div className="flex flex-col items-center sm:items-start md:flex-row md:items-end gap-4 sm:gap-6 md:gap-8">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-xl overflow-hidden border-4 border-[#B4E90E] shadow-lg shadow-[#B4E90E]/20"
-          >
-            <Image
-              key={profilePicKey}
-              src={
-                clientInfo?.profilePic ||
-                "https://res.cloudinary.com/dkjx65vc7/image/upload/v1745098188/blank-profile-picture-973460_960_720_oxeuux.webp"
-              }
-              alt={`${clientInfo.firstName} ${clientInfo.lastName}`}
-              width={320}
-              height={320}
-              className="object-cover w-full h-full"
-              priority
-            />
-          </motion.div>
-
           <div className="flex-1 text-center md:text-left">
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
@@ -635,7 +612,6 @@ function EditProfileModal({
   handleArrayInputChange,
   handleSubmit,
   setIsEditModalOpen,
-  handleImageChange,
 }) {
   const t = useTranslations("ProfilePage");
   return (
@@ -827,19 +803,6 @@ function EditProfileModal({
                 />
               </div>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-400 mb-1">
-              {t("profile")}
-            </label>
-            <input
-              type="file"
-              name="profilePic"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="w-full bg-[#161c2a] border border-[#1f2937] rounded-lg px-3 py-2 text-white focus:ring-1 focus:ring-[#B4E90E] focus:outline-none"
-            />
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

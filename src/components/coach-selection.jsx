@@ -47,30 +47,17 @@ export default function CoachSelection({ onSelect , coaches }) {
           <CardHeader className="pb-3 pt-6">
             <div className="flex items-center gap-4">
               <Avatar className="h-30 w-30 border-2 border-[#B4E90E]">
-                <AvatarImage src={coach.image || coach.profilePic} alt={coach.name || `${coach.firstName} ${coach.lastName}`} />
+                <AvatarImage src={coach.image || coach.profilePic} alt={coach.name || `${coach.firstName}`} />
                 <AvatarFallback className="bg-[#B4E90E] text-[#0d111a] text-xl font-bold">
                   {coach.firstName ? coach.firstName.charAt(0) : coach.name?.charAt(0)}
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-1">
                 <CardTitle className="text-xl font-bold">
-                  {coach.firstName && coach.lastName ? `${coach.firstName} ${coach.lastName}` : coach.name}
+                  {coach.firstName ? `${coach.firstName}` : coach.name}
                 </CardTitle>
-                {coach.email && (
-                  <CardDescription className="text-gray-300 text-sm flex items-center">
-                    {coach.email}
-                  </CardDescription>
-                )}
-                {coach.phoneNumber && (
-                  <CardDescription className="text-gray-300 text-sm flex items-center">
-                    {coach.phoneNumber}
-                  </CardDescription>
-                )}
-                <div className="flex items-center gap-1 mt-1">
-                  <span className="font-medium">{coach.rating || 0}</span>
-                  <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
-                  <span className="text-sm text-gray-400">({coach.reviews || 0} reviews)</span>
-                </div>
+                
+                
               </div>
             </div>
           </CardHeader>

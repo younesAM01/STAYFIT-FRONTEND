@@ -221,7 +221,7 @@ export default function BookingSection({
                     {locale === "ar" ? (
                       <>
                         {selectedCoach
-                          ? `${selectedCoach.firstName} ${selectedCoach.lastName}`
+                          ? `${selectedCoach.firstName}`
                           : ""}{" "}
                         <span className="text-gray-400">:{t("coach")}</span>
                       </>
@@ -229,7 +229,7 @@ export default function BookingSection({
                       <>
                         <span className="text-gray-400">{t("coach")}:</span>{" "}
                         {selectedCoach
-                          ? `${selectedCoach.firstName} ${selectedCoach.lastName}`
+                          ? `${selectedCoach.firstName} `
                           : ""}
                       </>
                     )}

@@ -69,22 +69,22 @@ const Timeline = () => {
     {
       title: t('General Fitness'),  // Translated title
       description: t('GeneralFitnessDescription'),  // Translated description
-      image: "https://res.cloudinary.com/dkjx65vc7/image/upload/v1744290139/Athletic-Man-Doing-a-Bulgarian-Split-Squat_1_a7se8t.webp"
+      image: "https://res.cloudinary.com/stayfit123/image/upload/v1747743799/Stayfit/Athletic-Man-Doing-a-Bulgarian-Split-Squat_1_liqdjn.webp"
     },
     {
       title: t('Pre/Postnatal Exercises'),
       description: t('ExercisesDescription'),
-      image: "https://res.cloudinary.com/dkjx65vc7/image/upload/v1744290140/unsplash-image-ORK-USd2DDc_1_dcx5qo.jpg"
+      image: "https://res.cloudinary.com/stayfit123/image/upload/v1747915589/unsplash-image-ORK-USd2DDc_1_botk6y.jpg"
     },
     {
       title: t('Boxing'),
       description: t('BoxingDescription'),
-      image: "https://res.cloudinary.com/dkjx65vc7/image/upload/v1744290140/gq-fitness-boxing_gzy9ea.webp"
+      image: "https://res.cloudinary.com/stayfit123/image/upload/v1747915654/gq-fitness-boxing_gn6apu.webp"
     },
     {
       title: t('Yoga'),
       description: t('YogaDescription'),
-      image: "https://res.cloudinary.com/dkjx65vc7/image/upload/v1744290140/87ae6fb631f7c8a627e8e28785d9992d-1687356162_cxop4m.jpg"
+      image: "https://res.cloudinary.com/stayfit123/image/upload/v1747915653/87ae6fb631f7c8a627e8e28785d9992d-1687356162_zq763m.jpg"
     }
   ];
   return (
