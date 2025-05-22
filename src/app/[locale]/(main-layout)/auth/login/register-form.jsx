@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { registerUser } from "../actions"
 import { useTranslations } from "next-intl"
+import { useRouter } from "next/navigation"
 
 
 export function RegisterForm({ onToggle }) {
   const t = useTranslations("RegisterPage")
+  const router = useRouter()
   const [errors, setErrors] = useState({})
   const [globalError, setGlobalError] = useState(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -70,7 +72,8 @@ export function RegisterForm({ onToggle }) {
       const result = await registerUser(registrationData)
 
       if (result.success) {
-        onToggle() // Switch to login form
+        // Redirect to confirmation page instead of toggling to login
+        router.push('/auth/confirmation-email')
       } else {
         // Set error from server response
         setGlobalError(result.error || 'Registration failed')
