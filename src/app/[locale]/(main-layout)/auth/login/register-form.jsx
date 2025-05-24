@@ -73,7 +73,7 @@ export function RegisterForm({ onToggle }) {
 
       if (result.success) {
         // Redirect to confirmation page instead of toggling to login
-        router.push('/auth/confirmation-email')
+        onToggle() // Switch to login form
       } else {
         // Set error from server response
         setGlobalError(result.error || 'Registration failed')
