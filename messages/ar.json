@@ -300,6 +300,7 @@
     "firstName": "الاسم الأول",
     "lastName": "اسم العائلة",
     "email": "البريد الإلكتروني",
+    "clientMobile": "رقم الهاتف",
     "address": "العنوان",
     "city": "المدينة",
     "zipCode": "الرمز البريدي",
@@ -334,7 +335,8 @@
     "validity": "الصلاحية",
     "noPendingPurchase": "لا يوجد باقة مختارة بعد",
     "pleaseSelectPackFirst": "الرجاء اختيار باقة اولا في الصفحة الرئيسية",
-    "goToHomePage": "العودة الى الرئيسية"
+    "goToHomePage": "العودة الى الرئيسية",
+    "loading": "جاري التحميل..."
   },
   "FAQ": {
     "faqtitle": "الأسئلة الشائعة",

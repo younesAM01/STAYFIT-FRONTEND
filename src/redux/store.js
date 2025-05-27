@@ -8,6 +8,7 @@ import { servicesApi } from "./services/services.service";
 import { sessionApi } from "./services/session.service";
 import { userApi } from "./services/user.service";
 import { emailApi } from "./services/email.service";
+import { paylinkApi } from "./services/paylink.service";
 export const store = configureStore({
   reducer: {
     [packApi.reducerPath]: packApi.reducer,
@@ -18,6 +19,7 @@ export const store = configureStore({
     [servicesApi.reducerPath]: servicesApi.reducer,
     [couponApi.reducerPath]: couponApi.reducer,
     [emailApi.reducerPath]: emailApi.reducer,
+    [paylinkApi.reducerPath]: paylinkApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -28,6 +30,7 @@ export const store = configureStore({
       reviewApi.middleware,
       servicesApi.middleware,
       sessionApi.middleware,
-      emailApi.middleware
+      emailApi.middleware,
+      paylinkApi.middleware
     ),
 });

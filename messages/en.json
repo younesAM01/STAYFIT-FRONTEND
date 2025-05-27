@@ -299,6 +299,7 @@
     "firstName": "First Name",
     "lastName": "Last Name",
     "email": "Email",
+    "clientMobile": "Mobile Phone",
     "address": "Address",
     "city": "City",
     "zipCode": "ZIP Code",
@@ -335,7 +336,8 @@
     "off": "off",
     "noPendingPurchase": "No pack choose's yet ",
     "pleaseSelectPackFirst": "Please select a pack first in home page",
-    "goToHomePage": "Back Home"
+    "goToHomePage": "Back Home",
+    "loading": "Loading..."
   },
   "FAQ": {
     "faqtitle": "Frequently Asked Questions",
