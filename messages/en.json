@@ -291,7 +291,11 @@
     "lastNameError": "Last name must be at least 2 characters",
     "confirmPasswordError": "Passwords do not match",
     "emailError": "Please enter a valid email address",
-    "passwordError": "Password must be at least 6 characters"
+    "passwordError": "Password must be at least 6 characters",
+    "registrationSuccess": "Registration Successful!",
+    "confirmationEmailSent": "A confirmation email has been sent to your email address.",
+    "checkEmailInstructions": "Please check your email and click the confirmation link to complete your registration.",
+    "returnToLogin": "Return to Login"
   },
   "CheckoutPage": {
     "checkout": "Checkout",
@@ -475,6 +479,10 @@
     "freeSessionBookedSuccessfully": "Free session booked successfully!",
     "freeSessionBookingFailed": "Free session booking failed. Please try again.",
     "submitAgreement": "By submitting this form, you agree to be contacted regarding your free fitness consultation"
+  },
+  "Auth": {
+    "emailSent": "Verification Email Sent",
+    "checkEmailInstructions": "Please check your email inbox and spam folder for the verification link to complete your registration. If you don't see the email, please wait a few minutes and check again."
   },
   "Payment": {
     "paymentProcess": "Payment Process",
