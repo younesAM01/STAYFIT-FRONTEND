@@ -13,7 +13,6 @@ import { useAuth } from "@/context/authContext";
 import { useLocale, useTranslations } from "next-intl";
 import {
   useGetClientPackByIdQuery,
-  useUpdateClientPackMutation,
 } from "@/redux/services/clientpack.service";
 import { useGetCouponsQuery } from "@/redux/services/coupon.service";
 import { toast } from "sonner";
@@ -193,6 +192,7 @@ export default function CheckoutPage() {
           : null;
 
       const orderNumber = lastPendingPack?._id || Date.now().toString();
+      console.log(orderNumber);
 
       // Create the formData object in the required format
       const formDataPayload = {
@@ -213,7 +213,6 @@ export default function CheckoutPage() {
       };
 
       const response = await createPaylinkInvoice(formDataPayload).unwrap();
-      console.log(response.paymentUrl.url);
       if (response.paymentUrl.url) {
         window.location.href = response.paymentUrl.url;
       }

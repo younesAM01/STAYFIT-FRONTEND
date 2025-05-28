@@ -475,5 +475,25 @@
     "freeSessionBookedSuccessfully": "Free session booked successfully!",
     "freeSessionBookingFailed": "Free session booking failed. Please try again.",
     "submitAgreement": "By submitting this form, you agree to be contacted regarding your free fitness consultation"
+  },
+  "Payment": {
+    "paymentProcess": "Payment Process",
+    "paymentProcessParagraph": "Please wait while we verify your payment...",
+    "paymentSuccess": "Payment successful!",
+    "paymentSuccessParagraph": "Thank you for your payment. Your transaction has been completed successfully.",
+    "paymentFailed": "Payment failed. Please try again.",
+    "paymentFailedParagraph": "Unfortunately, your payment could not be processed. Please try again or contact support if the problem persists.",
+    "paymentPending": "Payment pending. Please check your email for more details.",
+    "paymentExpired": "Payment expired. Please try again.",
+    "paymentCancelled": "Payment cancelled. Please try again.",
+    "paymentCanceledParagraph": "Your payment has been canceled. No charges have been made to your account.",
+    "orderNumber": "Order Number",
+    "transactionId": "Transaction ID",
+    "continueToYourProfile": "Continue to Your Profile",
+    "backHome": "Back Home",
+    "tryAgain": "Try Again",
+    "contactSupport": "Contact Support"
+
+
   }
 }

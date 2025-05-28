@@ -46,7 +46,7 @@ export default function CoachSelection({ onSelect , coaches }) {
         <Card key={coach._id} className="overflow-hidden text-white bg-[#0d111a] border-[#2a3142] hover:border-[#B4E90E] transition-colors duration-300">
           <CardHeader className="pb-3 pt-6">
             <div className="flex items-center gap-4">
-              <Avatar className="h-30 w-30 border-2 border-[#B4E90E]">
+              <Avatar className="h-40 w-40 border-2 border-[#B4E90E]">
                 <AvatarImage src={coach.image || coach.profilePic} alt={coach.name || `${coach.firstName}`} />
                 <AvatarFallback className="bg-[#B4E90E] text-[#0d111a] text-xl font-bold">
                   {coach.firstName ? coach.firstName.charAt(0) : coach.name?.charAt(0)}

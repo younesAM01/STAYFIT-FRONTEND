@@ -474,6 +474,22 @@
     "freeSessionBookedSuccessfully": "تم حجز الجلسة المجانية بنجاح!",
     "freeSessionBookingFailed": "فشل حجز الجلسة المجانية. يرجى المحاولة مرة أخرى.",
     "submitAgreement": "من خلال إرسال هذا النموذج، فإنك توافق على أن يتم التواصل معك بخصوص استشارتك المجانية في اللياقة البدنية"
+  },
+  "Payment": {
+    "paymentProcess": "عملية الدفع",
+    "paymentProcessParagraph": "يرجى الإنتظار حتى نقوم بمعالجة الدفع...",
+    "paymentSuccess": "تم الدفع بنجاح!",
+    "paymentSuccessParagraph": "شكرا لك على الدفع. تم إكمال المعاملة بنجاح.",
+    "paymentFailed": "فشل الدفع . يرجى المحاولة مرة أخرى",
+    "paymentFailedParagraph": "للأسف، لم يتم معالجة الدفع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم إذا لم يتم الحل",
+    "paymentCanceled": "تم إلغاء الدفع",
+    "paymentCanceledParagraph": "تم إلغاء الدفع. لم يتم إجراء أي مدفوعات إلى حسابك.",
+    "orderNumber": "رقم الطلب",
+    "transactionId": "رقم المعاملة",
+    "continueToYourProfile": "الانتقال إلى الملف الشخصي",
+    "backHome": "العودة إلى الرئيسية",
+    "tryAgain": "حاول مرة أخرى",
+    "contactSupport": "تواصل مع الدعم"
   }
-
 }
+
