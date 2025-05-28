@@ -15,6 +15,7 @@ const PaymentProcess = () => {
   const locale = useLocale();
   const t = useTranslations("Payment");
   const [updateClientPack, { isLoading: isUpdateClientPackLoading }] = useUpdateClientPackMutation();
+  const state = "Paid"
 
   const { data, isLoading } = useVerifyPaymentQuery(transactionNo);
   useEffect(() => {
