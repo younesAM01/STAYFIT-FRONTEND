@@ -8,7 +8,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useGetClientPackByClientIdQuery } from "@/redux/services/clientpack.service";
 import { useGetSessionsByCoachIdQuery } from "@/redux/services/session.service";
 
-export default function BookingCalendar({ coachId, onSelect }) {
+export default function BookingCalendar({ coachId, onSelect, availableTime }) {
   const { mongoUser } = useAuth();
   const {
     data: clientPack,
@@ -32,6 +32,7 @@ export default function BookingCalendar({ coachId, onSelect }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(
     getWeekStartDate(today)
   );
+  console.log(availableTime);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [availableSlots, setAvailableSlots] = useState({});
   const [coachSessions, setCoachSessions] = useState([]);
@@ -41,7 +42,19 @@ export default function BookingCalendar({ coachId, onSelect }) {
   const [sessionLocation, setSessionLocation] = useState("");
   const [locationError, setLocationError] = useState(""); // New state for location error message
   const t = useTranslations("BookingCalendar");
-  const hours = Array.from({ length: 16 }, (_, i) => i + 8);
+  // Convert time strings to hours
+  const startHour = availableTime?.startTime
+    ? parseInt(availableTime.startTime.split(":")[0])
+    : 9;
+  const endHour = availableTime?.endTime
+    ? parseInt(availableTime.endTime.split(":")[0])
+    : 22;
+
+  // Generate hours array based on available time range
+  const hours = Array.from(
+    { length: endHour - startHour + 1 },
+    (_, i) => i + startHour
+  );
   const weekDays = getWeekDays(currentWeekStart);
   const monthNames = [
     "January",
@@ -116,7 +129,12 @@ export default function BookingCalendar({ coachId, onSelect }) {
       const dayStr = formatDateKey(day.date);
       dummyData[dayStr] = {};
       hours.forEach((hour) => {
-        dummyData[dayStr][hour] = true;
+        // Only mark slots within the available time range as available
+        if (hour >= startHour && hour <= endHour) {
+          dummyData[dayStr][hour] = true;
+        } else {
+          dummyData[dayStr][hour] = false;
+        }
       });
     });
 
@@ -160,18 +178,6 @@ export default function BookingCalendar({ coachId, onSelect }) {
         }
       });
     }
-
-    const markSpecialHoursAsUnavailable = (dayStr) => {
-      if (!dummyData[dayStr][6] && !dummyData[dayStr][8]) {
-        dummyData[dayStr][6] = false;
-        dummyData[dayStr][8] = false;
-      }
-    };
-
-    weekDays.forEach((day) => {
-      const dayStr = formatDateKey(day.date);
-      markSpecialHoursAsUnavailable(dayStr);
-    });
 
     setAvailableSlots(dummyData);
   };

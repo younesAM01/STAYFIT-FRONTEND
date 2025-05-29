@@ -14,6 +14,7 @@ import {
   Upload,
   Plus,
   Trash,
+  Clock,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { useParams, useRouter, usePathname } from "next/navigation";
@@ -36,9 +37,13 @@ export default function CoachProfile() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [isEditingTime, setIsEditingTime] = useState(false);
+  const [tempTimeData, setTempTimeData] = useState({
+    startTime: "08:00",
+    endTime: "23:00",
+  });
   const t = useTranslations("aboutme");
   const params = useParams();
-
 
   // Extract the coach ID from the URL parameters
   const coachId = params.id;
@@ -48,7 +53,6 @@ export default function CoachProfile() {
     isSuccess,
     refetch,
   } = useGetUserByIdQuery(coachId);
-  console.log(coachId);
 
   const [
     updateUser,
@@ -65,6 +69,14 @@ export default function CoachProfile() {
   useEffect(() => {
     if (isSuccess) {
       setCoachData(data?.user);
+      // Initialize tempTimeData with coach's available time or defaults
+      const startTime = data?.user?.availableTime?.startTime || "08:00";
+      const endTime = data?.user?.availableTime?.endTime || "23:00";
+
+      setTempTimeData({
+        startTime: startTime,
+        endTime: endTime,
+      });
 
       // Check if user is missing profile information
       const isIncompleteProfile =
@@ -75,8 +87,6 @@ export default function CoachProfile() {
         !data?.user.certifications?.length;
 
       setIsFirstTimeUser(isIncompleteProfile);
-
-      // Check if the logged-in user is viewing their own profile
       setIsOwnProfile(mongoUser && mongoUser._id === coachId);
 
       // If it's the owner with incomplete profile, open the edit modal
@@ -89,6 +99,10 @@ export default function CoachProfile() {
           phoneNumber: data?.user?.phoneNumber || "",
           age: data?.user?.age || "",
           profilePic: data?.profilePic || "",
+          availableTime: data?.user?.availableTime || {
+            startTime: "08:00",
+            endTime: "23:00",
+          },
           title: {
             en: data?.user?.title?.en || "",
             ar: data?.user?.title?.ar || "",
@@ -519,6 +533,40 @@ export default function CoachProfile() {
     }
   };
 
+  const handleTimeChange = (field, value) => {
+    setTempTimeData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const saveTimeChanges = async () => {
+    try {
+      const updatedData = {
+        ...editFormData,
+        availableTime: {
+          startTime: tempTimeData.startTime,
+          endTime: tempTimeData.endTime,
+        },
+      };
+
+      const result = await updateUser({
+        id: coachId,
+        user: updatedData,
+      });
+
+      if (isUpdateError) {
+        console.error("Update failed:", updateError);
+        return;
+      }
+
+      setIsEditingTime(false);
+      await refetch();
+    } catch (err) {
+      console.error("Error saving time changes:", err);
+    }
+  };
+
   if (coachLoading) {
     return (
       <div className="min-h-screen bg-[#0d111a] text-white flex items-center justify-center">
@@ -719,6 +767,117 @@ export default function CoachProfile() {
                   )
                 )}
 
+                {/* Available Time Section */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="mt-8 sm:mt-12"
+                >
+                  <div className="flex items-center justify-center gap-3 mb-6">
+                    <h3 className="text-xl sm:text-2xl font-bold flex items-center">
+                      <Clock className="text-[#B4E90E] mr-3" />
+                      {t("sections.availableTime.title")}
+                    </h3>
+                    {isOwnProfile && (
+                      <button
+                        onClick={() => setIsEditingTime(!isEditingTime)}
+                        className="p-2 bg-[#161c2a] hover:bg-[#B4E90E] hover:text-[#0d111a] rounded-full transition-colors"
+                        aria-label="Edit available time"
+                      >
+                        <Edit size={20} />
+                      </button>
+                    )}
+                  </div>
+                  <div className="bg-[#0a0e15] p-6 rounded-lg border border-[#161c2a]">
+                    {isEditingTime && isOwnProfile ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-center gap-4">
+                          <div className="text-center">
+                            <div className="text-sm text-gray-400 mb-1">
+                              {t("sections.availableTime.startTime")}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="time"
+                                value={tempTimeData.startTime}
+                                onChange={(e) =>
+                                  handleTimeChange("startTime", e.target.value)
+                                }
+                                min="08:00"
+                                max="23:00"
+                                className="text-2xl font-bold text-[#B4E90E] bg-[#161c2a] border border-[#252d3d] rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#B4E90E]"
+                              />
+                            </div>
+                          </div>
+                          <div className="text-gray-400">-</div>
+                          <div className="text-center">
+                            <div className="text-sm text-gray-400 mb-1">
+                              {t("sections.availableTime.endTime")}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="time"
+                                value={tempTimeData.endTime}
+                                onChange={(e) =>
+                                  handleTimeChange("endTime", e.target.value)
+                                }
+                                min="08:00"
+                                max="23:00"
+                                className="text-2xl font-bold text-[#B4E90E] bg-[#161c2a] border border-[#252d3d] rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#B4E90E]"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex justify-center gap-3 mt-4">
+                          <button
+                            onClick={() => {
+                              setIsEditingTime(false);
+                              const startTime =
+                                coachData?.availableTime?.startTime || "08:00";
+                              const endTime =
+                                coachData?.availableTime?.endTime || "23:00";
+                              setTempTimeData({
+                                startTime: startTime,
+                                endTime: endTime,
+                              });
+                            }}
+                            className="px-4 py-2 bg-[#161c2a] text-gray-300 rounded-lg hover:bg-[#252d3d]"
+                          >
+                            {t("cancelBtn")}
+                          </button>
+                          <button
+                            onClick={saveTimeChanges}
+                            className="px-4 py-2 bg-[#B4E90E] text-[#0d111a] rounded-lg font-medium hover:bg-[#9bc80c]"
+                          >
+                            {t("saveBtn")}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-4">
+                        <div className="text-center">
+                          <div className="text-sm text-gray-400 mb-1">
+                            {t("sections.availableTime.startTime")}
+                          </div>
+                          <div className="text-2xl font-bold text-[#B4E90E]">
+                            {coachData?.availableTime?.startTime || "08:00"}
+                          </div>
+                        </div>
+                        <div className="text-gray-400">-</div>
+                        <div className="text-center">
+                          <div className="text-sm text-gray-400 mb-1">
+                            {t("sections.availableTime.endTime")}
+                          </div>
+                          <div className="text-2xl font-bold text-[#B4E90E]">
+                            {coachData?.availableTime?.endTime || "23:00"}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -854,13 +1013,20 @@ export default function CoachProfile() {
             whileHover={{ scale: 1.02 }}
             className="max-w-3xl mx-auto bg-gradient-to-r from-[#9bc80c] to-[#B4E90E] rounded-lg sm:rounded-xl p-6 sm:p-8 md:p-12"
           >
-            <h2 className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-[#0d111a] ${locale === "ar" ? "text-right" : "text-left"}`}>
+            <h2
+              className={`text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4 text-[#0d111a] ${locale === "ar" ? "text-right" : "text-left"}`}
+            >
               {t("cta.title")}
             </h2>
-            <p className={`text-base sm:text-lg mb-6 sm:mb-8 text-[#0d111a]/80 ${locale === "ar" ? "text-right" : "text-left"}`}>
+            <p
+              className={`text-base sm:text-lg mb-6 sm:mb-8 text-[#0d111a]/80 ${locale === "ar" ? "text-right" : "text-left"}`}
+            >
               {t("cta.description")}
             </p>
-            <Link className={`${locale === "ar" ? "text-right" : "text-left"} align-center justify-center`} href={`/${locale}/free-session`}>
+            <Link
+              className={`${locale === "ar" ? "text-right" : "text-left"} align-center justify-center`}
+              href={`/${locale}/free-session`}
+            >
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
