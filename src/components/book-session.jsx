@@ -34,6 +34,7 @@ export default function BookingSection({
   const t = useTranslations("BookingPage");
   const [createSession, { isLoading }] = useCreateSessionMutation();
   const { data, isLoading: isLoadingCoaches, isSuccess } = useGetCoachQuery();
+  console.log(selectedCoach);
   useEffect(() => {
     if (isSuccess) {
       console.log("data", data);
@@ -195,6 +196,7 @@ export default function BookingSection({
             <BookingCalendar
               coachId={selectedCoachId}
               onSelect={handleDateTimeSelect}
+              availableTime={selectedCoach?.availableTime}
             />
           </TabsContent>
 
@@ -220,17 +222,13 @@ export default function BookingSection({
                   <p className="text-white">
                     {locale === "ar" ? (
                       <>
-                        {selectedCoach
-                          ? `${selectedCoach.firstName}`
-                          : ""}{" "}
+                        {selectedCoach ? `${selectedCoach.firstName}` : ""}{" "}
                         <span className="text-gray-400">:{t("coach")}</span>
                       </>
                     ) : (
                       <>
                         <span className="text-gray-400">{t("coach")}:</span>{" "}
-                        {selectedCoach
-                          ? `${selectedCoach.firstName} `
-                          : ""}
+                        {selectedCoach ? `${selectedCoach.firstName} ` : ""}
                       </>
                     )}
                   </p>

@@ -107,32 +107,38 @@
   },
   "aboutme": {
     "navigation": {
-      "about": "ABOUT",
-      "specialties": "SPECIALTIES",
-      "certifications": "CERTIFICATIONS"
+      "about": "About",
+      "specialties": "Specialties",
+      "certifications": "Certifications"
     },
     "sections": {
       "about": {
         "title": "About Me"
+      },
+      "availableTime": {
+        "title": "Available Hours",
+        "startTime": "Start Time",
+        "endTime": "End Time"
+      },
+      "languages": {
+        "title": "Languages"
       },
       "specialties": {
         "title": "Specialties"
       },
       "certifications": {
         "title": "Certifications"
-      },
-      "languages": {
-      "title": "Languages"
-    }
+      }
     },
     "cta": {
-      "title": "Ready to Transform Your Fitness?",
-      "description": "Book a session with our Coaches and start your fitness journey today.",
-      "button": "Book a free session"
+      "title": "Ready to Start Your Fitness Journey?",
+      "description": "Book a free session with our expert coach and take the first step towards a healthier lifestyle.",
+      "button": "Book Free Session"
     },
     "coach": "Coach",
-    "welcome": "Welcome to Stay Fit"
-    
+    "welcome": "Welcome to Stay Fit",
+    "cancelBtn": "Cancel",
+    "saveBtn": "Save Changes"
   },
   "ProfilePage": {
     "title": "Profile Page",
@@ -497,8 +503,6 @@
     "backHome": "Back Home",
     "tryAgain": "Try Again",
     "contactSupport": "Contact Support"
-
-
   },
   "Auth": {
     "emailSent": "Verification Email Sent",
