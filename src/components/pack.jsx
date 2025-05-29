@@ -135,7 +135,7 @@ const MembershipPlans = () => {
       className="flex flex-col items-center justify-center py-16 px-4 relative w-full bg-cover bg-center"
       style={{
         backgroundImage:
-          "url('https://res.cloudinary.com/dkjx65vc7/image/upload/v1745095664/d295770e25e76451f2a1d3912903708f_dlplhc.jpg')",
+          "url('https://res.cloudinary.com/stayfit123/image/upload/v1748543808/d295770e25e76451f2a1d3912903708f_or9kfj.jpg')",
         backgroundColor: "rgba(0, 0, 0, 0.8)",
       }}
     >
