@@ -768,18 +768,18 @@ export default function CoachProfile() {
                 )}
 
                 {/* Available Time Section */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="mt-8 sm:mt-12"
-                >
-                  <div className="flex items-center justify-center gap-3 mb-6">
-                    <h3 className="text-xl sm:text-2xl font-bold flex items-center">
-                      <Clock className="text-[#B4E90E] mr-3" />
-                      {t("sections.availableTime.title")}
-                    </h3>
-                    {isOwnProfile && (
+                {isOwnProfile && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="mt-8 sm:mt-12"
+                  >
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                      <h3 className="text-xl sm:text-2xl font-bold flex items-center">
+                        <Clock className="text-[#B4E90E] mr-3" />
+                        {t("sections.availableTime.title")}
+                      </h3>
                       <button
                         onClick={() => setIsEditingTime(!isEditingTime)}
                         className="p-2 bg-[#161c2a] hover:bg-[#B4E90E] hover:text-[#0d111a] rounded-full transition-colors"
@@ -787,27 +787,84 @@ export default function CoachProfile() {
                       >
                         <Edit size={20} />
                       </button>
-                    )}
-                  </div>
-                  <div className="bg-[#0a0e15] p-6 rounded-lg border border-[#161c2a]">
-                    {isEditingTime && isOwnProfile ? (
-                      <div className="space-y-4">
+                    </div>
+                    <div className="bg-[#0a0e15] p-6 rounded-lg border border-[#161c2a]">
+                      {isEditingTime ? (
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-center gap-4">
+                            <div className="text-center">
+                              <div className="text-sm text-gray-400 mb-1">
+                                {t("sections.availableTime.startTime")}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="time"
+                                  value={tempTimeData.startTime}
+                                  onChange={(e) =>
+                                    handleTimeChange(
+                                      "startTime",
+                                      e.target.value
+                                    )
+                                  }
+                                  min="08:00"
+                                  max="23:00"
+                                  className="text-2xl font-bold text-[#B4E90E] bg-[#161c2a] border border-[#252d3d] rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#B4E90E]"
+                                />
+                              </div>
+                            </div>
+                            <div className="text-gray-400">-</div>
+                            <div className="text-center">
+                              <div className="text-sm text-gray-400 mb-1">
+                                {t("sections.availableTime.endTime")}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="time"
+                                  value={tempTimeData.endTime}
+                                  onChange={(e) =>
+                                    handleTimeChange("endTime", e.target.value)
+                                  }
+                                  min="08:00"
+                                  max="23:00"
+                                  className="text-2xl font-bold text-[#B4E90E] bg-[#161c2a] border border-[#252d3d] rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#B4E90E]"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex justify-center gap-3 mt-4">
+                            <button
+                              onClick={() => {
+                                setIsEditingTime(false);
+                                const startTime =
+                                  coachData?.availableTime?.startTime ||
+                                  "08:00";
+                                const endTime =
+                                  coachData?.availableTime?.endTime || "23:00";
+                                setTempTimeData({
+                                  startTime: startTime,
+                                  endTime: endTime,
+                                });
+                              }}
+                              className="px-4 py-2 bg-[#161c2a] text-gray-300 rounded-lg hover:bg-[#252d3d]"
+                            >
+                              {t("cancelBtn")}
+                            </button>
+                            <button
+                              onClick={saveTimeChanges}
+                              className="px-4 py-2 bg-[#B4E90E] text-[#0d111a] rounded-lg font-medium hover:bg-[#9bc80c]"
+                            >
+                              {t("saveBtn")}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
                         <div className="flex items-center justify-center gap-4">
                           <div className="text-center">
                             <div className="text-sm text-gray-400 mb-1">
                               {t("sections.availableTime.startTime")}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="time"
-                                value={tempTimeData.startTime}
-                                onChange={(e) =>
-                                  handleTimeChange("startTime", e.target.value)
-                                }
-                                min="08:00"
-                                max="23:00"
-                                className="text-2xl font-bold text-[#B4E90E] bg-[#161c2a] border border-[#252d3d] rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#B4E90E]"
-                              />
+                            <div className="text-2xl font-bold text-[#B4E90E]">
+                              {coachData?.availableTime?.startTime || "08:00"}
                             </div>
                           </div>
                           <div className="text-gray-400">-</div>
@@ -815,68 +872,15 @@ export default function CoachProfile() {
                             <div className="text-sm text-gray-400 mb-1">
                               {t("sections.availableTime.endTime")}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="time"
-                                value={tempTimeData.endTime}
-                                onChange={(e) =>
-                                  handleTimeChange("endTime", e.target.value)
-                                }
-                                min="08:00"
-                                max="23:00"
-                                className="text-2xl font-bold text-[#B4E90E] bg-[#161c2a] border border-[#252d3d] rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-[#B4E90E]"
-                              />
+                            <div className="text-2xl font-bold text-[#B4E90E]">
+                              {coachData?.availableTime?.endTime || "23:00"}
                             </div>
                           </div>
                         </div>
-                        <div className="flex justify-center gap-3 mt-4">
-                          <button
-                            onClick={() => {
-                              setIsEditingTime(false);
-                              const startTime =
-                                coachData?.availableTime?.startTime || "08:00";
-                              const endTime =
-                                coachData?.availableTime?.endTime || "23:00";
-                              setTempTimeData({
-                                startTime: startTime,
-                                endTime: endTime,
-                              });
-                            }}
-                            className="px-4 py-2 bg-[#161c2a] text-gray-300 rounded-lg hover:bg-[#252d3d]"
-                          >
-                            {t("cancelBtn")}
-                          </button>
-                          <button
-                            onClick={saveTimeChanges}
-                            className="px-4 py-2 bg-[#B4E90E] text-[#0d111a] rounded-lg font-medium hover:bg-[#9bc80c]"
-                          >
-                            {t("saveBtn")}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center gap-4">
-                        <div className="text-center">
-                          <div className="text-sm text-gray-400 mb-1">
-                            {t("sections.availableTime.startTime")}
-                          </div>
-                          <div className="text-2xl font-bold text-[#B4E90E]">
-                            {coachData?.availableTime?.startTime || "08:00"}
-                          </div>
-                        </div>
-                        <div className="text-gray-400">-</div>
-                        <div className="text-center">
-                          <div className="text-sm text-gray-400 mb-1">
-                            {t("sections.availableTime.endTime")}
-                          </div>
-                          <div className="text-2xl font-bold text-[#B4E90E]">
-                            {coachData?.availableTime?.endTime || "23:00"}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
 
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
