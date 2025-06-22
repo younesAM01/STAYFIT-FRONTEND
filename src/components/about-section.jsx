@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const AboutUs = () => {
   const vid =
-    "https://youtu.be/jdTBHM1a9Sg?si=LR_5SoSHkg8FVpEk";
+    "https://www.youtube.com/embed/jdTBHM1a9Sg?si=3OdS9YyNHkX61_89";
   const t = useTranslations("HomePage");
   const locale = useLocale();
   const [isPlaying, setIsPlaying] = useState(false);

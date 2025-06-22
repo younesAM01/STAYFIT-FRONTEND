@@ -49,8 +49,8 @@ const HeroSection = () => {
     <div className="relative w-full h-screen overflow-hidden overflow-x-hidden">
       {/* Video Background */}
       <video
-        id="hero-video"
-        src="https://youtu.be/jdTBHM1a9Sg?si=LR_5SoSHkg8FVpEk"
+        id="YouTube video player"
+        src="https://www.youtube.com/embed/jdTBHM1a9Sg?si=3OdS9YyNHkX61_89"
         autoPlay
         muted
         loop
