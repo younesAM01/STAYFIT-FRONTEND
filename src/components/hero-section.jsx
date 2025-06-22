@@ -50,7 +50,7 @@ const HeroSection = () => {
       {/* Video Background */}
       <video
         id="hero-video"
-        src="https://www.youtube.com/embed/jdTBHM1a9Sg?si=46RKMdWyN3Uh3Bxd"
+        src="https://youtu.be/jdTBHM1a9Sg?si=LR_5SoSHkg8FVpEk"
         autoPlay
         muted
         loop

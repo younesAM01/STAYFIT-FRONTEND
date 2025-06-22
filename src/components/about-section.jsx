@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const AboutUs = () => {
   const vid =
-    "https://res.cloudinary.com/stayfit123/video/upload/v1747748666/Stayfit/0325_3_r6vlrp.mp4";
+    "https://youtu.be/jdTBHM1a9Sg?si=LR_5SoSHkg8FVpEk";
   const t = useTranslations("HomePage");
   const locale = useLocale();
   const [isPlaying, setIsPlaying] = useState(false);
