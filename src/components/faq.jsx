@@ -24,10 +24,10 @@ export default function FAQ() {
             {t("faqdescription")}
           </p>
           <Link
-            href="mailto:stayfit@gmail.com"
+            href="mailto:info@stayfit.sa"
             className="text-[#B4E90E] hover:underline mx-1"
           >
-            stayfit@gmail.com
+           info@stayfit.sa
           </Link>
         </div>
         <Accordion type="single" collapsible className="space-y-4">

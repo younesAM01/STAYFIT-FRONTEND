@@ -51,9 +51,7 @@ const HeroSection = () => {
       <video
         id="hero-video"
         src="https://ik.imagekit.io/stayfit/0325(3).mp4?updatedAt=1750676579931"
-        autoPlay
         muted
-        loop
         playsInline
         preload="auto"
         className="w-full h-full object-cover z-[-100]"
