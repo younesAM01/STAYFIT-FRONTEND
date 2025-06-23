@@ -50,7 +50,7 @@ const HeroSection = () => {
       {/* Video Background */}
       <video
         id="hero-video"
-        src="https://res.cloudinary.com/stayfit123/video/upload/v1747748666/Stayfit/0325_3_r6vlrp.mp4"
+        src="https://ik.imagekit.io/stayfit/0325(3).mp4?updatedAt=1750676579931"
         autoPlay
         muted
         loop
