@@ -495,7 +495,7 @@
     "paymentFailedParagraph": "Unfortunately, your payment could not be processed. Please try again or contact support if the problem persists.",
     "paymentPending": "Payment pending. Please check your email for more details.",
     "paymentExpired": "Payment expired. Please try again.",
-    "paymentCancelled": "Payment cancelled. Please try again.",
+    "paymentCanceled": "Payment cancelled. Please try again.",
     "paymentCanceledParagraph": "Your payment has been canceled. No charges have been made to your account.",
     "orderNumber": "Order Number",
     "transactionId": "Transaction ID",
