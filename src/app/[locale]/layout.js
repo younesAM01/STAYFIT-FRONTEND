@@ -5,6 +5,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { Toaster } from "@/components/ui/sonner";
+import { GoogleTagManager ,  GoogleAnalytics  } from '@next/third-parties/google'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default async function RootLayout({ children, params }) {
 
   return (
     <html lang={locale}>
+      <GoogleTagManager gtmId="GTM-WS4TD5VW" />
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased subtle-brand-background `}
       >
@@ -48,6 +50,7 @@ export default async function RootLayout({ children, params }) {
           <Toaster />
         </NextIntlClientProvider>
       </body>
+      <GoogleAnalytics gaId="G-CHC77YTQCE" />
     </html>
   );
 }
