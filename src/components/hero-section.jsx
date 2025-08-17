@@ -49,11 +49,9 @@ const HeroSection = () => {
     <div className="relative w-full h-screen overflow-hidden overflow-x-hidden">
       {/* Video Background */}
       <video
-        id="YouTube video player"
-        src="https://files.catbox.moe/c3zzge.mp4"
-        autoPlay
+        id="hero-video"
+        src="https://ik.imagekit.io/stayfit/0325(3).mp4?updatedAt=1750676579931"
         muted
-        loop
         playsInline
         preload="auto"
         className="w-full h-full object-cover z-[-100]"

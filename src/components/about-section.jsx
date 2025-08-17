@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const AboutUs = () => {
   const vid =
-    "https://www.youtube.com/embed/jdTBHM1a9Sg?si=3OdS9YyNHkX61_89";
+    "https://ik.imagekit.io/stayfit/0325(3).mp4?updatedAt=1750676579931";
   const t = useTranslations("HomePage");
   const locale = useLocale();
   const [isPlaying, setIsPlaying] = useState(false);
