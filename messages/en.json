@@ -83,6 +83,11 @@
       }
     }
   },
+  "ThanksPage": {
+    "title": "Thank you! We will contact you soon",
+    "subtitle": "Meanwhile, you can secure your transformation by choosing a membership plan.",
+    "cta": "Explore membership packs"
+  },
   "COACHEPAGE": {
     "herotitle1": "Transform Your Body",
     "herotitle_span": "Transform Your Life",

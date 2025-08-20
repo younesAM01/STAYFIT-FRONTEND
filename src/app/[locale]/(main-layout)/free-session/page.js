@@ -50,10 +50,8 @@ export default function ReserveSessionPage() {
   });
   useEffect(() => {
     if (isSuccess) {
-      toast.success(
-        "Your request has been sent successfully , we will contact you as soon as possible"
-      );
-      router.push("/");
+      
+      router.push(`/${locale}/thanks`);
     }
     if (isError) {
       toast.error(error?.data?.message);
